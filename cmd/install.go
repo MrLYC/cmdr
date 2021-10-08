@@ -22,24 +22,22 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
+var installCmdFlag struct {
+	name     string
+	version  string
+	location string
+}
+
 // installCmd represents the install command
 var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install command into cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
-		flags := cmd.Flags()
+		client := core.GetClient()
+		defer utils.CallClose(client)
 
-		name, err := flags.GetString("name")
-		utils.CheckError(err)
-
-		version, err := flags.GetString("version")
-		utils.CheckError(err)
-
-		location, err := flags.GetString("location")
-		utils.CheckError(err)
-
-		helper := core.NewCommandHelper(core.GetClient())
-		utils.CheckError(helper.Install(cmd.Context(), name, version, location))
+		helper := core.NewCommandHelper(client)
+		utils.CheckError(helper.Install(cmd.Context(), installCmdFlag.name, installCmdFlag.version, installCmdFlag.location))
 	},
 }
 
@@ -55,9 +53,9 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	flags := installCmd.Flags()
-	flags.StringP("name", "n", "", "command name")
-	flags.StringP("version", "v", "", "command version")
-	flags.StringP("location", "l", "", "command location")
+	flags.StringVarP(&installCmdFlag.name, "name", "n", "", "command name")
+	flags.StringVarP(&installCmdFlag.version, "version", "v", "", "command version")
+	flags.StringVarP(&installCmdFlag.location, "location", "l", "", "command location")
 
 	installCmd.MarkFlagRequired("name")
 	installCmd.MarkFlagRequired("version")

@@ -20,7 +20,7 @@ var initCmd = &cobra.Command{
 		cfg := define.Configuration
 		cmdrDir := cfg.GetString("cmdr_dir")
 
-		logger.Debug("Creating cmdr dir", map[string]interface{}{
+		logger.Debug("ceating cmdr dir", map[string]interface{}{
 			"dir": cmdrDir,
 		})
 		utils.CheckError(os.MkdirAll(cmdrDir, 0755))
@@ -28,7 +28,7 @@ var initCmd = &cobra.Command{
 		client := core.GetClient()
 		defer utils.CallClose(client)
 
-		logger.Debug("Creating cmdr database")
+		logger.Debug("creating cmdr database")
 		utils.CheckError(client.Schema.Create(cmd.Context()))
 	},
 }
