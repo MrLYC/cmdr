@@ -24,6 +24,30 @@ func (h *CommandHelper) GetCommandByNameAndVersion(ctx context.Context, name, ve
 	return h.GetCommand(ctx, command.Name(name), command.Version(version))
 }
 
+func (h *CommandHelper) defineCommand(ctx context.Context, name, version, location string) error {
+	logger := define.Logger
+
+	logger.Debug("checking command", map[string]interface{}{
+		"name":     name,
+		"version":  version,
+		"location": location,
+	})
+
+	h.client.Command.Create().
+		SetName(name).
+		SetVersion(version).
+		SetLocation(location).
+		SaveX(ctx)
+
+	return nil
+}
+
+func (h *CommandHelper) Define(ctx context.Context, name, version, location string) error {
+	return utils.WithTx(ctx, h.client, func(client *model.Client) error {
+		return h.defineCommand(ctx, name, version, location)
+	})
+}
+
 func (h *CommandHelper) installCommandBinary(name, version, location, target string) error {
 	fs := define.FS
 	logger := define.Logger
@@ -55,22 +79,12 @@ func (h *CommandHelper) installCommandBinary(name, version, location, target str
 }
 
 func (h *CommandHelper) Install(ctx context.Context, name, version, location string) error {
-	logger := define.Logger
-
-	logger.Debug("checking command", map[string]interface{}{
-		"name":     name,
-		"version":  version,
-		"location": location,
-	})
-
 	return utils.WithTx(ctx, h.client, func(client *model.Client) error {
 		target := path.Join(h.ShimsDir, name, fmt.Sprintf("%s_%s", name, version))
-
-		h.client.Command.Create().
-			SetName(name).
-			SetVersion(version).
-			SetLocation(target).
-			SaveX(ctx)
+		err := h.defineCommand(ctx, name, version, target)
+		if err != nil {
+			return err
+		}
 
 		return h.installCommandBinary(name, version, location, target)
 	})

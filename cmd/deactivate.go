@@ -14,7 +14,7 @@ var deactivateCmdFlag struct {
 // deactivateCmd represents the deactivate command
 var deactivateCmd = &cobra.Command{
 	Use:   "deactivate",
-	Short: "Activate a command",
+	Short: "Deactivate a command",
 	Run: func(cmd *cobra.Command, args []string) {
 		client := core.GetClient()
 		defer utils.CallClose(client)
