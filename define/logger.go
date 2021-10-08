@@ -4,8 +4,6 @@ import (
 	"github.com/sirupsen/logrus"
 	logrusadapter "logur.dev/adapter/logrus"
 	"logur.dev/logur"
-
-	"github.com/mrlyc/cmdr/utils"
 )
 
 var Logger logur.Logger
@@ -17,7 +15,9 @@ func init() {
 func InitLogger() {
 	logrusLogger := logrus.New()
 	level, err := logrus.ParseLevel(Configuration.GetString("log.level"))
-	utils.CheckError(err)
+	if err != nil {
+		panic(err)
+	}
 	logrusLogger.SetLevel(level)
 
 	Logger = logrusadapter.New(logrusLogger)

@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
@@ -28,7 +26,7 @@ var initCmd = &cobra.Command{
 				"name": n,
 				"dir":  p,
 			})
-			utils.CheckError(os.MkdirAll(p, 0755))
+			utils.CheckError(define.FS.MkdirAll(p, 0755))
 		}
 
 		logger.Info("creating cmdr database")
