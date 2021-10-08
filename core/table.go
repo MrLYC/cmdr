@@ -2,12 +2,12 @@ package core
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 
 	"entgo.io/ent"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
+	"github.com/spf13/cast"
 )
 
 type ModelTable struct {
@@ -33,7 +33,7 @@ func (p *ModelTable) Append(model interface{}) error {
 		var content string
 		value, ok := mappings[name]
 		if ok {
-			content = fmt.Sprintf("%s", value)
+			content = cast.ToString(value)
 		}
 		row = append(row, content)
 	}

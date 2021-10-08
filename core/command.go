@@ -24,18 +24,18 @@ func (h *CommandHelper) GetCommandByNameAndVersion(ctx context.Context, name, ve
 	return h.GetCommand(ctx, command.Name(name), command.Version(version))
 }
 
-func (h *CommandHelper) installCommandBinary(name, version, location string) (string, error) {
+func (h *CommandHelper) installCommandBinary(name, version, location, target string) error {
 	fs := define.FS
 	logger := define.Logger
 
-	shimsDir := path.Join(h.ShimsDir, name)
-	logger.Debug("creating command shims dir", map[string]interface{}{
-		"name": name,
-		"dir":  shimsDir,
+	dir := path.Dir(target)
+	logger.Debug("creating binary dir", map[string]interface{}{
+		"name":     name,
+		"location": location,
+		"dir":      dir,
 	})
-	utils.CheckError(fs.MkdirAll(shimsDir, 0755))
+	utils.CheckError(fs.MkdirAll(dir, 0755))
 
-	target := path.Join(shimsDir, fmt.Sprintf("%s_%s", name, version))
 	logger.Debug("coping command", map[string]interface{}{
 		"name":     name,
 		"location": location,
@@ -43,15 +43,15 @@ func (h *CommandHelper) installCommandBinary(name, version, location string) (st
 	})
 	err := utils.CopyFile(location, target)
 	if err != nil {
-		return "", errors.WithMessagef(err, "install command %s failed", target)
+		return errors.WithMessagef(err, "install command %s failed", target)
 	}
 
 	err = fs.Chmod(target, 0755)
 	if err != nil {
-		return "", errors.WithMessagef(err, "change command mode %s failed", target)
+		return errors.WithMessagef(err, "change command mode %s failed", target)
 	}
 
-	return target, nil
+	return nil
 }
 
 func (h *CommandHelper) Install(ctx context.Context, name, version, location string) error {
@@ -62,31 +62,22 @@ func (h *CommandHelper) Install(ctx context.Context, name, version, location str
 		"version":  version,
 		"location": location,
 	})
-	command, err := h.GetCommandByNameAndVersion(ctx, name, version)
-	if err != nil {
-		return err
-	}
 
-	if command != nil {
-		return errors.Wrapf(ErrCommandAlreadyExists, "name %s, version %s", name, version)
-	}
+	return utils.WithTx(ctx, h.client, func(client *model.Client) error {
+		target := path.Join(h.ShimsDir, name, fmt.Sprintf("%s_%s", name, version))
 
-	target, err := h.installCommandBinary(name, version, location)
-	if err != nil {
-		return err
-	}
+		_, err := h.client.Command.Create().
+			SetName(name).
+			SetVersion(version).
+			SetLocation(target).
+			Save(ctx)
 
-	_, err = h.client.Command.Create().
-		SetName(name).
-		SetVersion(version).
-		SetLocation(target).
-		Save(ctx)
+		if err != nil {
+			return err
+		}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+		return h.installCommandBinary(name, version, location, target)
+	})
 }
 
 func (h *CommandHelper) GetCommand(ctx context.Context, ps ...predicate.Command) (*model.Command, error) {
@@ -105,6 +96,60 @@ func (h *CommandHelper) GetCommands(ctx context.Context, ps ...predicate.Command
 	}
 
 	return commands, errors.Wrapf(err, "get commands failed")
+}
+
+func (h *CommandHelper) activateBinary(ctx context.Context, name, target string) error {
+	fs := define.FS
+	binPath := path.Join(h.BinDir, name)
+
+	_, err := fs.Stat(binPath)
+	if err == nil {
+		fs.Remove(binPath)
+	}
+
+	linker := define.GetSymbolLinker()
+	err = linker.SymlinkIfPossible(target, binPath)
+	if err != nil {
+		return errors.Wrapf(err, "create symbol link failed")
+	}
+
+	return nil
+}
+
+func (h *CommandHelper) Activate(ctx context.Context, name, version string) error {
+	return utils.WithTx(ctx, h.client, func(client *model.Client) error {
+		logger := define.Logger
+
+		n, err := h.client.Command.Update().
+			Where(command.Name(name), command.Activated(true)).
+			SetActivated(false).
+			Save(ctx)
+		if err != nil {
+			return errors.Wrapf(err, "deactivate command failed")
+		}
+
+		logger.Debug("activating command", map[string]interface{}{
+			"name":        name,
+			"version":     version,
+			"deactivated": n,
+		})
+		command, err := h.client.Command.Query().
+			Where(command.Name(name), command.Version(version)).
+			Only(ctx)
+
+		if err != nil {
+			return errors.Wrapf(err, "get command failed")
+		}
+
+		command.Activated = true
+		err = h.client.Command.UpdateOne(command).Exec(ctx)
+
+		if err != nil {
+			return errors.Wrapf(err, "activate command failed")
+		}
+
+		return h.activateBinary(ctx, name, command.Location)
+	})
 }
 
 func NewCommandHelper(client *model.Client) *CommandHelper {
