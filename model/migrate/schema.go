@@ -10,7 +10,7 @@ import (
 var (
 	// CommandsColumns holds the columns for the "commands" table.
 	CommandsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
+		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Size: 128},
 		{Name: "version", Type: field.TypeString, Size: 128},
@@ -22,6 +22,18 @@ var (
 		Name:       "commands",
 		Columns:    CommandsColumns,
 		PrimaryKey: []*schema.Column{CommandsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "command_name_version",
+				Unique:  true,
+				Columns: []*schema.Column{CommandsColumns[2], CommandsColumns[3]},
+			},
+			{
+				Name:    "command_activated",
+				Unique:  false,
+				Columns: []*schema.Column{CommandsColumns[5]},
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{

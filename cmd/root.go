@@ -20,9 +20,10 @@ import (
 	"fmt"
 	"os"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+
+	"github.com/mrlyc/cmdr/define"
+	"github.com/mrlyc/cmdr/utils"
 )
 
 var cfgFile string
@@ -30,13 +31,7 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "cmdr",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "CMDR is a version manager for simple commands",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
@@ -52,13 +47,14 @@ func ExecuteContext(ctx context.Context) {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initConfig, define.InitLogger)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cmdr.yaml)")
+	pFlags := rootCmd.PersistentFlags()
+	pFlags.StringVar(&cfgFile, "config", "~/.cmdr.yaml", "config file")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -67,26 +63,15 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
+	cfg := define.Configuration
+
+	_, err := os.Stat(cfgFile)
+
+	if err == nil {
 		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		// Search config in home directory with name ".cmdr" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".cmdr")
+		cfg.SetConfigFile(cfgFile)
+		utils.CheckError(cfg.ReadInConfig())
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
+	cfg.AutomaticEnv() // read in environment variables that match
 }

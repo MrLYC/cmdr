@@ -1,26 +1,34 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/dao"
+	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
 )
 
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Initial cmdr environment",
 	Run: func(cmd *cobra.Command, args []string) {
-		client := dao.GetClient()
+		logger := define.Logger
+
+		cfg := define.Configuration
+		cmdrDir := cfg.GetString("cmdr_dir")
+
+		logger.Debug("Creating cmdr dir", map[string]interface{}{
+			"dir": cmdrDir,
+		})
+		utils.CheckError(os.MkdirAll(cmdrDir, 0755))
+
+		client := core.GetClient()
 		defer utils.CallClose(client)
 
+		logger.Debug("Creating cmdr database")
 		utils.CheckError(client.Schema.Create(cmd.Context()))
 	},
 }
