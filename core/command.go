@@ -2,13 +2,16 @@ package core
 
 import (
 	"context"
+	"path"
 
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/model"
 )
 
 type CommandHelper struct {
-	client *model.Client
+	client   *model.Client
+	ShimsDir string
+	BinDir   string
 }
 
 func (h *CommandHelper) Install(ctx context.Context, name, version, location string) error {
@@ -37,7 +40,10 @@ func (h *CommandHelper) Query() *model.CommandQuery {
 }
 
 func NewCommandHelper(client *model.Client) *CommandHelper {
+	RootDir := define.Configuration.GetString("cmdr.root")
 	return &CommandHelper{
-		client: client,
+		client:   client,
+		ShimsDir: path.Join(RootDir, "shims"),
+		BinDir:   path.Join(RootDir, "bin"),
 	}
 }

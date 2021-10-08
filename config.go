@@ -14,7 +14,8 @@ func init() {
 
 	cfg := define.Configuration
 
-	cfg.SetDefault("cmdr_dir", path.Join(homeDir, ".cmdr"))
+	cfg.SetDefault("cmdr.root", path.Join(homeDir, ".cmdr"))
+
 	cfg.SetDefault("database.name", "cmdr.db")
 	cfg.SetDefault("log.level", "warning")
 }

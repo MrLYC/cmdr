@@ -16,19 +16,22 @@ var initCmd = &cobra.Command{
 	Short: "Initial cmdr environment",
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := define.Logger
-
-		cfg := define.Configuration
-		cmdrDir := cfg.GetString("cmdr_dir")
-
-		logger.Debug("ceating cmdr dir", map[string]interface{}{
-			"dir": cmdrDir,
-		})
-		utils.CheckError(os.MkdirAll(cmdrDir, 0755))
-
 		client := core.GetClient()
 		defer utils.CallClose(client)
 
-		logger.Debug("creating cmdr database")
+		helper := core.NewCommandHelper(client)
+		for n, p := range map[string]string{
+			"shims": helper.ShimsDir,
+			"bin":   helper.BinDir,
+		} {
+			logger.Info("createing dir", map[string]interface{}{
+				"name": n,
+				"dir":  p,
+			})
+			utils.CheckError(os.MkdirAll(p, 0755))
+		}
+
+		logger.Info("creating cmdr database")
 		utils.CheckError(client.Schema.Create(cmd.Context()))
 	},
 }

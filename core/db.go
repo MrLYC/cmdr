@@ -11,7 +11,7 @@ import (
 
 func GetClient() *model.Client {
 	cfg := define.Configuration
-	cmdrDir := cfg.GetString("cmdr_dir")
+	cmdrDir := cfg.GetString("cmdr.root")
 	name := cfg.GetString("database.name")
 	client, err := model.Open("sqlite3", fmt.Sprintf("file:%s?cache=shared&_fk=1", path.Join(cmdrDir, name)))
 	utils.CheckError(err)
