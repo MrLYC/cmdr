@@ -10,6 +10,7 @@ require (
 	github.com/sirupsen/logrus v1.5.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
+	gopkg.in/yaml.v2 v2.4.0
 	logur.dev/adapter/logrus v0.5.0
 	logur.dev/logur v0.17.0
 )
