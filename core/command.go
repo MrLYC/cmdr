@@ -24,7 +24,7 @@ func (h *CommandHelper) GetCommandByNameAndVersion(ctx context.Context, name, ve
 	return h.GetCommand(ctx, command.Name(name), command.Version(version))
 }
 
-func (h *CommandHelper) defineCommand(ctx context.Context, name, version, location string) error {
+func (h *CommandHelper) defineCommand(ctx context.Context, name, version, location string, managed bool) error {
 	logger := define.Logger
 
 	logger.Debug("checking command", map[string]interface{}{
@@ -37,6 +37,7 @@ func (h *CommandHelper) defineCommand(ctx context.Context, name, version, locati
 		SetName(name).
 		SetVersion(version).
 		SetLocation(location).
+		SetManaged(managed).
 		SaveX(ctx)
 
 	return nil
@@ -44,7 +45,7 @@ func (h *CommandHelper) defineCommand(ctx context.Context, name, version, locati
 
 func (h *CommandHelper) Define(ctx context.Context, name, version, location string) error {
 	return utils.WithTx(ctx, h.client, func(client *model.Client) error {
-		return h.defineCommand(ctx, name, version, location)
+		return h.defineCommand(ctx, name, version, location, false)
 	})
 }
 
@@ -81,7 +82,7 @@ func (h *CommandHelper) installCommandBinary(name, version, location, target str
 func (h *CommandHelper) Install(ctx context.Context, name, version, location string) error {
 	return utils.WithTx(ctx, h.client, func(client *model.Client) error {
 		target := path.Join(h.ShimsDir, name, fmt.Sprintf("%s_%s", name, version))
-		err := h.defineCommand(ctx, name, version, target)
+		err := h.defineCommand(ctx, name, version, target, true)
 		if err != nil {
 			return err
 		}
@@ -191,6 +192,35 @@ func (h *CommandHelper) Deactivate(ctx context.Context, name string) error {
 		})
 
 		return h.deactivateBinary(ctx, name)
+	})
+}
+
+func (h *CommandHelper) Remove(ctx context.Context, name, version string) error {
+	return utils.WithTx(ctx, h.client, func(client *model.Client) error {
+		logger := define.Logger
+		fs := define.FS
+
+		logger.Debug("remove command", map[string]interface{}{
+			"name":    name,
+			"version": version,
+		})
+
+		command, err := h.GetCommandByNameAndVersion(ctx, name, version)
+		if err != nil {
+			return err
+		}
+
+		h.client.Command.DeleteOneID(command.ID).ExecX(ctx)
+		if !command.Managed {
+			return nil
+		}
+
+		err = fs.Remove(command.Location)
+		if err != nil {
+			return errors.Wrapf(err, "remove command binary %s failed", command.Location)
+		}
+
+		return nil
 	})
 }
 

@@ -17,16 +17,18 @@ type Command struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
+	// Activated holds the value of the "activated" field.
+	Activated bool `json:"activated,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Version holds the value of the "version" field.
 	Version string `json:"version,omitempty"`
 	// Location holds the value of the "location" field.
 	Location string `json:"location,omitempty"`
-	// Activated holds the value of the "activated" field.
-	Activated bool `json:"activated,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// Managed holds the value of the "managed" field.
+	Managed bool `json:"managed,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -34,7 +36,7 @@ func (*Command) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case command.FieldActivated:
+		case command.FieldActivated, command.FieldManaged:
 			values[i] = new(sql.NullBool)
 		case command.FieldName, command.FieldVersion, command.FieldLocation:
 			values[i] = new(sql.NullString)
@@ -63,11 +65,11 @@ func (c *Command) assignValues(columns []string, values []interface{}) error {
 			} else if value != nil {
 				c.ID = *value
 			}
-		case command.FieldCreatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+		case command.FieldActivated:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field activated", values[i])
 			} else if value.Valid {
-				c.CreatedAt = value.Time
+				c.Activated = value.Bool
 			}
 		case command.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -87,11 +89,17 @@ func (c *Command) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				c.Location = value.String
 			}
-		case command.FieldActivated:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field activated", values[i])
+		case command.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				c.Activated = value.Bool
+				c.CreatedAt = value.Time
+			}
+		case command.FieldManaged:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field managed", values[i])
+			} else if value.Valid {
+				c.Managed = value.Bool
 			}
 		}
 	}
@@ -121,16 +129,18 @@ func (c *Command) String() string {
 	var builder strings.Builder
 	builder.WriteString("Command(")
 	builder.WriteString(fmt.Sprintf("id=%v", c.ID))
-	builder.WriteString(", created_at=")
-	builder.WriteString(c.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", activated=")
+	builder.WriteString(fmt.Sprintf("%v", c.Activated))
 	builder.WriteString(", name=")
 	builder.WriteString(c.Name)
 	builder.WriteString(", version=")
 	builder.WriteString(c.Version)
 	builder.WriteString(", location=")
 	builder.WriteString(c.Location)
-	builder.WriteString(", activated=")
-	builder.WriteString(fmt.Sprintf("%v", c.Activated))
+	builder.WriteString(", created_at=")
+	builder.WriteString(c.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", managed=")
+	builder.WriteString(fmt.Sprintf("%v", c.Managed))
 	builder.WriteByte(')')
 	return builder.String()
 }

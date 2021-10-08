@@ -11,11 +11,12 @@ var (
 	// CommandsColumns holds the columns for the "commands" table.
 	CommandsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "created_at", Type: field.TypeTime},
+		{Name: "activated", Type: field.TypeBool, Default: false},
 		{Name: "name", Type: field.TypeString, Size: 128},
 		{Name: "version", Type: field.TypeString, Size: 128},
 		{Name: "location", Type: field.TypeString, Size: 512},
-		{Name: "activated", Type: field.TypeBool, Default: false},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "managed", Type: field.TypeBool, Default: false},
 	}
 	// CommandsTable holds the schema information for the "commands" table.
 	CommandsTable = &schema.Table{
@@ -31,7 +32,7 @@ var (
 			{
 				Name:    "command_activated",
 				Unique:  false,
-				Columns: []*schema.Column{CommandsColumns[5]},
+				Columns: []*schema.Column{CommandsColumns[1]},
 			},
 		},
 	}

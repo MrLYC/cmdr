@@ -17,12 +17,13 @@ type Command struct {
 // Fields of the Command.
 func (Command) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
-		field.Time("created_at").Default(time.Now).Immutable(),
+		field.Bool("activated").Default(false),
 		field.String("name").MaxLen(128).NotEmpty(),
 		field.String("version").MaxLen(128).NotEmpty(),
 		field.String("location").MaxLen(512).NotEmpty(),
-		field.Bool("activated").Default(false),
+		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique().Immutable(),
+		field.Time("created_at").Default(time.Now).Immutable(),
+		field.Bool("managed").Default(false),
 	}
 }
 

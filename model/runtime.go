@@ -16,12 +16,12 @@ import (
 func init() {
 	commandFields := schema.Command{}.Fields()
 	_ = commandFields
-	// commandDescCreatedAt is the schema descriptor for created_at field.
-	commandDescCreatedAt := commandFields[1].Descriptor()
-	// command.DefaultCreatedAt holds the default value on creation for the created_at field.
-	command.DefaultCreatedAt = commandDescCreatedAt.Default.(func() time.Time)
+	// commandDescActivated is the schema descriptor for activated field.
+	commandDescActivated := commandFields[0].Descriptor()
+	// command.DefaultActivated holds the default value on creation for the activated field.
+	command.DefaultActivated = commandDescActivated.Default.(bool)
 	// commandDescName is the schema descriptor for name field.
-	commandDescName := commandFields[2].Descriptor()
+	commandDescName := commandFields[1].Descriptor()
 	// command.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	command.NameValidator = func() func(string) error {
 		validators := commandDescName.Validators
@@ -39,7 +39,7 @@ func init() {
 		}
 	}()
 	// commandDescVersion is the schema descriptor for version field.
-	commandDescVersion := commandFields[3].Descriptor()
+	commandDescVersion := commandFields[2].Descriptor()
 	// command.VersionValidator is a validator for the "version" field. It is called by the builders before save.
 	command.VersionValidator = func() func(string) error {
 		validators := commandDescVersion.Validators
@@ -57,7 +57,7 @@ func init() {
 		}
 	}()
 	// commandDescLocation is the schema descriptor for location field.
-	commandDescLocation := commandFields[4].Descriptor()
+	commandDescLocation := commandFields[3].Descriptor()
 	// command.LocationValidator is a validator for the "location" field. It is called by the builders before save.
 	command.LocationValidator = func() func(string) error {
 		validators := commandDescLocation.Validators
@@ -74,12 +74,16 @@ func init() {
 			return nil
 		}
 	}()
-	// commandDescActivated is the schema descriptor for activated field.
-	commandDescActivated := commandFields[5].Descriptor()
-	// command.DefaultActivated holds the default value on creation for the activated field.
-	command.DefaultActivated = commandDescActivated.Default.(bool)
+	// commandDescCreatedAt is the schema descriptor for created_at field.
+	commandDescCreatedAt := commandFields[5].Descriptor()
+	// command.DefaultCreatedAt holds the default value on creation for the created_at field.
+	command.DefaultCreatedAt = commandDescCreatedAt.Default.(func() time.Time)
+	// commandDescManaged is the schema descriptor for managed field.
+	commandDescManaged := commandFields[6].Descriptor()
+	// command.DefaultManaged holds the default value on creation for the managed field.
+	command.DefaultManaged = commandDescManaged.Default.(bool)
 	// commandDescID is the schema descriptor for id field.
-	commandDescID := commandFields[0].Descriptor()
+	commandDescID := commandFields[4].Descriptor()
 	// command.DefaultID holds the default value on creation for the id field.
 	command.DefaultID = commandDescID.Default.(func() uuid.UUID)
 }

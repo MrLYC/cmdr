@@ -33,11 +33,12 @@ type CommandMutation struct {
 	op            Op
 	typ           string
 	id            *uuid.UUID
-	created_at    *time.Time
+	activated     *bool
 	name          *string
 	version       *string
 	location      *string
-	activated     *bool
+	created_at    *time.Time
+	managed       *bool
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*Command, error)
@@ -129,40 +130,40 @@ func (m *CommandMutation) ID() (id uuid.UUID, exists bool) {
 	return *m.id, true
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (m *CommandMutation) SetCreatedAt(t time.Time) {
-	m.created_at = &t
+// SetActivated sets the "activated" field.
+func (m *CommandMutation) SetActivated(b bool) {
+	m.activated = &b
 }
 
-// CreatedAt returns the value of the "created_at" field in the mutation.
-func (m *CommandMutation) CreatedAt() (r time.Time, exists bool) {
-	v := m.created_at
+// Activated returns the value of the "activated" field in the mutation.
+func (m *CommandMutation) Activated() (r bool, exists bool) {
+	v := m.activated
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCreatedAt returns the old "created_at" field's value of the Command entity.
+// OldActivated returns the old "activated" field's value of the Command entity.
 // If the Command object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CommandMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+func (m *CommandMutation) OldActivated(ctx context.Context) (v bool, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldCreatedAt is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldActivated is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldCreatedAt requires an ID field in the mutation")
+		return v, fmt.Errorf("OldActivated requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+		return v, fmt.Errorf("querying old value for OldActivated: %w", err)
 	}
-	return oldValue.CreatedAt, nil
+	return oldValue.Activated, nil
 }
 
-// ResetCreatedAt resets all changes to the "created_at" field.
-func (m *CommandMutation) ResetCreatedAt() {
-	m.created_at = nil
+// ResetActivated resets all changes to the "activated" field.
+func (m *CommandMutation) ResetActivated() {
+	m.activated = nil
 }
 
 // SetName sets the "name" field.
@@ -273,40 +274,76 @@ func (m *CommandMutation) ResetLocation() {
 	m.location = nil
 }
 
-// SetActivated sets the "activated" field.
-func (m *CommandMutation) SetActivated(b bool) {
-	m.activated = &b
+// SetCreatedAt sets the "created_at" field.
+func (m *CommandMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
 }
 
-// Activated returns the value of the "activated" field in the mutation.
-func (m *CommandMutation) Activated() (r bool, exists bool) {
-	v := m.activated
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *CommandMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldActivated returns the old "activated" field's value of the Command entity.
+// OldCreatedAt returns the old "created_at" field's value of the Command entity.
 // If the Command object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CommandMutation) OldActivated(ctx context.Context) (v bool, err error) {
+func (m *CommandMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldActivated is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldCreatedAt is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldActivated requires an ID field in the mutation")
+		return v, fmt.Errorf("OldCreatedAt requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldActivated: %w", err)
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
 	}
-	return oldValue.Activated, nil
+	return oldValue.CreatedAt, nil
 }
 
-// ResetActivated resets all changes to the "activated" field.
-func (m *CommandMutation) ResetActivated() {
-	m.activated = nil
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *CommandMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetManaged sets the "managed" field.
+func (m *CommandMutation) SetManaged(b bool) {
+	m.managed = &b
+}
+
+// Managed returns the value of the "managed" field in the mutation.
+func (m *CommandMutation) Managed() (r bool, exists bool) {
+	v := m.managed
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldManaged returns the old "managed" field's value of the Command entity.
+// If the Command object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CommandMutation) OldManaged(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldManaged is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldManaged requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldManaged: %w", err)
+	}
+	return oldValue.Managed, nil
+}
+
+// ResetManaged resets all changes to the "managed" field.
+func (m *CommandMutation) ResetManaged() {
+	m.managed = nil
 }
 
 // Where appends a list predicates to the CommandMutation builder.
@@ -328,9 +365,9 @@ func (m *CommandMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *CommandMutation) Fields() []string {
-	fields := make([]string, 0, 5)
-	if m.created_at != nil {
-		fields = append(fields, command.FieldCreatedAt)
+	fields := make([]string, 0, 6)
+	if m.activated != nil {
+		fields = append(fields, command.FieldActivated)
 	}
 	if m.name != nil {
 		fields = append(fields, command.FieldName)
@@ -341,8 +378,11 @@ func (m *CommandMutation) Fields() []string {
 	if m.location != nil {
 		fields = append(fields, command.FieldLocation)
 	}
-	if m.activated != nil {
-		fields = append(fields, command.FieldActivated)
+	if m.created_at != nil {
+		fields = append(fields, command.FieldCreatedAt)
+	}
+	if m.managed != nil {
+		fields = append(fields, command.FieldManaged)
 	}
 	return fields
 }
@@ -352,16 +392,18 @@ func (m *CommandMutation) Fields() []string {
 // schema.
 func (m *CommandMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case command.FieldCreatedAt:
-		return m.CreatedAt()
+	case command.FieldActivated:
+		return m.Activated()
 	case command.FieldName:
 		return m.Name()
 	case command.FieldVersion:
 		return m.Version()
 	case command.FieldLocation:
 		return m.Location()
-	case command.FieldActivated:
-		return m.Activated()
+	case command.FieldCreatedAt:
+		return m.CreatedAt()
+	case command.FieldManaged:
+		return m.Managed()
 	}
 	return nil, false
 }
@@ -371,16 +413,18 @@ func (m *CommandMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *CommandMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case command.FieldCreatedAt:
-		return m.OldCreatedAt(ctx)
+	case command.FieldActivated:
+		return m.OldActivated(ctx)
 	case command.FieldName:
 		return m.OldName(ctx)
 	case command.FieldVersion:
 		return m.OldVersion(ctx)
 	case command.FieldLocation:
 		return m.OldLocation(ctx)
-	case command.FieldActivated:
-		return m.OldActivated(ctx)
+	case command.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case command.FieldManaged:
+		return m.OldManaged(ctx)
 	}
 	return nil, fmt.Errorf("unknown Command field %s", name)
 }
@@ -390,12 +434,12 @@ func (m *CommandMutation) OldField(ctx context.Context, name string) (ent.Value,
 // type.
 func (m *CommandMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case command.FieldCreatedAt:
-		v, ok := value.(time.Time)
+	case command.FieldActivated:
+		v, ok := value.(bool)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetCreatedAt(v)
+		m.SetActivated(v)
 		return nil
 	case command.FieldName:
 		v, ok := value.(string)
@@ -418,12 +462,19 @@ func (m *CommandMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetLocation(v)
 		return nil
-	case command.FieldActivated:
+	case command.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case command.FieldManaged:
 		v, ok := value.(bool)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetActivated(v)
+		m.SetManaged(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Command field %s", name)
@@ -474,8 +525,8 @@ func (m *CommandMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *CommandMutation) ResetField(name string) error {
 	switch name {
-	case command.FieldCreatedAt:
-		m.ResetCreatedAt()
+	case command.FieldActivated:
+		m.ResetActivated()
 		return nil
 	case command.FieldName:
 		m.ResetName()
@@ -486,8 +537,11 @@ func (m *CommandMutation) ResetField(name string) error {
 	case command.FieldLocation:
 		m.ResetLocation()
 		return nil
-	case command.FieldActivated:
-		m.ResetActivated()
+	case command.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case command.FieldManaged:
+		m.ResetManaged()
 		return nil
 	}
 	return fmt.Errorf("unknown Command field %s", name)

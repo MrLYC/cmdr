@@ -26,6 +26,20 @@ func (cu *CommandUpdate) Where(ps ...predicate.Command) *CommandUpdate {
 	return cu
 }
 
+// SetActivated sets the "activated" field.
+func (cu *CommandUpdate) SetActivated(b bool) *CommandUpdate {
+	cu.mutation.SetActivated(b)
+	return cu
+}
+
+// SetNillableActivated sets the "activated" field if the given value is not nil.
+func (cu *CommandUpdate) SetNillableActivated(b *bool) *CommandUpdate {
+	if b != nil {
+		cu.SetActivated(*b)
+	}
+	return cu
+}
+
 // SetName sets the "name" field.
 func (cu *CommandUpdate) SetName(s string) *CommandUpdate {
 	cu.mutation.SetName(s)
@@ -44,16 +58,16 @@ func (cu *CommandUpdate) SetLocation(s string) *CommandUpdate {
 	return cu
 }
 
-// SetActivated sets the "activated" field.
-func (cu *CommandUpdate) SetActivated(b bool) *CommandUpdate {
-	cu.mutation.SetActivated(b)
+// SetManaged sets the "managed" field.
+func (cu *CommandUpdate) SetManaged(b bool) *CommandUpdate {
+	cu.mutation.SetManaged(b)
 	return cu
 }
 
-// SetNillableActivated sets the "activated" field if the given value is not nil.
-func (cu *CommandUpdate) SetNillableActivated(b *bool) *CommandUpdate {
+// SetNillableManaged sets the "managed" field if the given value is not nil.
+func (cu *CommandUpdate) SetNillableManaged(b *bool) *CommandUpdate {
 	if b != nil {
-		cu.SetActivated(*b)
+		cu.SetManaged(*b)
 	}
 	return cu
 }
@@ -161,6 +175,13 @@ func (cu *CommandUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := cu.mutation.Activated(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: command.FieldActivated,
+		})
+	}
 	if value, ok := cu.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -182,11 +203,11 @@ func (cu *CommandUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: command.FieldLocation,
 		})
 	}
-	if value, ok := cu.mutation.Activated(); ok {
+	if value, ok := cu.mutation.Managed(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
 			Value:  value,
-			Column: command.FieldActivated,
+			Column: command.FieldManaged,
 		})
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
@@ -208,6 +229,20 @@ type CommandUpdateOne struct {
 	mutation *CommandMutation
 }
 
+// SetActivated sets the "activated" field.
+func (cuo *CommandUpdateOne) SetActivated(b bool) *CommandUpdateOne {
+	cuo.mutation.SetActivated(b)
+	return cuo
+}
+
+// SetNillableActivated sets the "activated" field if the given value is not nil.
+func (cuo *CommandUpdateOne) SetNillableActivated(b *bool) *CommandUpdateOne {
+	if b != nil {
+		cuo.SetActivated(*b)
+	}
+	return cuo
+}
+
 // SetName sets the "name" field.
 func (cuo *CommandUpdateOne) SetName(s string) *CommandUpdateOne {
 	cuo.mutation.SetName(s)
@@ -226,16 +261,16 @@ func (cuo *CommandUpdateOne) SetLocation(s string) *CommandUpdateOne {
 	return cuo
 }
 
-// SetActivated sets the "activated" field.
-func (cuo *CommandUpdateOne) SetActivated(b bool) *CommandUpdateOne {
-	cuo.mutation.SetActivated(b)
+// SetManaged sets the "managed" field.
+func (cuo *CommandUpdateOne) SetManaged(b bool) *CommandUpdateOne {
+	cuo.mutation.SetManaged(b)
 	return cuo
 }
 
-// SetNillableActivated sets the "activated" field if the given value is not nil.
-func (cuo *CommandUpdateOne) SetNillableActivated(b *bool) *CommandUpdateOne {
+// SetNillableManaged sets the "managed" field if the given value is not nil.
+func (cuo *CommandUpdateOne) SetNillableManaged(b *bool) *CommandUpdateOne {
 	if b != nil {
-		cuo.SetActivated(*b)
+		cuo.SetManaged(*b)
 	}
 	return cuo
 }
@@ -367,6 +402,13 @@ func (cuo *CommandUpdateOne) sqlSave(ctx context.Context) (_node *Command, err e
 			}
 		}
 	}
+	if value, ok := cuo.mutation.Activated(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: command.FieldActivated,
+		})
+	}
 	if value, ok := cuo.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -388,11 +430,11 @@ func (cuo *CommandUpdateOne) sqlSave(ctx context.Context) (_node *Command, err e
 			Column: command.FieldLocation,
 		})
 	}
-	if value, ok := cuo.mutation.Activated(); ok {
+	if value, ok := cuo.mutation.Managed(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
 			Value:  value,
-			Column: command.FieldActivated,
+			Column: command.FieldManaged,
 		})
 	}
 	_node = &Command{config: cuo.config}

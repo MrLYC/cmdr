@@ -21,16 +21,16 @@ type CommandCreate struct {
 	hooks    []Hook
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (cc *CommandCreate) SetCreatedAt(t time.Time) *CommandCreate {
-	cc.mutation.SetCreatedAt(t)
+// SetActivated sets the "activated" field.
+func (cc *CommandCreate) SetActivated(b bool) *CommandCreate {
+	cc.mutation.SetActivated(b)
 	return cc
 }
 
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cc *CommandCreate) SetNillableCreatedAt(t *time.Time) *CommandCreate {
-	if t != nil {
-		cc.SetCreatedAt(*t)
+// SetNillableActivated sets the "activated" field if the given value is not nil.
+func (cc *CommandCreate) SetNillableActivated(b *bool) *CommandCreate {
+	if b != nil {
+		cc.SetActivated(*b)
 	}
 	return cc
 }
@@ -53,16 +53,30 @@ func (cc *CommandCreate) SetLocation(s string) *CommandCreate {
 	return cc
 }
 
-// SetActivated sets the "activated" field.
-func (cc *CommandCreate) SetActivated(b bool) *CommandCreate {
-	cc.mutation.SetActivated(b)
+// SetCreatedAt sets the "created_at" field.
+func (cc *CommandCreate) SetCreatedAt(t time.Time) *CommandCreate {
+	cc.mutation.SetCreatedAt(t)
 	return cc
 }
 
-// SetNillableActivated sets the "activated" field if the given value is not nil.
-func (cc *CommandCreate) SetNillableActivated(b *bool) *CommandCreate {
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (cc *CommandCreate) SetNillableCreatedAt(t *time.Time) *CommandCreate {
+	if t != nil {
+		cc.SetCreatedAt(*t)
+	}
+	return cc
+}
+
+// SetManaged sets the "managed" field.
+func (cc *CommandCreate) SetManaged(b bool) *CommandCreate {
+	cc.mutation.SetManaged(b)
+	return cc
+}
+
+// SetNillableManaged sets the "managed" field if the given value is not nil.
+func (cc *CommandCreate) SetNillableManaged(b *bool) *CommandCreate {
 	if b != nil {
-		cc.SetActivated(*b)
+		cc.SetManaged(*b)
 	}
 	return cc
 }
@@ -144,13 +158,17 @@ func (cc *CommandCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (cc *CommandCreate) defaults() {
+	if _, ok := cc.mutation.Activated(); !ok {
+		v := command.DefaultActivated
+		cc.mutation.SetActivated(v)
+	}
 	if _, ok := cc.mutation.CreatedAt(); !ok {
 		v := command.DefaultCreatedAt()
 		cc.mutation.SetCreatedAt(v)
 	}
-	if _, ok := cc.mutation.Activated(); !ok {
-		v := command.DefaultActivated
-		cc.mutation.SetActivated(v)
+	if _, ok := cc.mutation.Managed(); !ok {
+		v := command.DefaultManaged
+		cc.mutation.SetManaged(v)
 	}
 	if _, ok := cc.mutation.ID(); !ok {
 		v := command.DefaultID()
@@ -160,8 +178,8 @@ func (cc *CommandCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (cc *CommandCreate) check() error {
-	if _, ok := cc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`model: missing required field "created_at"`)}
+	if _, ok := cc.mutation.Activated(); !ok {
+		return &ValidationError{Name: "activated", err: errors.New(`model: missing required field "activated"`)}
 	}
 	if _, ok := cc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`model: missing required field "name"`)}
@@ -187,8 +205,11 @@ func (cc *CommandCreate) check() error {
 			return &ValidationError{Name: "location", err: fmt.Errorf(`model: validator failed for field "location": %w`, err)}
 		}
 	}
-	if _, ok := cc.mutation.Activated(); !ok {
-		return &ValidationError{Name: "activated", err: errors.New(`model: missing required field "activated"`)}
+	if _, ok := cc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`model: missing required field "created_at"`)}
+	}
+	if _, ok := cc.mutation.Managed(); !ok {
+		return &ValidationError{Name: "managed", err: errors.New(`model: missing required field "managed"`)}
 	}
 	return nil
 }
@@ -222,13 +243,13 @@ func (cc *CommandCreate) createSpec() (*Command, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = id
 	}
-	if value, ok := cc.mutation.CreatedAt(); ok {
+	if value, ok := cc.mutation.Activated(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeBool,
 			Value:  value,
-			Column: command.FieldCreatedAt,
+			Column: command.FieldActivated,
 		})
-		_node.CreatedAt = value
+		_node.Activated = value
 	}
 	if value, ok := cc.mutation.Name(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -254,13 +275,21 @@ func (cc *CommandCreate) createSpec() (*Command, *sqlgraph.CreateSpec) {
 		})
 		_node.Location = value
 	}
-	if value, ok := cc.mutation.Activated(); ok {
+	if value, ok := cc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: command.FieldCreatedAt,
+		})
+		_node.CreatedAt = value
+	}
+	if value, ok := cc.mutation.Managed(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
 			Value:  value,
-			Column: command.FieldActivated,
+			Column: command.FieldManaged,
 		})
-		_node.Activated = value
+		_node.Managed = value
 	}
 	return _node, _spec
 }

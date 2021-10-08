@@ -13,16 +13,18 @@ const (
 	Label = "command"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldCreatedAt holds the string denoting the created_at field in the database.
-	FieldCreatedAt = "created_at"
+	// FieldActivated holds the string denoting the activated field in the database.
+	FieldActivated = "activated"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldVersion holds the string denoting the version field in the database.
 	FieldVersion = "version"
 	// FieldLocation holds the string denoting the location field in the database.
 	FieldLocation = "location"
-	// FieldActivated holds the string denoting the activated field in the database.
-	FieldActivated = "activated"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldManaged holds the string denoting the managed field in the database.
+	FieldManaged = "managed"
 	// Table holds the table name of the command in the database.
 	Table = "commands"
 )
@@ -30,11 +32,12 @@ const (
 // Columns holds all SQL columns for command fields.
 var Columns = []string{
 	FieldID,
-	FieldCreatedAt,
+	FieldActivated,
 	FieldName,
 	FieldVersion,
 	FieldLocation,
-	FieldActivated,
+	FieldCreatedAt,
+	FieldManaged,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -48,16 +51,18 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
-	DefaultCreatedAt func() time.Time
+	// DefaultActivated holds the default value on creation for the "activated" field.
+	DefaultActivated bool
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
 	// VersionValidator is a validator for the "version" field. It is called by the builders before save.
 	VersionValidator func(string) error
 	// LocationValidator is a validator for the "location" field. It is called by the builders before save.
 	LocationValidator func(string) error
-	// DefaultActivated holds the default value on creation for the "activated" field.
-	DefaultActivated bool
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultManaged holds the default value on creation for the "managed" field.
+	DefaultManaged bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
