@@ -100,6 +100,16 @@ func (h *CommandHelper) GetCommand(ctx context.Context, ps ...predicate.Command)
 	return command, errors.Wrapf(err, "get command failed")
 }
 
+func (h *CommandHelper) GetActivatedCommand(ctx context.Context, name string) (*model.Command, error) {
+	command, err := h.client.Command.Query().Where(command.Name(name), command.Activated(true)).
+		Only(ctx)
+	if model.IsNotFound(err) {
+		return nil, nil
+	}
+
+	return command, errors.Wrapf(err, "get activated command failed")
+}
+
 func (h *CommandHelper) GetCommands(ctx context.Context, ps ...predicate.Command) ([]*model.Command, error) {
 	commands, err := h.client.Command.Query().Where(ps...).All(ctx)
 	if model.IsNotFound(err) {
