@@ -66,15 +66,11 @@ func (h *CommandHelper) Install(ctx context.Context, name, version, location str
 	return utils.WithTx(ctx, h.client, func(client *model.Client) error {
 		target := path.Join(h.ShimsDir, name, fmt.Sprintf("%s_%s", name, version))
 
-		_, err := h.client.Command.Create().
+		h.client.Command.Create().
 			SetName(name).
 			SetVersion(version).
 			SetLocation(target).
-			Save(ctx)
-
-		if err != nil {
-			return err
-		}
+			SaveX(ctx)
 
 		return h.installCommandBinary(name, version, location, target)
 	})
@@ -99,11 +95,16 @@ func (h *CommandHelper) GetCommands(ctx context.Context, ps ...predicate.Command
 }
 
 func (h *CommandHelper) activateBinary(ctx context.Context, name, target string) error {
+	logger := define.Logger
 	fs := define.FS
 	binPath := path.Join(h.BinDir, name)
 
 	_, err := fs.Stat(binPath)
 	if err == nil {
+		logger.Debug("remove existed binary", map[string]interface{}{
+			"name":   name,
+			"target": target,
+		})
 		fs.Remove(binPath)
 	}
 
@@ -120,35 +121,62 @@ func (h *CommandHelper) Activate(ctx context.Context, name, version string) erro
 	return utils.WithTx(ctx, h.client, func(client *model.Client) error {
 		logger := define.Logger
 
-		n, err := h.client.Command.Update().
+		n := h.client.Command.Update().
 			Where(command.Name(name), command.Activated(true)).
 			SetActivated(false).
-			Save(ctx)
-		if err != nil {
-			return errors.Wrapf(err, "deactivate command failed")
-		}
+			SaveX(ctx)
 
 		logger.Debug("activating command", map[string]interface{}{
 			"name":        name,
 			"version":     version,
 			"deactivated": n,
 		})
-		command, err := h.client.Command.Query().
+
+		n = h.client.Command.Update().
 			Where(command.Name(name), command.Version(version)).
-			Only(ctx)
+			SetActivated(true).
+			SaveX(ctx)
 
+		cmd, err := h.GetCommandByNameAndVersion(ctx, name, version)
 		if err != nil {
-			return errors.Wrapf(err, "get command failed")
+			return err
 		}
+		return h.activateBinary(ctx, name, cmd.Location)
+	})
+}
 
-		command.Activated = true
-		err = h.client.Command.UpdateOne(command).Exec(ctx)
+func (h *CommandHelper) deactivateBinary(ctx context.Context, name string) error {
+	fs := define.FS
+	binPath := path.Join(h.BinDir, name)
 
-		if err != nil {
-			return errors.Wrapf(err, "activate command failed")
-		}
+	_, err := fs.Stat(binPath)
+	if err != nil {
+		return nil
+	}
 
-		return h.activateBinary(ctx, name, command.Location)
+	err = fs.Remove(binPath)
+	if err != nil {
+		return errors.Wrapf(err, "remove %s failed", name)
+	}
+
+	return nil
+}
+
+func (h *CommandHelper) Deactivate(ctx context.Context, name string) error {
+	return utils.WithTx(ctx, h.client, func(client *model.Client) error {
+		logger := define.Logger
+
+		n := h.client.Command.Update().
+			Where(command.Name(name)).
+			SetActivated(false).
+			SaveX(ctx)
+
+		logger.Debug("deactivating command", map[string]interface{}{
+			"name":        name,
+			"deactivated": n,
+		})
+
+		return h.deactivateBinary(ctx, name)
 	})
 }
 
