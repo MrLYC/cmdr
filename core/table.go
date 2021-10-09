@@ -53,6 +53,9 @@ func NewModleTablePrinter(schema ent.Interface, writer io.Writer) *ModelTable {
 	}
 
 	table.SetHeader(headers)
+	table.SetBorder(false)
+	table.SetCenterSeparator(" ")
+	table.SetColumnSeparator(" ")
 
 	return &ModelTable{
 		fields: fields,
