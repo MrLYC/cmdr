@@ -23,15 +23,25 @@ import (
 	"github.com/mrlyc/cmdr/define"
 )
 
+var versionCmdFlag struct {
+	all bool
+}
+
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print cmdr version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(define.Version)
+		if versionCmdFlag.all {
+			fmt.Printf("Version: %s\nCommit: %s\n BuildDate: %s\n", define.Version, define.Commit, define.BuildDate)
+
+		} else {
+			fmt.Println(define.Version)
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
+	versionCmd.Flags().BoolVarP(&versionCmdFlag.all, "all", "a", false, "print all infomation")
 }
