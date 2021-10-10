@@ -15,13 +15,6 @@ builds:
       - darwin
     ldflags:
       - -s -w -X github.com/mrlyc/cmdr/define.Version={{.Version}} -X github.com/mrlyc/cmdr/define.Commit={{.Commit}} -X github.com/mrlyc/cmdr/define.BuildDate={{.Date}} -X github.com/mrlyc/cmdr/define.BuildOS={{.Os}} -X github.com/mrlyc/cmdr/define.BuildArch={{.Arch}}
-archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
 checksum:
   name_template: "checksums.txt"
 snapshot:
