@@ -4,4 +4,4 @@ TARGET ?= ${BIN_DIR}/cmdr
 
 .PHONY: build
 build:
-	go build -i -o "${TARGET}" .
+	go build -o "${TARGET}" .

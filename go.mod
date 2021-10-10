@@ -1,6 +1,6 @@
 module github.com/mrlyc/cmdr
 
-go 1.14
+go 1.16
 
 require (
 	entgo.io/ent v0.9.1
@@ -14,6 +14,7 @@ require (
 	github.com/spf13/cast v1.3.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
+	golang.org/x/tools/gopls v0.7.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	logur.dev/adapter/logrus v0.5.0
 	logur.dev/logur v0.17.0

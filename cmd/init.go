@@ -20,13 +20,9 @@ var initCmd = &cobra.Command{
 	Short: "Initial cmdr environment",
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := define.Logger
-		client := core.GetClient()
-		defer utils.CallClose(client)
-
-		helper := core.NewCommandHelper(client)
 		for n, p := range map[string]string{
-			"shims": helper.ShimsDir,
-			"bin":   helper.BinDir,
+			"shims": core.GetShimsDir(),
+			"bin":   core.GetBinDir(),
 		} {
 			logger.Info("createing dir", map[string]interface{}{
 				"name": n,
@@ -37,6 +33,10 @@ var initCmd = &cobra.Command{
 
 		ctx := cmd.Context()
 		logger.Info("creating cmdr database")
+
+		client := core.GetClient()
+		defer utils.CallClose(client)
+
 		utils.CheckError(client.Schema.Create(ctx))
 
 		if !initCmdFlag.install {
@@ -48,6 +48,7 @@ var initCmd = &cobra.Command{
 
 		logger.Info("installing cmdr")
 
+		helper := core.NewCommandHelper(client)
 		command, err := helper.GetCommandByNameAndVersion(ctx, define.Name, define.Version)
 		utils.CheckError(err)
 		if command == nil {

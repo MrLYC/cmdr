@@ -16,8 +16,8 @@ import (
 
 type CommandHelper struct {
 	client   *model.Client
-	ShimsDir string
-	BinDir   string
+	shimsDir string
+	binDir   string
 }
 
 func (h *CommandHelper) GetCommandByNameAndVersion(ctx context.Context, name, version string) (*model.Command, error) {
@@ -81,7 +81,7 @@ func (h *CommandHelper) installCommandBinary(name, version, location, target str
 
 func (h *CommandHelper) Install(ctx context.Context, name, version, location string) error {
 	return utils.WithTx(ctx, h.client, func(client *model.Client) error {
-		target := path.Join(h.ShimsDir, name, fmt.Sprintf("%s_%s", name, version))
+		target := path.Join(h.shimsDir, name, fmt.Sprintf("%s_%s", name, version))
 		err := h.defineCommand(ctx, name, version, target, true)
 		if err != nil {
 			return err
@@ -122,7 +122,7 @@ func (h *CommandHelper) GetCommands(ctx context.Context, ps ...predicate.Command
 func (h *CommandHelper) activateBinary(ctx context.Context, name, target string) error {
 	logger := define.Logger
 	fs := define.FS
-	binPath := path.Join(h.BinDir, name)
+	binPath := path.Join(h.binDir, name)
 
 	_, err := fs.Stat(binPath)
 	if err == nil {
@@ -172,7 +172,7 @@ func (h *CommandHelper) Activate(ctx context.Context, name, version string) erro
 
 func (h *CommandHelper) deactivateBinary(ctx context.Context, name string) error {
 	fs := define.FS
-	binPath := path.Join(h.BinDir, name)
+	binPath := path.Join(h.binDir, name)
 
 	_, err := fs.Stat(binPath)
 	if err != nil {
@@ -235,10 +235,9 @@ func (h *CommandHelper) Remove(ctx context.Context, name, version string) error 
 }
 
 func NewCommandHelper(client *model.Client) *CommandHelper {
-	RootDir := define.Configuration.GetString("cmdr.root")
 	return &CommandHelper{
 		client:   client,
-		ShimsDir: path.Join(RootDir, "shims"),
-		BinDir:   path.Join(RootDir, "bin"),
+		shimsDir: GetShimsDir(),
+		binDir:   GetBinDir(),
 	}
 }

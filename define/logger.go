@@ -1,6 +1,8 @@
 package define
 
 import (
+	"os"
+
 	"github.com/sirupsen/logrus"
 	logrusadapter "logur.dev/adapter/logrus"
 	"logur.dev/logur"
@@ -19,6 +21,7 @@ func InitLogger() {
 		panic(err)
 	}
 	logrusLogger.SetLevel(level)
+	logrusLogger.SetOutput(os.Stderr)
 
 	Logger = logrusadapter.New(logrusLogger)
 }
