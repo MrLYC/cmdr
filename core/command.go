@@ -234,6 +234,30 @@ func (h *CommandHelper) Remove(ctx context.Context, name, version string) error 
 	})
 }
 
+func (h *CommandHelper) Upgrade(ctx context.Context, version, path string) (bool, error) {
+	name := define.Name
+	command, err := h.GetCommandByNameAndVersion(ctx, name, version)
+	if err != nil {
+		return false, err
+	}
+
+	if command != nil {
+		return true, nil
+	}
+
+	err = h.Install(ctx, name, version, path)
+	if err != nil {
+		return false, err
+	}
+
+	err = h.Activate(ctx, name, version)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func NewCommandHelper(client *model.Client) *CommandHelper {
 	return &CommandHelper{
 		client:   client,

@@ -27,7 +27,10 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
-var cfgFile string
+var (
+	cfgFile  string
+	exitCode int
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -43,7 +46,7 @@ var rootCmd = &cobra.Command{
 func ExecuteContext(ctx context.Context) {
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		os.Exit(exitCode)
 	}
 }
 

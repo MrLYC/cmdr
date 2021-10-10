@@ -49,11 +49,11 @@ var initCmd = &cobra.Command{
 		logger.Info("installing cmdr")
 
 		helper := core.NewCommandHelper(client)
-		command, err := helper.GetCommandByNameAndVersion(ctx, define.Name, define.Version)
+		installed, err := helper.Upgrade(ctx, define.Version, cmdrPath)
 		utils.CheckError(err)
-		if command == nil {
-			utils.CheckError(helper.Install(ctx, define.Name, define.Version, cmdrPath))
-			utils.CheckError(helper.Activate(ctx, define.Name, define.Version))
+
+		if installed {
+			logger.Info("cmdr already installed")
 		}
 	},
 }

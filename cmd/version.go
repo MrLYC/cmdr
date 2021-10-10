@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/spf13/cobra"
 
@@ -39,8 +40,8 @@ var versionCmd = &cobra.Command{
 				define.Version,
 				define.Commit,
 				define.BuildDate,
-				define.BuildOS,
-				define.BuildArch,
+				runtime.GOOS,
+				runtime.GOARCH,
 			)
 
 		} else {
