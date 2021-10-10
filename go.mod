@@ -6,6 +6,7 @@ require (
 	entgo.io/ent v0.9.1
 	github.com/google/go-github/v39 v39.1.1-0.20211008144426-6b0f37fa430d
 	github.com/google/uuid v1.3.0
+	github.com/mattn/go-sqlite3 v1.14.8
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/errors v0.9.1
 	github.com/schollz/progressbar/v3 v3.8.3
@@ -22,5 +23,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	logur.dev/adapter/logrus v0.5.0
 	logur.dev/logur v0.17.0
-	modernc.org/sqlite v1.13.1
 )

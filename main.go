@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	_ "modernc.org/sqlite"
+	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/mrlyc/cmdr/cmd"
 )
