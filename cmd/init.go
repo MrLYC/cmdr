@@ -7,6 +7,7 @@ import (
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
+	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -32,12 +33,14 @@ var initCmd = &cobra.Command{
 		}
 
 		ctx := cmd.Context()
-		logger.Info("creating cmdr database")
 
 		client := core.GetClient()
 		defer utils.CallClose(client)
 
-		utils.CheckError(client.Schema.Create(ctx))
+		logger.Info("creating cmdr database")
+		utils.CheckError(client.Migrate(
+			new(model.Command),
+		))
 
 		if initCmdFlag.doNotinstall {
 			return

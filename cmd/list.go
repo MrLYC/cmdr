@@ -3,13 +3,12 @@ package cmd
 import (
 	"os"
 
+	"github.com/asdine/storm/v3/q"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model/command"
-	"github.com/mrlyc/cmdr/model/predicate"
-	"github.com/mrlyc/cmdr/model/schema"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -29,42 +28,51 @@ var listCmd = &cobra.Command{
 		defer utils.CallClose(client)
 
 		logger := define.Logger
-		filters := make([]predicate.Command, 0)
+		filters := make([]q.Matcher, 0)
 
 		if listCmdFlag.name != "" {
 			logger.Debug("filter by name", map[string]interface{}{
 				"name": listCmdFlag.name,
 			})
-			filters = append(filters, command.Name(listCmdFlag.name))
+			filters = append(filters, q.Eq("Name", listCmdFlag.name))
 		}
 
 		if listCmdFlag.version != "" {
 			logger.Debug("filter by version", map[string]interface{}{
 				"version": listCmdFlag.version,
 			})
-			filters = append(filters, command.Version(listCmdFlag.version))
+			filters = append(filters, q.Eq("Version", listCmdFlag.version))
 		}
 
 		if listCmdFlag.location != "" {
 			logger.Debug("filter by location", map[string]interface{}{
 				"location": listCmdFlag.location,
 			})
-			filters = append(filters, command.Location(listCmdFlag.location))
+			filters = append(filters, q.Eq("Location", listCmdFlag.location))
 		}
 
 		if listCmdFlag.activated {
 			logger.Debug("filter by activated", map[string]interface{}{
 				"activated": listCmdFlag.activated,
 			})
-			filters = append(filters, command.Activated(listCmdFlag.activated))
+			filters = append(filters, q.Eq("Activated", listCmdFlag.activated))
 		}
 
 		commands, err := core.NewCommandHelper(client).GetCommands(cmd.Context(), filters...)
 		utils.CheckError(err)
 
-		table := core.NewModleTablePrinter(schema.Command{}, os.Stdout)
+		table := core.NewModleTablePrinter(os.Stdout)
+		table.SetHeader([]string{
+			"Activated", "Name", "Version", "Location", "Managed",
+		})
 		for _, command := range commands {
-			utils.CheckError(table.Append(command))
+			table.Append([]string{
+				cast.ToString(command.Activated),
+				command.Name,
+				command.Version,
+				command.Location,
+				cast.ToString(command.Managed),
+			})
 		}
 
 		table.Render()
