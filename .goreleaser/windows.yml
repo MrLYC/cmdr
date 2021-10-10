@@ -11,6 +11,9 @@ builds:
       - CGO_ENABLED=1
     goos:
       - windows
+    goarch:
+      - 386
+      - amd64
     ldflags:
       - -s -w -X github.com/mrlyc/cmdr/define.Version={{.Version}} -X github.com/mrlyc/cmdr/define.Commit={{.Commit}} -X github.com/mrlyc/cmdr/define.BuildDate={{.Date}}
 checksum:
