@@ -1,9 +1,14 @@
 package cmd
 
 import (
+	"path"
+	"regexp"
+
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -18,11 +23,24 @@ var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install command into cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
+		location := installCmdFlag.location
+		fs := define.FS
+		ctx := cmd.Context()
+
+		httpSchemaRegexp := regexp.MustCompile(`^https?://.*?$`)
+		if httpSchemaRegexp.Match([]byte(installCmdFlag.location)) {
+			outputDir, err := afero.TempDir(fs, "", "")
+			utils.CheckError(err)
+
+			location = path.Join(outputDir, installCmdFlag.name)
+			utils.CheckError(utils.DownloadToFile(ctx, installCmdFlag.location, location))
+		}
+
 		client := core.GetClient()
 		defer utils.CallClose(client)
 
 		helper := core.NewCommandHelper(client)
-		utils.CheckError(helper.Install(cmd.Context(), installCmdFlag.name, installCmdFlag.version, installCmdFlag.location))
+		utils.CheckError(helper.Install(ctx, installCmdFlag.name, installCmdFlag.version, location))
 	},
 }
 
