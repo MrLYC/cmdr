@@ -52,5 +52,7 @@ var versionCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
-	versionCmd.Flags().BoolVarP(&versionCmdFlag.all, "all", "a", false, "print all infomation")
+	flags := versionCmd.Flags()
+
+	flags.BoolVarP(&versionCmdFlag.all, "all", "a", false, "print all infomation")
 }

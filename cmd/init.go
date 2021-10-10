@@ -11,7 +11,7 @@ import (
 )
 
 var initCmdFlag struct {
-	install bool
+	doNotinstall bool
 }
 
 // initCmd represents the init command
@@ -39,7 +39,7 @@ var initCmd = &cobra.Command{
 
 		utils.CheckError(client.Schema.Create(ctx))
 
-		if !initCmdFlag.install {
+		if initCmdFlag.doNotinstall {
 			return
 		}
 
@@ -62,5 +62,5 @@ func init() {
 	rootCmd.AddCommand(initCmd)
 
 	flags := initCmd.Flags()
-	flags.BoolVarP(&initCmdFlag.install, "install", "i", true, "install cmdr")
+	flags.BoolVar(&initCmdFlag.doNotinstall, "do-not-install-cmdr", false, "do not install cmdr")
 }
