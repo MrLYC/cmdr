@@ -33,10 +33,10 @@ var upgradeCmd = &cobra.Command{
 			"release": upgradeCmdFlag.release,
 		})
 		release, err := utils.GetCMDRRelease(ctx, upgradeCmdFlag.release)
-		utils.CheckError(err)
+		utils.ExitWithError(err, "search cmdr releases failed")
 
 		outputDir, err := afero.TempDir(fs, "", "")
-		utils.CheckError(err)
+		utils.ExitWithError(err, "create temporary dir failed")
 
 		version := strings.TrimPrefix(*release.TagName, "v")
 		assetName := fmt.Sprintf(
@@ -46,26 +46,56 @@ var upgradeCmd = &cobra.Command{
 			runtime.GOOS,
 			runtime.GOARCH,
 		)
+		logger.Info("cmdr release found", map[string]interface{}{
+			"version": version,
+		})
+
 		target := path.Join(outputDir, assetName)
-		logger.Info("searching cmdr assert", map[string]interface{}{
+		logger.Debug("searching cmdr assert", map[string]interface{}{
 			"release": upgradeCmdFlag.release,
 			"assert":  assetName,
 			"version": version,
 			"target":  target,
 		})
+		utils.ExitWithError(
+			utils.DownloadReleaseAssertByName(ctx, release, assetName, target),
+			"download assert %s failed", assetName,
+		)
+		logger.Info("assert downloaded", map[string]interface{}{
+			"assert":  assetName,
+			"version": version,
+		})
 
-		utils.CheckError(utils.DownloadReleaseAssertByName(ctx, release, assetName, target))
-		utils.CheckError(utils.ExtraTGZ(target, outputDir))
+		logger.Debug("extraing assert", map[string]interface{}{
+			"target": target,
+			"output": outputDir,
+		})
+		utils.ExitWithError(
+			utils.ExtraTGZ(target, outputDir),
+			"extra assert failed",
+		)
+		logger.Info("assert extred")
 
 		client := core.GetClient()
 		defer utils.CallClose(client)
 
 		helper := core.NewCommandHelper(client)
-		installed, err := helper.Upgrade(ctx, version, path.Join(outputDir, define.Name))
-		utils.CheckError(err)
+		cmdrPath := path.Join(outputDir, define.Name)
+
+		logger.Debug("upgrading cmdr", map[string]interface{}{
+			"version": version,
+			"path":    cmdrPath,
+		})
+		installed, err := helper.Upgrade(ctx, version, cmdrPath)
+		utils.ExitWithError(err, "upgrade cmdr failed")
+		logger.Info("cmdr upgraded", map[string]interface{}{
+			"version": version,
+		})
 
 		if installed {
 			logger.Info("cmdr already installed")
+		} else {
+			logger.Info("cmdr installed")
 		}
 	},
 }

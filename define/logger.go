@@ -2,6 +2,7 @@ package define
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/gookit/color"
@@ -101,6 +102,13 @@ func InitLogger() {
 	level, ok := logur.ParseLevel(Configuration.GetString("log.level"))
 	if !ok {
 		level = logur.Info
+	}
+
+	switch Configuration.GetString("log.output") {
+	case "stdout":
+		color.SetOutput(os.Stdout)
+	default:
+		color.SetOutput(os.Stderr)
 	}
 
 	Logger = &terminalLogger{

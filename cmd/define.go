@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -18,11 +19,29 @@ var defineCmd = &cobra.Command{
 	Use:   "define",
 	Short: "Define command into cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := define.Logger
+
 		client := core.GetClient()
 		defer utils.CallClose(client)
 
 		helper := core.NewCommandHelper(client)
-		utils.CheckError(helper.Define(cmd.Context(), defineCmdFlag.name, defineCmdFlag.version, defineCmdFlag.location))
+
+		logger.Debug("defining command", map[string]interface{}{
+			"name":     defineCmdFlag.name,
+			"version":  defineCmdFlag.version,
+			"location": defineCmdFlag.location,
+		})
+
+		utils.ExitWithError(
+			helper.Define(cmd.Context(), defineCmdFlag.name, defineCmdFlag.version, defineCmdFlag.location),
+			"define command failed",
+		)
+
+		logger.Info("command defined", map[string]interface{}{
+			"name":    defineCmdFlag.name,
+			"version": defineCmdFlag.version,
+		})
+
 	},
 }
 

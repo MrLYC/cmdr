@@ -23,6 +23,7 @@ var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install command into cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := define.Logger
 		location := installCmdFlag.location
 		fs := define.FS
 		ctx := cmd.Context()
@@ -30,17 +31,43 @@ var installCmd = &cobra.Command{
 		httpSchemaRegexp := regexp.MustCompile(`^https?://.*?$`)
 		if httpSchemaRegexp.Match([]byte(installCmdFlag.location)) {
 			outputDir, err := afero.TempDir(fs, "", "")
-			utils.CheckError(err)
+			utils.ExitWithError(err, "create temporary dir failed")
 
 			location = path.Join(outputDir, installCmdFlag.name)
-			utils.CheckError(utils.DownloadToFile(ctx, installCmdFlag.location, location))
+
+			logger.Debug("downloading command", map[string]interface{}{
+				"url":    installCmdFlag.location,
+				"target": location,
+			})
+			utils.ExitWithError(
+				utils.DownloadToFile(ctx, installCmdFlag.location, location),
+				"download command failed",
+			)
+
+			logger.Info("command downloaded", map[string]interface{}{
+				"url": installCmdFlag.location,
+			})
 		}
 
 		client := core.GetClient()
 		defer utils.CallClose(client)
 
 		helper := core.NewCommandHelper(client)
-		utils.CheckError(helper.Install(ctx, installCmdFlag.name, installCmdFlag.version, location))
+
+		logger.Debug("installing command", map[string]interface{}{
+			"name":     installCmdFlag.name,
+			"version":  installCmdFlag.version,
+			"location": location,
+		})
+		utils.ExitWithError(
+			helper.Install(ctx, installCmdFlag.name, installCmdFlag.version, location),
+			"install command failed",
+		)
+
+		logger.Info("command installed", map[string]interface{}{
+			"name":    installCmdFlag.name,
+			"version": installCmdFlag.version,
+		})
 	},
 }
 

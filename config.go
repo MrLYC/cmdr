@@ -17,5 +17,6 @@ func init() {
 	cfg.SetDefault("cmdr.root", path.Join(homeDir, ".cmdr"))
 
 	cfg.SetDefault("database.name", "cmdr.db")
-	cfg.SetDefault("log.level", "warning")
+	cfg.SetDefault("log.level", "info")
+	cfg.SetDefault("log.output", "stderr")
 }

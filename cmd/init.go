@@ -12,7 +12,7 @@ import (
 )
 
 var initCmdFlag struct {
-	doNotinstall bool
+	doNotInstall bool
 }
 
 // initCmd represents the init command
@@ -29,7 +29,10 @@ var initCmd = &cobra.Command{
 				"name": n,
 				"dir":  p,
 			})
-			utils.CheckError(define.FS.MkdirAll(p, 0755))
+			utils.ExitWithError(
+				define.FS.MkdirAll(p, 0755),
+				"making dir %s failed", n,
+			)
 		}
 
 		ctx := cmd.Context()
@@ -37,26 +40,36 @@ var initCmd = &cobra.Command{
 		client := core.GetClient()
 		defer utils.CallClose(client)
 
-		logger.Info("creating cmdr database")
-		utils.CheckError(client.Migrate(
-			new(model.Command),
-		))
+		logger.Debug("migrating database")
+		utils.ExitWithError(
+			client.Migrate(
+				new(model.Command),
+			),
+			"migrate failed",
+		)
+		logger.Info("database migrated")
 
-		if initCmdFlag.doNotinstall {
+		if initCmdFlag.doNotInstall {
 			return
 		}
 
 		cmdrPath, err := os.Executable()
 		utils.CheckError(err)
 
-		logger.Info("installing cmdr")
-
 		helper := core.NewCommandHelper(client)
+
+		logger.Debug("installing cmdr", map[string]interface{}{
+			"version": define.Version,
+			"path":    cmdrPath,
+		})
 		installed, err := helper.Upgrade(ctx, define.Version, cmdrPath)
-		utils.CheckError(err)
+		utils.ExitWithError(err, "cmdr install failed")
+		logger.Info("cmdr installed")
 
 		if installed {
 			logger.Info("cmdr already installed")
+		} else {
+			logger.Info("cmdr installed")
 		}
 	},
 }
@@ -65,5 +78,5 @@ func init() {
 	rootCmd.AddCommand(initCmd)
 
 	flags := initCmd.Flags()
-	flags.BoolVar(&initCmdFlag.doNotinstall, "do-not-install-cmdr", false, "do not install cmdr")
+	flags.BoolVar(&initCmdFlag.doNotInstall, "do-not-install-cmdr", false, "do not install cmdr")
 }

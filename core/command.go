@@ -182,7 +182,7 @@ func (h *CommandHelper) Activate(ctx context.Context, name, version string) erro
 		}
 
 		if command != nil {
-			logger.Info("deactivating command", map[string]interface{}{
+			logger.Debug("command found", map[string]interface{}{
 				"name":    name,
 				"version": command.Version,
 			})
@@ -192,7 +192,7 @@ func (h *CommandHelper) Activate(ctx context.Context, name, version string) erro
 			}
 		}
 
-		logger.Debug("activating command", map[string]interface{}{
+		logger.Debug("getting command", map[string]interface{}{
 			"name":    name,
 			"version": version,
 		})

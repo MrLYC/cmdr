@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -17,11 +18,24 @@ var removeCmd = &cobra.Command{
 	Use:   "remove",
 	Short: "Remove command from cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := define.Logger
 		client := core.GetClient()
 		defer utils.CallClose(client)
 
 		helper := core.NewCommandHelper(client)
-		utils.CheckError(helper.Remove(cmd.Context(), removeCmdFlag.name, removeCmdFlag.version))
+
+		logger.Debug("removing command", map[string]interface{}{
+			"name":    removeCmdFlag.name,
+			"version": removeCmdFlag.version,
+		})
+		utils.ExitWithError(
+			helper.Remove(cmd.Context(), removeCmdFlag.name, removeCmdFlag.version),
+			"remove command failed",
+		)
+		logger.Info("command removed", map[string]interface{}{
+			"name":    removeCmdFlag.name,
+			"version": removeCmdFlag.version,
+		})
 	},
 }
 

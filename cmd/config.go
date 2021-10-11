@@ -10,19 +10,25 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
+var configCmdFlag struct {
+	list bool
+}
+
 // configCmd represents the config command
 var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Manage cmdr configurations",
 	Run: func(cmd *cobra.Command, args []string) {
-		flags := cmd.Flags()
-		isListMode, err := flags.GetBool("list")
-		utils.CheckError(err)
+		logger := define.Logger
 
-		if isListMode {
+		if configCmdFlag.list {
+			logger.Debug("listing configurations", map[string]interface{}{
+				"path": define.Configuration.ConfigFileUsed(),
+			})
+
 			settings := define.Configuration.AllSettings()
 			content, err := yaml.Marshal(settings)
-			utils.CheckError(err)
+			utils.ExitWithError(err, "marshaling settings")
 
 			fmt.Printf("%s\n", content)
 		}
@@ -33,5 +39,5 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 
 	flags := configCmd.Flags()
-	flags.BoolP("list", "l", false, "list config")
+	flags.BoolVarP(&configCmdFlag.list, "list", "l", false, "list config")
 }

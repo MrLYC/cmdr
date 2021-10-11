@@ -35,22 +35,41 @@ var execCmd = &cobra.Command{
 		)
 
 		if execCmdFlag.version == "" {
+			logger.Debug("looking up the activated command", map[string]interface{}{
+				"name": execCmdFlag.name,
+			})
+
 			command, err = helper.GetActivatedCommand(cmd.Context(), execCmdFlag.name)
-			utils.CheckError(err)
+			utils.ExitWithError(err, "lookup activated command failed")
 		} else {
+			logger.Debug("looking up the command", map[string]interface{}{
+				"name":    execCmdFlag.name,
+				"version": execCmdFlag.version,
+			})
+
 			command, err = helper.GetCommandByNameAndVersion(cmd.Context(), execCmdFlag.name, execCmdFlag.version)
-			utils.CheckError(err)
+			utils.ExitWithError(err, "lookup specified command failed")
 		}
 
 		if command == nil {
-			panic(core.ErrCommandNotExists)
+			logger.Warn("command not found", map[string]interface{}{
+				"name":    execCmdFlag.name,
+				"version": execCmdFlag.version,
+			})
+			exitCode = -2
+			return
 		}
 
-		logger.Debug("executing command", map[string]interface{}{
-			"target": command.Location,
-			"args":   args,
+		logger.Debug("executing", map[string]interface{}{
+			"name":    execCmdFlag.name,
+			"version": execCmdFlag.version,
+			"target":  command.Location,
+			"args":    args,
 		})
-		utils.CheckError(syscall.Exec(command.Location, args, os.Environ()))
+		utils.ExitWithError(
+			syscall.Exec(command.Location, args, os.Environ()),
+			"execute command failed",
+		)
 	},
 }
 

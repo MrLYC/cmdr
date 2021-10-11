@@ -58,8 +58,9 @@ var listCmd = &cobra.Command{
 			filters = append(filters, q.Eq("Activated", listCmdFlag.activated))
 		}
 
+		logger.Debug("quering commands")
 		commands, err := core.NewCommandHelper(client).GetCommands(cmd.Context(), filters...)
-		utils.CheckError(err)
+		utils.ExitWithError(err, "query command failed")
 
 		table := core.NewModleTablePrinter(os.Stdout)
 		table.SetHeader([]string{
