@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/go-github/v39/github"
 	"github.com/pkg/errors"
@@ -10,7 +11,7 @@ import (
 )
 
 var (
-	ErrReleaseAssertNotFound = errors.New("release assert not found")
+	ErrReleaseAssertNotFound = fmt.Errorf("release assert not found")
 )
 
 func GetCMDRRelease(ctx context.Context, tag string) (release *github.RepositoryRelease, err error) {

@@ -1,8 +1,10 @@
 package core
 
-import "errors"
+import (
+	"fmt"
+)
 
 var (
-	ErrCommandAlreadyExists = errors.New("command already exists")
-	ErrCommandNotExists     = errors.New("command not exists")
+	ErrCommandAlreadyExists = fmt.Errorf("command already exists")
+	ErrCommandNotExists     = fmt.Errorf("command not exists")
 )

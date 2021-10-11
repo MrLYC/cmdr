@@ -5,7 +5,9 @@ go 1.16
 require (
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/google/go-github/v39 v39.1.1-0.20211008144426-6b0f37fa430d
+	github.com/gookit/color v1.4.2 // indirect
 	github.com/mattn/go-sqlite3 v1.14.8
+	github.com/muesli/termenv v0.9.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/errors v0.9.1
 	github.com/schollz/progressbar/v3 v3.8.3
@@ -21,5 +23,6 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	logur.dev/adapter/logrus v0.5.0
+	logur.dev/adapter/template v0.0.0-20200428192559-245bae87f59a // indirect
 	logur.dev/logur v0.17.0
 )
