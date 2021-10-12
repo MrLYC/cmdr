@@ -75,7 +75,7 @@ var listCmd = &cobra.Command{
 				return x.Name < y.Name
 			}
 
-			return x.Version < y.Version
+			return y.Version < x.Version
 		})
 
 		for _, command := range commands {
