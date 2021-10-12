@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/gookit/color"
-	"github.com/spf13/cast"
+	"github.com/muesli/termenv"
 	adapter "logur.dev/adapter/template"
 	"logur.dev/logur"
 )
@@ -17,21 +17,16 @@ type terminalLogger struct {
 	adapter.Logger
 	level          logur.Level
 	withErrorStack bool
-	traceStyle     color.Style
-	debugStyle     color.Style
-	infoStyle      color.Style
-	warnStyle      color.Style
-	errorStyle     color.Style
+	errorKey       string
 }
 
-func (l *terminalLogger) getMessages(msg string) string {
+func (l *terminalLogger) getMessage(msg string) string {
 	return strings.ToUpper(msg[:1]) + msg[1:]
 }
 
-func (l *terminalLogger) getMessagesByFields(fields []map[string]interface{}) []string {
+func (l *terminalLogger) getFieldsMessages(fields []map[string]interface{}) []string {
 	var (
 		messages   = []string{}
-		errorKey   string
 		errorValue error
 	)
 
@@ -40,62 +35,68 @@ func (l *terminalLogger) getMessagesByFields(fields []map[string]interface{}) []
 	}
 
 	for k, v := range fields[0] {
-		switch value := v.(type) {
-		case error:
-			errorKey = k
-			errorValue = value
-		default:
-			messages = append(messages, fmt.Sprintf("%s=%s", k, cast.ToString(v)))
+		if k == l.errorKey {
+			errorValue = v.(error)
+		} else {
+			messages = append(messages, fmt.Sprintf("%s=%s", k, v))
 		}
 	}
 
-	if errorValue == nil {
-		return messages
-	}
-
-	if l.withErrorStack {
-		messages = append(messages, fmt.Sprintf("%s=%+v", errorKey, errorValue))
-	} else {
-		messages = append(messages, fmt.Sprintf("%s=%v", errorKey, errorValue))
+	if errorValue != nil {
+		if l.withErrorStack {
+			messages = append(messages, fmt.Sprintf("%s=%+v", l.errorKey, errorValue))
+		} else {
+			messages = append(messages, fmt.Sprintf("%s=%v", l.errorKey, errorValue))
+		}
 	}
 
 	return messages
 }
 
-func (l *terminalLogger) log(level logur.Level, style color.Style, msg string, fields []map[string]interface{}) {
+func (l *terminalLogger) log(level logur.Level, msg string, fields []map[string]interface{}, fn func(message string) fmt.Stringer) {
 	if level < l.level || msg == "" {
 		return
 	}
 
-	messages := []string{l.getMessages(msg)}
-	messages = append(messages, l.getMessagesByFields(fields)...)
+	messages := []string{strings.ToUpper(msg[:1]) + msg[1:]}
+	messages = append(messages, l.getFieldsMessages(fields)...)
 
-	style.Println(strings.Join(messages, ", "))
+	fmt.Fprintln(os.Stderr, fn(strings.Join(messages, ", ")))
 }
 
 // Trace implements the Logur Logger interface.
 func (l *terminalLogger) Trace(msg string, fields ...map[string]interface{}) {
-	l.log(logur.Trace, l.traceStyle, msg, fields)
+	l.log(logur.Trace, msg, fields, func(message string) fmt.Stringer {
+		return termenv.String(message).Italic().Underline()
+	})
 }
 
 // Debug implements the Logur Logger interface.
 func (l *terminalLogger) Debug(msg string, fields ...map[string]interface{}) {
-	l.log(logur.Debug, l.debugStyle, msg, fields)
+	l.log(logur.Debug, msg, fields, func(message string) fmt.Stringer {
+		return termenv.String(message).Italic()
+	})
 }
 
 // Info implements the Logur Logger interface.
 func (l *terminalLogger) Info(msg string, fields ...map[string]interface{}) {
-	l.log(logur.Info, l.infoStyle, msg, fields)
+	l.log(logur.Info, msg, fields, func(message string) fmt.Stringer {
+		return termenv.String(message).Bold()
+	})
 }
 
 // Warn implements the Logur Logger interface.
 func (l *terminalLogger) Warn(msg string, fields ...map[string]interface{}) {
-	l.log(logur.Warn, l.warnStyle, msg, fields)
+	l.log(logur.Warn, msg, fields, func(message string) fmt.Stringer {
+		return termenv.String(message).Bold().Foreground(termenv.ANSIBrightYellow)
+	})
 }
 
 // Error implements the Logur Logger interface.
 func (l *terminalLogger) Error(msg string, fields ...map[string]interface{}) {
-	l.log(logur.Error, l.errorStyle, msg, fields)
+	l.log(logur.Error, msg, fields, func(message string) fmt.Stringer {
+		return termenv.String(message).Bold().Foreground(termenv.ANSIBrightRed)
+	})
 }
 
 func InitLogger() {
@@ -114,11 +115,7 @@ func InitLogger() {
 	Logger = &terminalLogger{
 		level:          level,
 		withErrorStack: level < logur.Info,
-		traceStyle:     color.Style{color.OpItalic, color.FgDarkGray},
-		debugStyle:     color.Style{color.OpItalic, color.FgDefault},
-		infoStyle:      color.Style{color.OpBold, color.FgDefault},
-		warnStyle:      color.Style{color.OpBold, color.FgYellow},
-		errorStyle:     color.Style{color.OpBold, color.FgRed},
+		errorKey:       "error",
 	}
 }
 

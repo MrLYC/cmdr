@@ -64,7 +64,6 @@ var initCmd = &cobra.Command{
 		})
 		installed, err := helper.Upgrade(ctx, define.Version, cmdrPath)
 		utils.ExitWithError(err, "cmdr install failed")
-		logger.Info("cmdr installed")
 
 		if installed {
 			logger.Info("cmdr already installed")

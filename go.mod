@@ -7,10 +7,10 @@ require (
 	github.com/google/go-github/v39 v39.1.1-0.20211008144426-6b0f37fa430d
 	github.com/gookit/color v1.4.2
 	github.com/mattn/go-sqlite3 v1.14.8
+	github.com/muesli/termenv v0.9.0
 	github.com/pkg/errors v0.9.1
 	github.com/schollz/progressbar/v3 v3.8.3
 	github.com/spf13/afero v1.6.0
-	github.com/spf13/cast v1.3.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
 	go.etcd.io/bbolt v1.3.6 // indirect
