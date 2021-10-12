@@ -30,10 +30,7 @@ func DownloadToFile(ctx context.Context, url, output string) error {
 	}
 	defer resp.Body.Close()
 
-	bar := progressbar.DefaultBytes(
-		resp.ContentLength,
-		"Downloading",
-	)
+	bar := progressbar.DefaultBytes(-1, "Downloading")
 	_, err = io.Copy(io.MultiWriter(f, bar), resp.Body)
 	if err != nil {
 		return errors.Wrapf(err, "download failed")
