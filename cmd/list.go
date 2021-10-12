@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"os"
+	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/asdine/storm/v3/q"
-	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
@@ -62,21 +63,37 @@ var listCmd = &cobra.Command{
 		commands, err := core.NewCommandHelper(client).GetCommands(cmd.Context(), filters...)
 		utils.ExitWithError(err, "query command failed")
 
-		table := core.NewModleTablePrinter(os.Stdout)
-		table.SetHeader([]string{
-			"Activated", "Name", "Version", "Location", "Managed",
-		})
-		for _, command := range commands {
-			table.Append([]string{
-				cast.ToString(command.Activated),
-				command.Name,
-				command.Version,
-				command.Location,
-				cast.ToString(command.Managed),
-			})
-		}
+		sort.Slice(commands, func(i, j int) bool {
+			x := commands[i]
+			y := commands[j]
 
-		table.Render()
+			if x.Activated != y.Activated {
+				return !y.Activated
+			}
+
+			if x.Name != y.Name {
+				return x.Name < y.Name
+			}
+
+			return x.Version < y.Version
+		})
+
+		for _, command := range commands {
+			var parts []string
+			if command.Activated {
+				parts = append(parts, "*")
+			} else {
+				parts = append(parts, " ")
+			}
+
+			parts = append(parts, fmt.Sprintf("%s@%s", command.Name, command.Version))
+
+			if !command.Managed {
+				parts = append(parts, command.Location)
+			}
+
+			fmt.Printf("%s\n", strings.Join(parts, " "))
+		}
 	},
 }
 
