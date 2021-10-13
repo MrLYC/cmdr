@@ -18,3 +18,12 @@ func GetSymbolLinker() afero.Linker {
 
 	return linker
 }
+
+func GetSymbolLinkReader() afero.LinkReader {
+	reader, ok := FS.(afero.LinkReader)
+	if !ok {
+		return nil
+	}
+
+	return reader
+}

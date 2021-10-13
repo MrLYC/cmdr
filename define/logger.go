@@ -7,6 +7,7 @@ import (
 
 	"github.com/gookit/color"
 	"github.com/muesli/termenv"
+	"github.com/spf13/cast"
 	adapter "logur.dev/adapter/template"
 	"logur.dev/logur"
 )
@@ -35,10 +36,10 @@ func (l *terminalLogger) getFieldsMessages(fields []map[string]interface{}) []st
 	}
 
 	for k, v := range fields[0] {
-		if k == l.errorKey {
+		if k != l.errorKey {
+			messages = append(messages, fmt.Sprintf("%s=%s", k, cast.ToString(v)))
+		} else if v != nil {
 			errorValue = v.(error)
-		} else {
-			messages = append(messages, fmt.Sprintf("%s=%s", k, v))
 		}
 	}
 

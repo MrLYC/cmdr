@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	ErrReleaseAssertNotFound = fmt.Errorf("release assert not found")
+	ErrReleaseAssetNotFound = fmt.Errorf("release asset not found")
 )
 
 func GetCMDRRelease(ctx context.Context, tag string) (release *github.RepositoryRelease, err error) {
@@ -25,14 +25,14 @@ func GetCMDRRelease(ctx context.Context, tag string) (release *github.Repository
 	return
 }
 
-func DownloadReleaseAssertByName(ctx context.Context, release *github.RepositoryRelease, name, output string) error {
-	for _, assert := range release.Assets {
-		if name != *assert.Name {
+func DownloadReleaseAssetByName(ctx context.Context, release *github.RepositoryRelease, name, output string) error {
+	for _, asset := range release.Assets {
+		if name != *asset.Name {
 			continue
 		}
 
-		return DownloadToFile(ctx, *assert.BrowserDownloadURL, output)
+		return DownloadToFile(ctx, *asset.BrowserDownloadURL, output)
 	}
 
-	return errors.Wrapf(ErrReleaseAssertNotFound, name)
+	return errors.Wrapf(ErrReleaseAssetNotFound, name)
 }

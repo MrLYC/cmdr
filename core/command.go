@@ -101,9 +101,13 @@ func (h *CommandHelper) installCommandBinary(name, version, location, target str
 	return nil
 }
 
+func (h *CommandHelper) GetActivatedCommandPath(ctx context.Context, name, version string) string {
+	return path.Join(h.shimsDir, name, fmt.Sprintf("%s_%s", name, version))
+}
+
 func (h *CommandHelper) Install(ctx context.Context, name, version, location string) error {
 	return h.client.Atomic(func() error {
-		target := path.Join(h.shimsDir, name, fmt.Sprintf("%s_%s", name, version))
+		target := h.GetActivatedCommandPath(ctx, name, version)
 		err := h.defineCommand(ctx, name, version, target, true)
 		if err != nil {
 			return err
@@ -154,9 +158,10 @@ func (h *CommandHelper) activateBinary(ctx context.Context, name, target string)
 	fs := define.FS
 	binPath := path.Join(h.binDir, name)
 
-	_, err := fs.Stat(binPath)
+	linkReader := define.GetSymbolLinkReader()
+	_, err := linkReader.ReadlinkIfPossible(binPath)
 	if err == nil {
-		logger.Debug("remove existed binary", map[string]interface{}{
+		logger.Debug("remove exists binary", map[string]interface{}{
 			"name":   name,
 			"target": target,
 		})
@@ -186,6 +191,11 @@ func (h *CommandHelper) Activate(ctx context.Context, name, version string) erro
 				"name":    name,
 				"version": command.Version,
 			})
+
+			if command.Name == name && command.Version == version {
+				return nil
+			}
+
 			err = h.deactivate(ctx, name)
 			if err != nil {
 				return err

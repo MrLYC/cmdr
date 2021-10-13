@@ -11,6 +11,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/schollz/progressbar/v3 v3.8.3
 	github.com/spf13/afero v1.6.0
+	github.com/spf13/cast v1.3.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
 	go.etcd.io/bbolt v1.3.6 // indirect

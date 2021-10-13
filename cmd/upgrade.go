@@ -51,30 +51,30 @@ var upgradeCmd = &cobra.Command{
 		})
 
 		target := path.Join(outputDir, assetName)
-		logger.Debug("searching cmdr assert", map[string]interface{}{
+		logger.Debug("searching cmdr asset", map[string]interface{}{
 			"release": upgradeCmdFlag.release,
-			"assert":  assetName,
+			"asset":   assetName,
 			"version": version,
 			"target":  target,
 		})
 		utils.ExitWithError(
-			utils.DownloadReleaseAssertByName(ctx, release, assetName, target),
-			"download assert %s failed", assetName,
+			utils.DownloadReleaseAssetByName(ctx, release, assetName, target),
+			"download asset %s failed", assetName,
 		)
-		logger.Info("assert downloaded", map[string]interface{}{
-			"assert":  assetName,
+		logger.Info("asset downloaded", map[string]interface{}{
+			"asset":   assetName,
 			"version": version,
 		})
 
-		logger.Debug("extraing assert", map[string]interface{}{
+		logger.Debug("extraing asset", map[string]interface{}{
 			"target": target,
 			"output": outputDir,
 		})
 		utils.ExitWithError(
 			utils.ExtraTGZ(target, outputDir),
-			"extra assert failed",
+			"extra asset failed",
 		)
-		logger.Info("assert extred")
+		logger.Info("asset unpacked")
 
 		client := core.GetClient()
 		defer utils.CallClose(client)
