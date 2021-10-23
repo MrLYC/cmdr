@@ -34,9 +34,9 @@ var doctorCmd = &cobra.Command{
 
 		if doctorCmdFlag.name != "" {
 			logger.Debug("filter by name", map[string]interface{}{
-				"name": listCmdFlag.name,
+				"name": doctorCmdFlag.name,
 			})
-			filters = append(filters, q.Eq("Name", listCmdFlag.name))
+			filters = append(filters, q.Eq("Name", doctorCmdFlag.name))
 		}
 
 		helper := core.NewCommandHelper(client)

@@ -1,4 +1,4 @@
-package cmd
+package command
 
 import (
 	"github.com/spf13/cobra"
@@ -7,11 +7,6 @@ import (
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
 )
-
-var activateCmdFlag struct {
-	name    string
-	version string
-}
 
 // activateCmd represents the activate command
 var activateCmd = &cobra.Command{
@@ -24,28 +19,28 @@ var activateCmd = &cobra.Command{
 
 		helper := core.NewCommandHelper(client)
 		logger.Debug("activating command", map[string]interface{}{
-			"name":    activateCmdFlag.name,
-			"version": activateCmdFlag.version,
+			"name":    simpleCmdFlag.name,
+			"version": simpleCmdFlag.version,
 		})
 
 		utils.ExitWithError(
-			helper.Activate(cmd.Context(), activateCmdFlag.name, activateCmdFlag.version),
+			helper.Activate(cmd.Context(), simpleCmdFlag.name, simpleCmdFlag.version),
 			"activate command failed",
 		)
 
 		logger.Info("command activated", map[string]interface{}{
-			"name":    activateCmdFlag.name,
-			"version": activateCmdFlag.version,
+			"name":    simpleCmdFlag.name,
+			"version": simpleCmdFlag.version,
 		})
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(activateCmd)
+	Cmd.AddCommand(activateCmd)
 
 	flags := activateCmd.Flags()
-	flags.StringVarP(&activateCmdFlag.name, "name", "n", "", "command name")
-	flags.StringVarP(&activateCmdFlag.version, "version", "v", "", "command version")
+	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
+	flags.StringVarP(&simpleCmdFlag.version, "version", "v", "", "command version")
 
 	activateCmd.MarkFlagRequired("name")
 	activateCmd.MarkFlagRequired("version")

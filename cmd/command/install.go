@@ -1,4 +1,4 @@
-package cmd
+package command
 
 import (
 	"path"
@@ -12,40 +12,34 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
-var installCmdFlag struct {
-	name     string
-	version  string
-	location string
-}
-
 // installCmd represents the install command
 var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install command into cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := define.Logger
-		location := installCmdFlag.location
+		location := simpleCmdFlag.location
 		fs := define.FS
 		ctx := cmd.Context()
 
 		httpSchemaRegexp := regexp.MustCompile(`^https?://.*?$`)
-		if httpSchemaRegexp.Match([]byte(installCmdFlag.location)) {
+		if httpSchemaRegexp.Match([]byte(simpleCmdFlag.location)) {
 			outputDir, err := afero.TempDir(fs, "", "")
 			utils.ExitWithError(err, "create temporary dir failed")
 
-			location = path.Join(outputDir, installCmdFlag.name)
+			location = path.Join(outputDir, simpleCmdFlag.name)
 
 			logger.Debug("downloading command", map[string]interface{}{
-				"url":    installCmdFlag.location,
+				"url":    simpleCmdFlag.location,
 				"target": location,
 			})
 			utils.ExitWithError(
-				utils.DownloadToFile(ctx, installCmdFlag.location, location),
+				utils.DownloadToFile(ctx, simpleCmdFlag.location, location),
 				"download command failed",
 			)
 
 			logger.Info("command downloaded", map[string]interface{}{
-				"url": installCmdFlag.location,
+				"url": simpleCmdFlag.location,
 			})
 		}
 
@@ -55,29 +49,29 @@ var installCmd = &cobra.Command{
 		helper := core.NewCommandHelper(client)
 
 		logger.Debug("installing command", map[string]interface{}{
-			"name":     installCmdFlag.name,
-			"version":  installCmdFlag.version,
+			"name":     simpleCmdFlag.name,
+			"version":  simpleCmdFlag.version,
 			"location": location,
 		})
 		utils.ExitWithError(
-			helper.Install(ctx, installCmdFlag.name, installCmdFlag.version, location),
+			helper.Install(ctx, simpleCmdFlag.name, simpleCmdFlag.version, location),
 			"install command failed",
 		)
 
 		logger.Info("command installed", map[string]interface{}{
-			"name":    installCmdFlag.name,
-			"version": installCmdFlag.version,
+			"name":    simpleCmdFlag.name,
+			"version": simpleCmdFlag.version,
 		})
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(installCmd)
+	Cmd.AddCommand(installCmd)
 
 	flags := installCmd.Flags()
-	flags.StringVarP(&installCmdFlag.name, "name", "n", "", "command name")
-	flags.StringVarP(&installCmdFlag.version, "version", "v", "", "command version")
-	flags.StringVarP(&installCmdFlag.location, "location", "l", "", "command location")
+	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
+	flags.StringVarP(&simpleCmdFlag.version, "version", "v", "", "command version")
+	flags.StringVarP(&simpleCmdFlag.location, "location", "l", "", "command location")
 
 	installCmd.MarkFlagRequired("name")
 	installCmd.MarkFlagRequired("version")

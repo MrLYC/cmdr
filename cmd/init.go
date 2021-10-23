@@ -70,6 +70,8 @@ var initCmd = &cobra.Command{
 		} else {
 			logger.Info("cmdr installed")
 		}
+
+		logger.Info("")
 	},
 }
 

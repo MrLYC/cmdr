@@ -1,4 +1,4 @@
-package cmd
+package command
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ var listCmdFlag struct {
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List all commands",
+	Short: "List commands",
 	Run: func(cmd *cobra.Command, args []string) {
 		client := core.GetClient()
 		defer utils.CallClose(client)
@@ -98,7 +98,7 @@ var listCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(listCmd)
+	Cmd.AddCommand(listCmd)
 
 	flags := listCmd.Flags()
 	flags.StringVarP(&listCmdFlag.name, "name", "n", "", "command name")

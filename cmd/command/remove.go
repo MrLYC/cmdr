@@ -1,4 +1,4 @@
-package cmd
+package command
 
 import (
 	"github.com/spf13/cobra"
@@ -7,11 +7,6 @@ import (
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
 )
-
-var removeCmdFlag struct {
-	name    string
-	version string
-}
 
 // removeCmd represents the remove command
 var removeCmd = &cobra.Command{
@@ -25,26 +20,26 @@ var removeCmd = &cobra.Command{
 		helper := core.NewCommandHelper(client)
 
 		logger.Debug("removing command", map[string]interface{}{
-			"name":    removeCmdFlag.name,
-			"version": removeCmdFlag.version,
+			"name":    simpleCmdFlag.name,
+			"version": simpleCmdFlag.version,
 		})
 		utils.ExitWithError(
-			helper.Remove(cmd.Context(), removeCmdFlag.name, removeCmdFlag.version),
+			helper.Remove(cmd.Context(), simpleCmdFlag.name, simpleCmdFlag.version),
 			"remove command failed",
 		)
 		logger.Info("command removed", map[string]interface{}{
-			"name":    removeCmdFlag.name,
-			"version": removeCmdFlag.version,
+			"name":    simpleCmdFlag.name,
+			"version": simpleCmdFlag.version,
 		})
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(removeCmd)
+	Cmd.AddCommand(removeCmd)
 
 	flags := removeCmd.Flags()
-	flags.StringVarP(&removeCmdFlag.name, "name", "n", "", "command name")
-	flags.StringVarP(&removeCmdFlag.version, "version", "v", "", "command version")
+	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
+	flags.StringVarP(&simpleCmdFlag.version, "version", "v", "", "command version")
 
 	removeCmd.MarkFlagRequired("name")
 	removeCmd.MarkFlagRequired("version")

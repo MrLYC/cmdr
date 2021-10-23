@@ -1,6 +1,6 @@
 //+build !windows
 
-package cmd
+package command
 
 import (
 	"os"
@@ -13,11 +13,6 @@ import (
 	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/utils"
 )
-
-var execCmdFlag struct {
-	name    string
-	version string
-}
 
 // execCmd represents the exec command
 var execCmd = &cobra.Command{
@@ -34,35 +29,34 @@ var execCmd = &cobra.Command{
 			err     error
 		)
 
-		if execCmdFlag.version == "" {
+		if simpleCmdFlag.version == "" {
 			logger.Debug("looking up the activated command", map[string]interface{}{
-				"name": execCmdFlag.name,
+				"name": simpleCmdFlag.name,
 			})
 
-			command, err = helper.GetActivatedCommand(cmd.Context(), execCmdFlag.name)
+			command, err = helper.GetActivatedCommand(cmd.Context(), simpleCmdFlag.name)
 			utils.ExitWithError(err, "lookup activated command failed")
 		} else {
 			logger.Debug("looking up the command", map[string]interface{}{
-				"name":    execCmdFlag.name,
-				"version": execCmdFlag.version,
+				"name":    simpleCmdFlag.name,
+				"version": simpleCmdFlag.version,
 			})
 
-			command, err = helper.GetCommandByNameAndVersion(cmd.Context(), execCmdFlag.name, execCmdFlag.version)
+			command, err = helper.GetCommandByNameAndVersion(cmd.Context(), simpleCmdFlag.name, simpleCmdFlag.version)
 			utils.ExitWithError(err, "lookup specified command failed")
 		}
 
 		if command == nil {
 			logger.Warn("command not found", map[string]interface{}{
-				"name":    execCmdFlag.name,
-				"version": execCmdFlag.version,
+				"name":    simpleCmdFlag.name,
+				"version": simpleCmdFlag.version,
 			})
-			exitCode = -2
 			return
 		}
 
 		logger.Debug("executing", map[string]interface{}{
-			"name":    execCmdFlag.name,
-			"version": execCmdFlag.version,
+			"name":    simpleCmdFlag.name,
+			"version": simpleCmdFlag.version,
 			"target":  command.Location,
 			"args":    args,
 		})
@@ -74,11 +68,11 @@ var execCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(execCmd)
+	Cmd.AddCommand(execCmd)
 
 	flags := execCmd.Flags()
-	flags.StringVarP(&execCmdFlag.name, "name", "n", "", "command name")
-	flags.StringVarP(&execCmdFlag.version, "version", "v", "", "command version")
+	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
+	flags.StringVarP(&simpleCmdFlag.version, "version", "v", "", "command version")
 
 	execCmd.MarkFlagRequired("name")
 }
