@@ -8,9 +8,9 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
-// activateCmd represents the activate command
-var activateCmd = &cobra.Command{
-	Use:   "activate",
+// useCmd represents the use command
+var useCmd = &cobra.Command{
+	Use:   "use",
 	Short: "Activate a command",
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := define.Logger
@@ -25,7 +25,7 @@ var activateCmd = &cobra.Command{
 
 		utils.ExitWithError(
 			helper.Activate(cmd.Context(), simpleCmdFlag.name, simpleCmdFlag.version),
-			"activate command failed",
+			"use command failed",
 		)
 
 		logger.Info("command activated", map[string]interface{}{
@@ -36,12 +36,12 @@ var activateCmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.AddCommand(activateCmd)
+	Cmd.AddCommand(useCmd)
 
-	flags := activateCmd.Flags()
+	flags := useCmd.Flags()
 	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
 	flags.StringVarP(&simpleCmdFlag.version, "version", "v", "", "command version")
 
-	activateCmd.MarkFlagRequired("name")
-	activateCmd.MarkFlagRequired("version")
+	useCmd.MarkFlagRequired("name")
+	useCmd.MarkFlagRequired("version")
 }

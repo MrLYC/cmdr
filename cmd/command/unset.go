@@ -8,9 +8,9 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
-// deactivateCmd represents the deactivate command
-var deactivateCmd = &cobra.Command{
-	Use:   "deactivate",
+// unsetCmd represents the unset command
+var unsetCmd = &cobra.Command{
+	Use:   "unset",
 	Short: "Deactivate a command",
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := define.Logger
@@ -36,10 +36,10 @@ var deactivateCmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.AddCommand(deactivateCmd)
+	Cmd.AddCommand(unsetCmd)
 
-	flags := deactivateCmd.Flags()
+	flags := unsetCmd.Flags()
 	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
 
-	deactivateCmd.MarkFlagRequired("name")
+	unsetCmd.MarkFlagRequired("name")
 }
