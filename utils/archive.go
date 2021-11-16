@@ -5,7 +5,7 @@ import (
 	"compress/gzip"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 
@@ -40,7 +40,7 @@ func ExtraTGZ(target, dir string) error {
 			}
 		}
 
-		filename := path.Join(dir, header.Name)
+		filename := filepath.Join(dir, header.Name)
 		file, err := fs.OpenFile(filename, os.O_CREATE|os.O_WRONLY, header.FileInfo().Mode().Perm())
 		if err != nil {
 			return errors.Wrapf(err, "create file %s failed", filename)

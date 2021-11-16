@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"path/filepath"
 
 	"github.com/asdine/storm/v3/q"
 	"github.com/pkg/errors"
@@ -102,7 +103,7 @@ func (h *CommandHelper) installCommandBinary(name, version, location, target str
 }
 
 func (h *CommandHelper) GetActivatedCommandPath(ctx context.Context, name, version string) string {
-	return path.Join(h.shimsDir, name, fmt.Sprintf("%s_%s", name, version))
+	return filepath.Join(h.shimsDir, name, fmt.Sprintf("%s_%s", name, version))
 }
 
 func (h *CommandHelper) Install(ctx context.Context, name, version, location string) error {
@@ -156,7 +157,7 @@ func (h *CommandHelper) GetCommands(ctx context.Context, matchers ...q.Matcher) 
 func (h *CommandHelper) activateBinary(ctx context.Context, name, target string) error {
 	logger := define.Logger
 	fs := define.FS
-	binPath := path.Join(h.binDir, name)
+	binPath := filepath.Join(h.binDir, name)
 
 	linkReader := define.GetSymbolLinkReader()
 	_, err := linkReader.ReadlinkIfPossible(binPath)
@@ -224,7 +225,7 @@ func (h *CommandHelper) Activate(ctx context.Context, name, version string) erro
 
 func (h *CommandHelper) deactivateBinary(ctx context.Context, name string) error {
 	fs := define.FS
-	binPath := path.Join(h.binDir, name)
+	binPath := filepath.Join(h.binDir, name)
 
 	_, err := fs.Stat(binPath)
 	if err != nil {

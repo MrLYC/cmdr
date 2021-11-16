@@ -1,7 +1,7 @@
 package core
 
 import (
-	"path"
+	"path/filepath"
 
 	"github.com/asdine/storm/v3"
 	"github.com/pkg/errors"
@@ -41,7 +41,7 @@ func GetClient() Client {
 	cmdrDir := cfg.GetString("cmdr.root")
 	name := cfg.GetString("database.name")
 
-	db, err := storm.Open(path.Join(cmdrDir, name))
+	db, err := storm.Open(filepath.Join(cmdrDir, name))
 	utils.CheckError(err)
 	return &StormClient{
 		DB: db,

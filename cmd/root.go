@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
+	"path"
 
 	"github.com/spf13/cobra"
 
@@ -46,8 +46,7 @@ func init() {
 
 	homeDir, err := os.UserHomeDir()
 	utils.CheckError(err)
-	filepath.Join()
-	pFlags.StringVar(&cfgFile, "config", filepath.Join(homeDir, ".cmdr.yaml"), "config file")
+	pFlags.StringVar(&cfgFile, "config", path.Join(homeDir, ".cmdr.yaml"), "config file")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

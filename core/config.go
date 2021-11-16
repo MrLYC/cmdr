@@ -1,7 +1,7 @@
 package core
 
 import (
-	"path"
+	"path/filepath"
 
 	"github.com/mrlyc/cmdr/define"
 )
@@ -11,9 +11,9 @@ func GetRootDir() string {
 }
 
 func GetBinDir() string {
-	return path.Join(GetRootDir(), "bin")
+	return filepath.Join(GetRootDir(), "bin")
 }
 
 func GetShimsDir() string {
-	return path.Join(GetRootDir(), "shims")
+	return filepath.Join(GetRootDir(), "shims")
 }
