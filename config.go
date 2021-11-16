@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
@@ -14,7 +14,7 @@ func init() {
 
 	cfg := define.Configuration
 
-	cfg.SetDefault("cmdr.root", path.Join(homeDir, ".cmdr"))
+	cfg.SetDefault("cmdr.root", filepath.Join(homeDir, ".cmdr"))
 
 	cfg.SetDefault("database.name", "cmdr.db")
 	cfg.SetDefault("log.level", "info")
