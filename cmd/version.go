@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"runtime"
 
 	"github.com/spf13/cobra"
 
@@ -20,13 +19,12 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if versionCmdFlag.all {
 			fmt.Printf(
-				"Author: %s\nVersion: %s\nCommit: %s\nDate: %s\nOS: %s\nArch: %s\n",
+				"Author: %s\nVersion: %s\nCommit: %s\nDate: %s\nBuildBinary: %s\n",
 				define.Author,
 				define.Version,
 				define.Commit,
 				define.BuildDate,
-				runtime.GOOS,
-				runtime.GOARCH,
+				define.BuildBinary,
 			)
 
 		} else {

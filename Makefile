@@ -6,6 +6,6 @@ TARGET ?= ${BIN_DIR}/cmdr
 build:
 	go build -o "${TARGET}" .
 
-.PHONY: release
-release:
-	goreleaser release --snapshot --rm-dist
+.PHONY: goreleaser
+goreleaser:
+	goreleaser build --skip-validate --single-target --rm-dist --snapshot
