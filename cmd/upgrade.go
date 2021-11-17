@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"fmt"
 	"path"
-	"runtime"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -39,17 +37,8 @@ var upgradeCmd = &cobra.Command{
 		utils.ExitWithError(err, "create temporary dir failed")
 
 		version := strings.TrimPrefix(*release.TagName, "v")
-		assetName := fmt.Sprintf(
-			"%s_%s_%s_%s.tar.gz",
-			define.Name,
-			version,
-			runtime.GOOS,
-			runtime.GOARCH,
-		)
-		logger.Info("cmdr release found", map[string]interface{}{
-			"version": version,
-		})
 
+		assetName := define.Asset
 		target := path.Join(outputDir, assetName)
 		logger.Debug("searching cmdr asset", map[string]interface{}{
 			"release": upgradeCmdFlag.release,
@@ -66,27 +55,16 @@ var upgradeCmd = &cobra.Command{
 			"version": version,
 		})
 
-		logger.Debug("extraing asset", map[string]interface{}{
-			"target": target,
-			"output": outputDir,
-		})
-		utils.ExitWithError(
-			utils.ExtraTGZ(target, outputDir),
-			"extra asset failed",
-		)
-		logger.Info("asset unpacked")
-
 		client := core.GetClient()
 		defer utils.CallClose(client)
 
 		helper := core.NewCommandHelper(client)
-		cmdrPath := path.Join(outputDir, define.Name)
 
 		logger.Debug("upgrading cmdr", map[string]interface{}{
 			"version": version,
-			"path":    cmdrPath,
+			"target":  target,
 		})
-		installed, err := helper.Upgrade(ctx, version, cmdrPath)
+		installed, err := helper.Upgrade(ctx, version, target)
 		utils.ExitWithError(err, "upgrade cmdr failed")
 		logger.Info("cmdr upgraded", map[string]interface{}{
 			"version": version,
