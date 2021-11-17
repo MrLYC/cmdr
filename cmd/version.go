@@ -19,7 +19,7 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if versionCmdFlag.all {
 			fmt.Printf(
-				"Author: %s\nVersion: %s\nCommit: %s\nDate: %s\nBuildBinary: %s\n",
+				"Author: %s\nVersion: %s\nCommit: %s\nDate: %s\nAsset: %s\n",
 				define.Author,
 				define.Version,
 				define.Commit,
