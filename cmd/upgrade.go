@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/afero"
@@ -39,7 +39,7 @@ var upgradeCmd = &cobra.Command{
 		version := strings.TrimPrefix(*release.TagName, "v")
 
 		assetName := define.Asset
-		target := path.Join(outputDir, assetName)
+		target := filepath.Join(outputDir, assetName)
 		logger.Debug("searching cmdr asset", map[string]interface{}{
 			"release": upgradeCmdFlag.release,
 			"asset":   assetName,

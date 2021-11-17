@@ -1,7 +1,7 @@
 package command
 
 import (
-	"path"
+	"path/filepath"
 	"regexp"
 
 	"github.com/spf13/afero"
@@ -27,7 +27,7 @@ var installCmd = &cobra.Command{
 			outputDir, err := afero.TempDir(fs, "", "")
 			utils.ExitWithError(err, "create temporary dir failed")
 
-			location = path.Join(outputDir, simpleCmdFlag.name)
+			location = filepath.Join(outputDir, simpleCmdFlag.name)
 
 			logger.Debug("downloading command", map[string]interface{}{
 				"url":    simpleCmdFlag.location,
