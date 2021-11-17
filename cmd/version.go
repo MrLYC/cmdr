@@ -24,7 +24,7 @@ var versionCmd = &cobra.Command{
 				define.Version,
 				define.Commit,
 				define.BuildDate,
-				define.BuildBinary,
+				define.Asset,
 			)
 
 		} else {
