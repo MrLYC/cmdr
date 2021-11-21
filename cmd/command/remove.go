@@ -8,10 +8,10 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
-// removeCmd represents the remove command
-var removeCmd = &cobra.Command{
-	Use:   "remove",
-	Short: "Remove command from cmdr",
+// uninstallCmd represents the uninstall command
+var uninstallCmd = &cobra.Command{
+	Use:   "uninstall",
+	Short: "Uninstall command from cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
@@ -30,12 +30,12 @@ var removeCmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.AddCommand(removeCmd)
+	Cmd.AddCommand(uninstallCmd)
 
-	flags := removeCmd.Flags()
+	flags := uninstallCmd.Flags()
 	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
 	flags.StringVarP(&simpleCmdFlag.version, "version", "v", "", "command version")
 
-	removeCmd.MarkFlagRequired("name")
-	removeCmd.MarkFlagRequired("version")
+	uninstallCmd.MarkFlagRequired("name")
+	uninstallCmd.MarkFlagRequired("version")
 }

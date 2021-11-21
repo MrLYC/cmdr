@@ -28,7 +28,7 @@ var defineCmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.AddCommand(installCmd)
+	Cmd.AddCommand(defineCmd)
 
 	flags := defineCmd.Flags()
 	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")

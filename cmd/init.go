@@ -1,56 +1,37 @@
+//+build !windows
+
 package cmd
 
 import (
-	"os"
+	"bytes"
+	_ "embed"
+	"fmt"
+	"html/template"
 
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/utils"
 )
-
-var initCmdFlag struct {
-	doNotInstall bool
-}
 
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initial cmdr environment",
 	Run: func(cmd *cobra.Command, args []string) {
-		runner := core.NewStepRunner(
-			core.NewDirectoryMaker(map[string]string{
-				"shims": core.GetShimsDir(),
-				"bin":   core.GetBinDir(),
-			}),
-			core.NewDBClientMaker(),
-			core.NewDBMigrator(new(model.Command)),
-		)
-
-		cmdrLocation, err := os.Executable()
+		tmpl, err := template.New("init.sh").ParseFS(define.EmbedFS, "scripts/init.sh")
 		utils.CheckError(err)
 
-		if !initCmdFlag.doNotInstall {
-			runner.Add(
-				core.NewBinaryInstaller(),
-				core.NewCommandInstaller(),
-			)
-		}
+		var buffer bytes.Buffer
+		utils.CheckError(tmpl.Execute(&buffer, map[string]interface{}{
+			"BinDir": core.GetBinDir(),
+		}))
 
-		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
-			define.ContextKeyName:           define.Name,
-			define.ContextKeyVersion:        define.Version,
-			define.ContextKeyLocation:       cmdrLocation,
-			define.ContextKeyCommandManaged: true,
-		})), "init failed")
+		fmt.Println(buffer.String())
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(initCmd)
-
-	flags := initCmd.Flags()
-	flags.BoolVar(&initCmdFlag.doNotInstall, "do-not-install-cmdr", false, "do not install cmdr")
 }

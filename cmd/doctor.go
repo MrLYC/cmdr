@@ -17,7 +17,7 @@ var doctorCmdFlag struct {
 // doctorCmd represents the doctor command
 var doctorCmd = &cobra.Command{
 	Use:   "doctor",
-	Short: "Check and fix commands mapping",
+	Short: "Check and fix cmdr environment",
 	Run: func(cmd *cobra.Command, args []string) {
 		binDir := core.GetBinDir()
 
