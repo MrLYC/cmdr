@@ -14,6 +14,7 @@ import (
 
 var upgradeCmdFlag struct {
 	release string
+	asset   string
 }
 
 // upgradeCmd represents the upgrade command
@@ -38,7 +39,7 @@ var upgradeCmd = &cobra.Command{
 
 		version := strings.TrimPrefix(*release.TagName, "v")
 
-		assetName := define.Asset
+		assetName := upgradeCmdFlag.asset
 		target := filepath.Join(outputDir, assetName)
 		logger.Debug("searching cmdr asset", map[string]interface{}{
 			"release": upgradeCmdFlag.release,
@@ -82,4 +83,5 @@ func init() {
 	rootCmd.AddCommand(upgradeCmd)
 	flags := upgradeCmd.Flags()
 	flags.StringVarP(&upgradeCmdFlag.release, "release", "r", "latest", "cmdr release tag name")
+	flags.StringVarP(&upgradeCmdFlag.asset, "asset", "a", define.Asset, "cmdr release assert name")
 }
