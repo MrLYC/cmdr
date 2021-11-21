@@ -6,6 +6,7 @@ import (
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
+	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -18,77 +19,28 @@ var doctorCmd = &cobra.Command{
 	Use:   "doctor",
 	Short: "Check and fix commands mapping",
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := core.GetDBClient()
-		utils.CheckError(err)
-		defer utils.CallClose(client)
+		binDir := core.GetBinDir()
 
-		fs := define.FS
-		logger := define.Logger
-		ctx := cmd.Context()
-		filters := make([]q.Matcher, 0)
-
-		logger.Info("rebuild bin dir")
-		utils.ExitWithError(
-			fs.MkdirAll(core.GetBinDir(), 0755),
-			"making dir bin failed",
+		runner := core.NewStepRunner(
+			core.NewDBClientMaker(),
+			core.NewDBMigrator(new(model.Command)),
+			core.NewCommandsQuerier([]q.Matcher{q.Eq("Activated", true)}),
+			core.NewBrokenCommandsRemover(),
+			core.NewDirectoryRemover(map[string]string{
+				"bin": binDir,
+			}),
+			core.NewDirectoryMaker(map[string]string{
+				"shims": core.GetShimsDir(),
+				"bin":   binDir,
+			}),
+			core.NewBinariesInstaller(),
+			core.NewBinariesActivator(),
 		)
 
-		if doctorCmdFlag.name != "" {
-			logger.Debug("filter by name", map[string]interface{}{
-				"name": doctorCmdFlag.name,
-			})
-			filters = append(filters, q.Eq("Name", doctorCmdFlag.name))
-		}
-
-		helper := core.NewCommandHelper(client)
-
-		logger.Debug("quering commands")
-		commands, err := helper.GetCommands(ctx, filters...)
-		utils.ExitWithError(err, "query command failed")
-
-		for _, command := range commands {
-			_, ferr := fs.Stat(command.Location)
-			if ferr != nil {
-				logger.Debug("deleting command", map[string]interface{}{
-					"name":     command.Name,
-					"version":  command.Version,
-					"location": command.Location,
-				})
-
-				err := client.DeleteStruct(command)
-				if err != nil {
-					logger.Error("remove command failed", map[string]interface{}{
-						"name":    command.Name,
-						"version": command.Version,
-						"error":   err,
-					})
-				} else {
-					logger.Info("command deleted", map[string]interface{}{
-						"name":    command.Name,
-						"version": command.Version,
-					})
-				}
-			} else if command.Activated {
-				logger.Debug("activating command", map[string]interface{}{
-					"name":    command.Name,
-					"version": command.Version,
-				})
-
-				err := helper.Activate(ctx, command.Name, command.Version)
-				if err != nil {
-					logger.Error("activate command failed", map[string]interface{}{
-						"name":    command.Name,
-						"version": command.Version,
-						"error":   err,
-					})
-				} else {
-					logger.Info("command activated", map[string]interface{}{
-						"name":    command.Name,
-						"version": command.Version,
-					})
-				}
-			}
-		}
+		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
+			define.ContextKeyName:           define.Name,
+			define.ContextKeyCommandManaged: true,
+		})), "doctor failed")
 	},
 }
 

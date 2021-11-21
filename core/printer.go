@@ -4,12 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-
-	"github.com/pkg/errors"
-
-	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
-	"github.com/mrlyc/cmdr/utils"
 )
 
 type CommandPrinter struct {
@@ -21,13 +15,8 @@ func (p *CommandPrinter) String() string {
 }
 
 func (p *CommandPrinter) Run(ctx context.Context) (context.Context, error) {
-	values := utils.GetInterfaceFromContext(ctx, define.ContextKeyCommands)
-	if values == nil {
-		return ctx, errors.Wrapf(ErrContextValueNotFound, "commands not found")
-	}
-
-	commands, ok := values.([]*model.Command)
-	if !ok || len(commands) == 0 {
+	commands, err := GetCommandsFromContext(ctx)
+	if err != nil {
 		return ctx, nil
 	}
 

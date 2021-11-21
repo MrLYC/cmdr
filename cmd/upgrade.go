@@ -1,10 +1,6 @@
 package cmd
 
 import (
-	"path/filepath"
-	"strings"
-
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
@@ -22,61 +18,18 @@ var upgradeCmd = &cobra.Command{
 	Use:   "upgrade",
 	Short: "Upgrade cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
-		var (
-			logger = define.Logger
-			ctx    = cmd.Context()
-			fs     = define.FS
+		runner := core.NewStepRunner(
+			core.NewDBClientMaker(),
+			core.NewReleaseSearcher(upgradeCmdFlag.release, upgradeCmdFlag.asset),
+			core.NewDownloader(),
+			core.NewBinaryInstaller(),
+			core.NewCommandInstaller(),
 		)
 
-		logger.Debug("searching cmdr release", map[string]interface{}{
-			"release": upgradeCmdFlag.release,
-		})
-		release, err := utils.GetCMDRRelease(ctx, upgradeCmdFlag.release)
-		utils.ExitWithError(err, "search cmdr releases failed")
-
-		outputDir, err := afero.TempDir(fs, "", "")
-		utils.ExitWithError(err, "create temporary dir failed")
-
-		version := strings.TrimPrefix(*release.TagName, "v")
-
-		assetName := upgradeCmdFlag.asset
-		target := filepath.Join(outputDir, assetName)
-		logger.Debug("searching cmdr asset", map[string]interface{}{
-			"release": upgradeCmdFlag.release,
-			"asset":   assetName,
-			"version": version,
-			"target":  target,
-		})
-		utils.ExitWithError(
-			utils.DownloadReleaseAssetByName(ctx, release, assetName, target),
-			"download asset %s failed", assetName,
-		)
-		logger.Info("asset downloaded", map[string]interface{}{
-			"asset":   assetName,
-			"version": version,
-		})
-
-		client, err := core.GetDBClient()
-		utils.CheckError(err)
-		defer utils.CallClose(client)
-
-		helper := core.NewCommandHelper(client)
-
-		logger.Debug("upgrading cmdr", map[string]interface{}{
-			"version": version,
-			"target":  target,
-		})
-		installed, err := helper.Upgrade(ctx, version, target)
-		utils.ExitWithError(err, "upgrade cmdr failed")
-		logger.Info("cmdr upgraded", map[string]interface{}{
-			"version": version,
-		})
-
-		if installed {
-			logger.Info("cmdr already installed")
-		} else {
-			logger.Info("cmdr installed")
-		}
+		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
+			define.ContextKeyName:           define.Name,
+			define.ContextKeyCommandManaged: true,
+		})), "upgrade failed")
 	},
 }
 

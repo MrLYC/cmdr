@@ -6,6 +6,7 @@ import (
 
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/define"
@@ -23,13 +24,9 @@ func (s *CommandActivator) String() string {
 
 func (s *CommandActivator) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
-	value := utils.GetInterfaceFromContext(ctx, define.ContextKeyCommand)
-	if value == nil {
-		return ctx, errors.Wrapf(ErrContextValueNotFound, "command not found")
-	}
 
-	command, ok := value.(*model.Command)
-	if !ok || command == nil {
+	command, err := GetCommandFromContext(ctx)
+	if err != nil {
 		return ctx, nil
 	}
 
@@ -40,7 +37,7 @@ func (s *CommandActivator) Run(ctx context.Context) (context.Context, error) {
 
 	client := GetDBClientFromContext(ctx)
 	command.Activated = true
-	err := client.Save(command)
+	err = client.Save(command)
 	if err != nil {
 		return ctx, errors.Wrapf(err, "save command failed")
 	}
@@ -50,6 +47,30 @@ func (s *CommandActivator) Run(ctx context.Context) (context.Context, error) {
 
 func NewCommandActivator() *CommandActivator {
 	return &CommandActivator{}
+}
+
+func activateBinary(name, location string) error {
+	fs := define.FS
+	logger := define.Logger
+	binPath := filepath.Join(GetBinDir(), name)
+
+	linkReader := define.GetSymbolLinkReader()
+	_, err := linkReader.ReadlinkIfPossible(binPath)
+	if err == nil {
+		logger.Debug("remove exists binary", map[string]interface{}{
+			"name":   name,
+			"target": location,
+		})
+		fs.Remove(binPath)
+	}
+
+	linker := define.GetSymbolLinker()
+	err = linker.SymlinkIfPossible(location, binPath)
+	if err != nil {
+		return errors.Wrapf(err, "create symbol link failed")
+	}
+
+	return nil
 }
 
 type BinaryActivator struct {
@@ -62,13 +83,9 @@ func (s *BinaryActivator) String() string {
 
 func (s *BinaryActivator) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
-	value := utils.GetInterfaceFromContext(ctx, define.ContextKeyCommand)
-	if value == nil {
-		return ctx, errors.Wrapf(ErrContextValueNotFound, "command not found")
-	}
 
-	command, ok := value.(*model.Command)
-	if !ok || command == nil {
+	command, err := GetCommandFromContext(ctx)
+	if err != nil {
 		return ctx, nil
 	}
 
@@ -77,23 +94,9 @@ func (s *BinaryActivator) Run(ctx context.Context) (context.Context, error) {
 		"version": command.Version,
 	})
 
-	fs := define.FS
-	binPath := filepath.Join(GetBinDir(), command.Name)
-
-	linkReader := define.GetSymbolLinkReader()
-	_, err := linkReader.ReadlinkIfPossible(binPath)
-	if err == nil {
-		logger.Debug("remove exists binary", map[string]interface{}{
-			"name":   command.Name,
-			"target": command.Location,
-		})
-		fs.Remove(binPath)
-	}
-
-	linker := define.GetSymbolLinker()
-	err = linker.SymlinkIfPossible(command.Location, binPath)
+	err = activateBinary(command.Name, command.Location)
 	if err != nil {
-		return ctx, errors.Wrapf(err, "create symbol link failed")
+		return ctx, errors.Wrapf(err, "activate binary failed")
 	}
 
 	return ctx, nil
@@ -101,6 +104,41 @@ func (s *BinaryActivator) Run(ctx context.Context) (context.Context, error) {
 
 func NewBinaryActivator() *BinaryActivator {
 	return &BinaryActivator{}
+}
+
+type BinariesActivator struct {
+	BaseStep
+}
+
+func (s *BinariesActivator) String() string {
+	return "binaries-activator"
+}
+
+func (s *BinariesActivator) Run(ctx context.Context) (context.Context, error) {
+	logger := define.Logger
+
+	commands, err := GetCommandsFromContext(ctx)
+	if err != nil {
+		return ctx, nil
+	}
+
+	logger.Info("activating binaries", map[string]interface{}{
+		"count": len(commands),
+	})
+
+	var errs error
+	for _, command := range commands {
+		err = activateBinary(command.Name, command.Location)
+		if err != nil {
+			errs = multierror.Append(errs, errors.Wrapf(err, "activate %s(%s) binary failed", command.Name, command.Version))
+		}
+	}
+
+	return ctx, nil
+}
+
+func NewBinariesActivator() *BinariesActivator {
+	return &BinariesActivator{}
 }
 
 type CommandDeactivator struct {

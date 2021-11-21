@@ -3,10 +3,6 @@ package core
 import (
 	"context"
 	"sort"
-
-	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
-	"github.com/mrlyc/cmdr/utils"
 )
 
 type CommandSorter struct {
@@ -18,9 +14,8 @@ func (s *CommandSorter) String() string {
 }
 
 func (s *CommandSorter) Run(ctx context.Context) (context.Context, error) {
-	values := utils.GetInterfaceFromContext(ctx, define.ContextKeyCommands)
-	commands, ok := values.([]*model.Command)
-	if !ok || len(commands) == 0 {
+	commands, err := GetCommandsFromContext(ctx)
+	if err != nil {
 		return ctx, nil
 	}
 

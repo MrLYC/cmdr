@@ -16,10 +16,6 @@ type StormClient struct {
 	*storm.DB
 }
 
-func GetDBClientFromContext(ctx context.Context) DBClient {
-	return ctx.Value(define.ContextKeyDBClient).(DBClient)
-}
-
 func GetDBClient() (DBClient, error) {
 	cmdrDir := GetRootDir()
 	name := GetDBName()
