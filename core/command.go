@@ -6,6 +6,7 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
 	"github.com/pkg/errors"
 
@@ -15,7 +16,7 @@ import (
 )
 
 type CommandHelper struct {
-	client   Client
+	client   DBClient
 	shimsDir string
 	binDir   string
 }
@@ -48,28 +49,26 @@ func (h *CommandHelper) defineCommand(ctx context.Context, name, version, locati
 }
 
 func (h *CommandHelper) Define(ctx context.Context, name, version, location string) error {
-	return h.client.Atomic(func() error {
-		logger := define.Logger
+	logger := define.Logger
 
-		logger.Info("checking command", map[string]interface{}{
+	logger.Info("checking command", map[string]interface{}{
+		"name":     name,
+		"version":  version,
+		"location": location,
+	})
+
+	command, err := h.GetCommandByNameAndVersion(ctx, name, version)
+	if err == nil && command != nil {
+		logger.Debug("command exists", map[string]interface{}{
 			"name":     name,
 			"version":  version,
-			"location": location,
+			"location": command.Location,
 		})
 
-		command, err := h.GetCommandByNameAndVersion(ctx, name, version)
-		if err == nil && command != nil {
-			logger.Debug("command exists", map[string]interface{}{
-				"name":     name,
-				"version":  version,
-				"location": command.Location,
-			})
+		return errors.Wrapf(ErrCommandAlreadyExists, name)
+	}
 
-			return errors.Wrapf(ErrCommandAlreadyExists, name)
-		}
-
-		return h.defineCommand(ctx, name, version, location, false)
-	})
+	return h.defineCommand(ctx, name, version, location, false)
 }
 
 func (h *CommandHelper) installCommandBinary(name, version, location, target string) error {
@@ -107,39 +106,32 @@ func (h *CommandHelper) GetActivatedCommandPath(ctx context.Context, name, versi
 }
 
 func (h *CommandHelper) Install(ctx context.Context, name, version, location string) error {
-	return h.client.Atomic(func() error {
-		target := h.GetActivatedCommandPath(ctx, name, version)
-		err := h.defineCommand(ctx, name, version, target, true)
-		if err != nil {
-			return err
-		}
+	target := h.GetActivatedCommandPath(ctx, name, version)
+	err := h.defineCommand(ctx, name, version, target, true)
+	if err != nil {
+		return err
+	}
 
-		return h.installCommandBinary(name, version, location, target)
-	})
+	return h.installCommandBinary(name, version, location, target)
 }
 
 func (h *CommandHelper) GetCommand(ctx context.Context, matchers ...q.Matcher) (*model.Command, error) {
 	var command model.Command
 	err := h.client.Select(matchers...).First(&command)
-	if IsQueryNotFound(err) {
+	if errors.Cause(err) == storm.ErrNotFound {
 		return nil, nil
+	} else if err != nil {
+		return nil, err
 	}
 
 	return &command, errors.Wrapf(err, "get command failed")
 }
 
 func (h *CommandHelper) GetActivatedCommand(ctx context.Context, name string) (*model.Command, error) {
-	var command *model.Command
-
-	err := h.client.Atomic(func() error {
-		var e error
-		command, e = h.GetCommand(ctx, q.Eq("Name", name), q.Eq("Activated", true))
-		if e != nil {
-			errors.Wrapf(e, "get activated command failed")
-		}
-
-		return nil
-	})
+	command, err := h.GetCommand(ctx, q.Eq("Name", name), q.Eq("Activated", true))
+	if err != nil {
+		return nil, errors.Wrapf(err, "get activated command failed")
+	}
 
 	return command, err
 }
@@ -147,7 +139,9 @@ func (h *CommandHelper) GetActivatedCommand(ctx context.Context, name string) (*
 func (h *CommandHelper) GetCommands(ctx context.Context, matchers ...q.Matcher) ([]*model.Command, error) {
 	var commands []*model.Command
 	err := h.client.Select(matchers...).Find(&commands)
-	if IsQueryNotFound(err) {
+	if errors.Cause(err) == storm.ErrNotFound {
+		return nil, nil
+	} else if err != nil {
 		return nil, nil
 	}
 
@@ -179,48 +173,46 @@ func (h *CommandHelper) activateBinary(ctx context.Context, name, target string)
 }
 
 func (h *CommandHelper) Activate(ctx context.Context, name, version string) error {
-	return h.client.Atomic(func() error {
-		logger := define.Logger
+	logger := define.Logger
 
-		command, err := h.GetActivatedCommand(ctx, name)
-		if err != nil {
-			return errors.WithMessagef(err, "deactivate command %s failed", name)
-		}
+	command, err := h.GetActivatedCommand(ctx, name)
+	if err != nil {
+		return errors.WithMessagef(err, "deactivate command %s failed", name)
+	}
 
-		if command != nil {
-			logger.Debug("command found", map[string]interface{}{
-				"name":    name,
-				"version": command.Version,
-			})
-
-			if command.Name == name && command.Version == version {
-				return nil
-			}
-
-			err = h.deactivate(ctx, name)
-			if err != nil {
-				return err
-			}
-		}
-
-		logger.Debug("getting command", map[string]interface{}{
+	if command != nil {
+		logger.Debug("command found", map[string]interface{}{
 			"name":    name,
-			"version": version,
+			"version": command.Version,
 		})
 
-		command, err = h.GetCommandByNameAndVersion(ctx, name, version)
+		if command.Name == name && command.Version == version {
+			return nil
+		}
+
+		err = h.deactivate(ctx, name)
 		if err != nil {
 			return err
 		}
+	}
 
-		command.Activated = true
-		err = h.client.Save(command)
-		if err != nil {
-			return errors.Wrapf(err, "save command %s failed", name)
-		}
-
-		return h.activateBinary(ctx, name, command.Location)
+	logger.Debug("getting command", map[string]interface{}{
+		"name":    name,
+		"version": version,
 	})
+
+	command, err = h.GetCommandByNameAndVersion(ctx, name, version)
+	if err != nil {
+		return err
+	}
+
+	command.Activated = true
+	err = h.client.Save(command)
+	if err != nil {
+		return errors.Wrapf(err, "save command %s failed", name)
+	}
+
+	return h.activateBinary(ctx, name, command.Location)
 }
 
 func (h *CommandHelper) deactivateBinary(ctx context.Context, name string) error {
@@ -267,47 +259,43 @@ func (h *CommandHelper) deactivate(ctx context.Context, name string) error {
 }
 
 func (h *CommandHelper) Deactivate(ctx context.Context, name string) error {
-	return h.client.Atomic(func() error {
-		err := h.deactivate(ctx, name)
-		if err != nil {
-			return errors.WithMessagef(err, "deactivate command %s failed", name)
-		}
+	err := h.deactivate(ctx, name)
+	if err != nil {
+		return errors.WithMessagef(err, "deactivate command %s failed", name)
+	}
 
-		return h.deactivateBinary(ctx, name)
-	})
+	return h.deactivateBinary(ctx, name)
 }
 
 func (h *CommandHelper) Remove(ctx context.Context, name, version string) error {
-	return h.client.Atomic(func() error {
-		logger := define.Logger
-		fs := define.FS
+	logger := define.Logger
+	fs := define.FS
 
-		logger.Debug("remove command", map[string]interface{}{
-			"name":    name,
-			"version": version,
-		})
-
-		command, err := h.GetCommandByNameAndVersion(ctx, name, version)
-		if err != nil {
-			return err
-		}
-
-		err = h.client.DeleteStruct(command)
-		if err != nil {
-			return errors.Wrapf(err, "delete record %s failed", name)
-		}
-
-		if !command.Managed {
-			return nil
-		}
-
-		err = fs.Remove(command.Location)
-		if err != nil {
-			return errors.Wrapf(err, "remove command binary %s failed", command.Location)
-		}
-
-		return nil
+	logger.Debug("remove command", map[string]interface{}{
+		"name":    name,
+		"version": version,
 	})
+
+	command, err := h.GetCommandByNameAndVersion(ctx, name, version)
+	if err != nil {
+		return err
+	}
+
+	err = h.client.DeleteStruct(command)
+	if err != nil {
+		return errors.Wrapf(err, "delete record %s failed", name)
+	}
+
+	if !command.Managed {
+		return nil
+	}
+
+	err = fs.Remove(command.Location)
+	if err != nil {
+		return errors.Wrapf(err, "remove command binary %s failed", command.Location)
+	}
+
+	return nil
 }
 
 func (h *CommandHelper) Upgrade(ctx context.Context, version, path string) (bool, error) {
@@ -334,7 +322,7 @@ func (h *CommandHelper) Upgrade(ctx context.Context, version, path string) (bool
 	return true, nil
 }
 
-func NewCommandHelper(client Client) *CommandHelper {
+func NewCommandHelper(client DBClient) *CommandHelper {
 	return &CommandHelper{
 		client:   client,
 		shimsDir: GetShimsDir(),

@@ -6,6 +6,7 @@ require (
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/google/go-github/v39 v39.1.1-0.20211008144426-6b0f37fa430d
 	github.com/gookit/color v1.4.2
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/mattn/go-sqlite3 v1.14.8
 	github.com/muesli/termenv v0.9.0
 	github.com/pkg/errors v0.9.1
@@ -16,6 +17,7 @@ require (
 	github.com/spf13/viper v1.8.1
 	go.etcd.io/bbolt v1.3.6 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect

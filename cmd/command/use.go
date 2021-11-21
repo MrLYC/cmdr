@@ -13,25 +13,19 @@ var useCmd = &cobra.Command{
 	Use:   "use",
 	Short: "Activate a command",
 	Run: func(cmd *cobra.Command, args []string) {
-		logger := define.Logger
-		client := core.GetClient()
-		defer utils.CallClose(client)
-
-		helper := core.NewCommandHelper(client)
-		logger.Debug("activating command", map[string]interface{}{
-			"name":    simpleCmdFlag.name,
-			"version": simpleCmdFlag.version,
-		})
-
-		utils.ExitWithError(
-			helper.Activate(cmd.Context(), simpleCmdFlag.name, simpleCmdFlag.version),
-			"use command failed",
+		runner := core.NewStepRunner(
+			core.NewDBClientMaker(),
+			core.NewCommandQuerierByNameAndVersion(simpleCmdFlag.name, simpleCmdFlag.version),
+			core.NewBinaryActivator(),
+			core.NewCommandDeactivator(),
+			core.NewCommandActivator(),
 		)
 
-		logger.Info("command activated", map[string]interface{}{
-			"name":    simpleCmdFlag.name,
-			"version": simpleCmdFlag.version,
-		})
+		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
+			define.ContextKeyName:     simpleCmdFlag.name,
+			define.ContextKeyVersion:  simpleCmdFlag.version,
+			define.ContextKeyLocation: simpleCmdFlag.location,
+		})), "activate failed")
 	},
 }
 

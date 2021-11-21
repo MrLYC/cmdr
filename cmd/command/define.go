@@ -8,15 +8,13 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
-// installCmd represents the install command
-var installCmd = &cobra.Command{
-	Use:   "install",
-	Short: "Install command into cmdr",
+// defineCmd represents the define command
+var defineCmd = &cobra.Command{
+	Use:   "define",
+	Short: "Define command into cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
-			core.NewDownloader(),
-			core.NewBinaryInstaller(),
 			core.NewCommandInstaller(),
 		)
 
@@ -24,7 +22,7 @@ var installCmd = &cobra.Command{
 			define.ContextKeyName:           simpleCmdFlag.name,
 			define.ContextKeyVersion:        simpleCmdFlag.version,
 			define.ContextKeyLocation:       simpleCmdFlag.location,
-			define.ContextKeyCommandManaged: true,
+			define.ContextKeyCommandManaged: false,
 		})), "install failed")
 	},
 }
@@ -32,12 +30,12 @@ var installCmd = &cobra.Command{
 func init() {
 	Cmd.AddCommand(installCmd)
 
-	flags := installCmd.Flags()
+	flags := defineCmd.Flags()
 	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
 	flags.StringVarP(&simpleCmdFlag.version, "version", "v", "", "command version")
 	flags.StringVarP(&simpleCmdFlag.location, "location", "l", "", "command location")
 
-	installCmd.MarkFlagRequired("name")
-	installCmd.MarkFlagRequired("version")
-	installCmd.MarkFlagRequired("location")
+	defineCmd.MarkFlagRequired("name")
+	defineCmd.MarkFlagRequired("version")
+	defineCmd.MarkFlagRequired("location")
 }

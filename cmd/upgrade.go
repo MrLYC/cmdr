@@ -56,7 +56,8 @@ var upgradeCmd = &cobra.Command{
 			"version": version,
 		})
 
-		client := core.GetClient()
+		client, err := core.GetDBClient()
+		utils.CheckError(err)
 		defer utils.CallClose(client)
 
 		helper := core.NewCommandHelper(client)

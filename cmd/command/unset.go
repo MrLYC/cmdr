@@ -13,25 +13,14 @@ var unsetCmd = &cobra.Command{
 	Use:   "unset",
 	Short: "Deactivate a command",
 	Run: func(cmd *cobra.Command, args []string) {
-		logger := define.Logger
-
-		client := core.GetClient()
-		defer utils.CallClose(client)
-
-		helper := core.NewCommandHelper(client)
-
-		logger.Debug("deactivating command", map[string]interface{}{
-			"name": simpleCmdFlag.name,
-		})
-
-		utils.ExitWithError(
-			helper.Deactivate(cmd.Context(), simpleCmdFlag.name),
-			"deactivate command failed",
+		runner := core.NewStepRunner(
+			core.NewDBClientMaker(),
+			core.NewCommandDeactivator(),
 		)
 
-		logger.Info("command deactivated", map[string]interface{}{
-			"name": simpleCmdFlag.name,
-		})
+		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
+			define.ContextKeyName: simpleCmdFlag.name,
+		})), "deactivate failed")
 	},
 }
 

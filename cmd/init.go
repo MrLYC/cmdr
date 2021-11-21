@@ -20,58 +20,31 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initial cmdr environment",
 	Run: func(cmd *cobra.Command, args []string) {
-		logger := define.Logger
-		for n, p := range map[string]string{
-			"shims": core.GetShimsDir(),
-			"bin":   core.GetBinDir(),
-		} {
-			logger.Info("createing dir", map[string]interface{}{
-				"name": n,
-				"dir":  p,
-			})
-			utils.ExitWithError(
-				define.FS.MkdirAll(p, 0755),
-				"making dir %s failed", n,
+		runner := core.NewStepRunner(
+			core.NewDirectoryMaker(map[string]string{
+				"shims": core.GetShimsDir(),
+				"bin":   core.GetBinDir(),
+			}),
+			core.NewDBClientMaker(),
+			core.NewDBMigrator(new(model.Command)),
+		)
+
+		cmdrLocation, err := os.Executable()
+		utils.CheckError(err)
+
+		if !initCmdFlag.doNotInstall {
+			runner.Add(
+				core.NewBinaryInstaller(),
+				core.NewCommandInstaller(),
 			)
 		}
 
-		ctx := cmd.Context()
-
-		client := core.GetClient()
-		defer utils.CallClose(client)
-
-		logger.Debug("migrating database")
-		utils.ExitWithError(
-			client.Migrate(
-				new(model.Command),
-			),
-			"migrate failed",
-		)
-		logger.Info("database migrated")
-
-		if initCmdFlag.doNotInstall {
-			return
-		}
-
-		cmdrPath, err := os.Executable()
-		utils.CheckError(err)
-
-		helper := core.NewCommandHelper(client)
-
-		logger.Debug("installing cmdr", map[string]interface{}{
-			"version": define.Version,
-			"path":    cmdrPath,
-		})
-		installed, err := helper.Upgrade(ctx, define.Version, cmdrPath)
-		utils.ExitWithError(err, "cmdr install failed")
-
-		if installed {
-			logger.Info("cmdr already installed")
-		} else {
-			logger.Info("cmdr installed")
-		}
-
-		logger.Info("")
+		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
+			define.ContextKeyName:           define.Name,
+			define.ContextKeyVersion:        define.Version,
+			define.ContextKeyLocation:       cmdrLocation,
+			define.ContextKeyCommandManaged: true,
+		})), "init failed")
 	},
 }
 

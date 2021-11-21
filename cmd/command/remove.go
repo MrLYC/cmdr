@@ -13,24 +13,19 @@ var removeCmd = &cobra.Command{
 	Use:   "remove",
 	Short: "Remove command from cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
-		logger := define.Logger
-		client := core.GetClient()
-		defer utils.CallClose(client)
-
-		helper := core.NewCommandHelper(client)
-
-		logger.Debug("removing command", map[string]interface{}{
-			"name":    simpleCmdFlag.name,
-			"version": simpleCmdFlag.version,
-		})
-		utils.ExitWithError(
-			helper.Remove(cmd.Context(), simpleCmdFlag.name, simpleCmdFlag.version),
-			"remove command failed",
+		runner := core.NewStepRunner(
+			core.NewDBClientMaker(),
+			core.NewCommandQuerierByNameAndVersion(
+				simpleCmdFlag.name, simpleCmdFlag.version,
+			),
+			core.NewBinaryRemover(),
+			core.NewCommandRemover(),
 		)
-		logger.Info("command removed", map[string]interface{}{
-			"name":    simpleCmdFlag.name,
-			"version": simpleCmdFlag.version,
-		})
+
+		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
+			define.ContextKeyName:    simpleCmdFlag.name,
+			define.ContextKeyVersion: simpleCmdFlag.version,
+		})), "list failed")
 	},
 }
 

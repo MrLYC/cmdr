@@ -18,7 +18,8 @@ var doctorCmd = &cobra.Command{
 	Use:   "doctor",
 	Short: "Check and fix commands mapping",
 	Run: func(cmd *cobra.Command, args []string) {
-		client := core.GetClient()
+		client, err := core.GetDBClient()
+		utils.CheckError(err)
 		defer utils.CallClose(client)
 
 		fs := define.FS
