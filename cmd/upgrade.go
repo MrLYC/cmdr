@@ -11,6 +11,7 @@ import (
 var upgradeCmdFlag struct {
 	release string
 	asset   string
+	keep    bool
 }
 
 // upgradeCmd represents the upgrade command
@@ -26,6 +27,21 @@ var upgradeCmd = &cobra.Command{
 			core.NewCommandInstaller(),
 		)
 
+		if !upgradeCmdFlag.keep {
+			runner.Add(
+				core.NewContextValueSetter(map[define.ContextKey]interface{}{
+					define.ContextKeyVersion: define.Version,
+				}),
+				core.NewCommandQuerierByNameAndVersion(
+					define.Name, define.Version,
+				),
+				core.NewBinaryRemover(),
+				core.NewCommandRemover(),
+				core.NewBinaryRemover(),
+				core.NewCommandRemover(),
+			)
+		}
+
 		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
 			define.ContextKeyName:           define.Name,
 			define.ContextKeyCommandManaged: true,
@@ -38,4 +54,5 @@ func init() {
 	flags := upgradeCmd.Flags()
 	flags.StringVarP(&upgradeCmdFlag.release, "release", "r", "latest", "cmdr release tag name")
 	flags.StringVarP(&upgradeCmdFlag.asset, "asset", "a", define.Asset, "cmdr release assert name")
+	flags.BoolVarP(&upgradeCmdFlag.keep, "keep", "k", false, "keep the last cmdr version")
 }

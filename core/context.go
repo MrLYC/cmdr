@@ -41,3 +41,22 @@ func GetCommandsFromContext(ctx context.Context) ([]*model.Command, error) {
 
 	return commands, nil
 }
+
+type ContextValueSetter struct {
+	BaseStep
+	values map[define.ContextKey]interface{}
+}
+
+func (s *ContextValueSetter) String() string {
+	return "context-value-setter"
+}
+
+func (s *ContextValueSetter) Run(ctx context.Context) (context.Context, error) {
+	return utils.SetIntoContext(ctx, s.values), nil
+}
+
+func NewContextValueSetter(values map[define.ContextKey]interface{}) *ContextValueSetter {
+	return &ContextValueSetter{
+		values: values,
+	}
+}
