@@ -26,6 +26,12 @@ var uninstallCmd = &cobra.Command{
 			define.ContextKeyName:    simpleCmdFlag.name,
 			define.ContextKeyVersion: simpleCmdFlag.version,
 		})), "list failed")
+
+		define.Logger.Info("uninstalled command", map[string]interface{}{
+			"name":     simpleCmdFlag.name,
+			"version":  simpleCmdFlag.version,
+			"location": simpleCmdFlag.location,
+		})
 	},
 }
 

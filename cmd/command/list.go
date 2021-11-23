@@ -9,9 +9,6 @@ import (
 )
 
 var listCmdFlag struct {
-	name      string
-	version   string
-	location  string
 	activated bool
 }
 
@@ -23,7 +20,7 @@ var listCmd = &cobra.Command{
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
 			core.NewSimpleCommandsQuerier(
-				listCmdFlag.name, listCmdFlag.version, listCmdFlag.location, listCmdFlag.activated,
+				simpleCmdFlag.name, simpleCmdFlag.version, simpleCmdFlag.location, listCmdFlag.activated,
 			),
 			core.NewCommandPrinter(),
 		)
@@ -40,7 +37,7 @@ func init() {
 	Cmd.AddCommand(listCmd)
 
 	flags := listCmd.Flags()
-	flags.StringVarP(&listCmdFlag.name, "name", "n", "", "command name")
-	flags.StringVarP(&listCmdFlag.version, "version", "v", "", "command version")
-	flags.StringVarP(&listCmdFlag.location, "location", "l", "", "command location")
+	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
+	flags.StringVarP(&simpleCmdFlag.version, "version", "v", "", "command version")
+	flags.StringVarP(&simpleCmdFlag.location, "location", "l", "", "command location")
 }

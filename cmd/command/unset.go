@@ -21,6 +21,10 @@ var unsetCmd = &cobra.Command{
 		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
 			define.ContextKeyName: simpleCmdFlag.name,
 		})), "deactivate failed")
+
+		define.Logger.Info("unset command", map[string]interface{}{
+			"name": simpleCmdFlag.name,
+		})
 	},
 }
 

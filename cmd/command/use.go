@@ -26,6 +26,11 @@ var useCmd = &cobra.Command{
 			define.ContextKeyVersion:  simpleCmdFlag.version,
 			define.ContextKeyLocation: simpleCmdFlag.location,
 		})), "activate failed")
+
+		define.Logger.Info("used command", map[string]interface{}{
+			"name":    simpleCmdFlag.name,
+			"version": simpleCmdFlag.version,
+		})
 	},
 }
 

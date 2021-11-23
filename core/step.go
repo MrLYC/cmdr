@@ -55,7 +55,7 @@ func (r *StepRunner) Run(ctx context.Context) (err error) {
 		}
 
 		defer func(step Steper) {
-			logger.Info("step finished", map[string]interface{}{
+			logger.Debug("step finished", map[string]interface{}{
 				"step": step,
 			})
 

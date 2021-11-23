@@ -24,6 +24,12 @@ var defineCmd = &cobra.Command{
 			define.ContextKeyLocation:       simpleCmdFlag.location,
 			define.ContextKeyCommandManaged: false,
 		})), "install failed")
+
+		define.Logger.Info("defined command", map[string]interface{}{
+			"name":     simpleCmdFlag.name,
+			"version":  simpleCmdFlag.version,
+			"location": simpleCmdFlag.location,
+		})
 	},
 }
 
