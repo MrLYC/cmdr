@@ -89,6 +89,7 @@ func (c *CommandQuerier) String() string {
 }
 
 func (c *CommandQuerier) Run(ctx context.Context) (context.Context, error) {
+	logger := define.Logger
 	var command model.Command
 	client := GetDBClientFromContext(ctx)
 	err := client.Select(c.matchers...).First(&command)
@@ -98,6 +99,10 @@ func (c *CommandQuerier) Run(ctx context.Context) (context.Context, error) {
 		return ctx, errors.Wrap(err, "query command failed")
 	}
 
+	logger.Info("command queried", map[string]interface{}{
+		"name":    command.Name,
+		"version": command.Version,
+	})
 	return context.WithValue(ctx, define.ContextKeyCommand, &command), nil
 }
 
@@ -107,8 +112,8 @@ func NewCommandQuerier(matchers []q.Matcher) *CommandQuerier {
 	}
 }
 
-func NewCommandQuerierByNameAndVersion(name, version string) *CommandQuerier {
-	return NewCommandQuerier([]q.Matcher{
-		q.Eq("Name", name), q.Eq("Version", version),
-	})
+func NewCommandListQuerierByNameAndVersion(name, version string) *CommandListQuerier {
+	return NewCommandsQuerier(
+		[]q.Matcher{q.Eq("Name", name), q.Eq("Version", version)},
+	)
 }

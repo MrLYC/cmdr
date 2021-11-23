@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/model"
@@ -28,6 +29,14 @@ func (s *BinaryRemover) Run(ctx context.Context) (context.Context, error) {
 	}
 
 	if !command.Managed {
+		return ctx, nil
+	}
+
+	exists, err := afero.Exists(fs, command.Location)
+	if !exists || err != nil {
+		logger.Debug("binary not found", map[string]interface{}{
+			"location": command.Location,
+		})
 		return ctx, nil
 	}
 
@@ -59,19 +68,21 @@ func (s *CommandRemover) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
 	client := GetDBClientFromContext(ctx)
 
-	command, err := GetCommandFromContext(ctx)
+	commands, err := GetCommandsFromContext(ctx)
 	if err != nil {
 		return ctx, nil
 	}
 
-	logger.Info("removing command", map[string]interface{}{
-		"name":    command.Name,
-		"version": command.Version,
-	})
+	for _, command := range commands {
+		logger.Info("removing command", map[string]interface{}{
+			"name":    command.Name,
+			"version": command.Version,
+		})
 
-	err = client.DeleteStruct(command)
-	if err != nil {
-		return ctx, errors.Wrapf(err, "remove command failed")
+		err = client.DeleteStruct(command)
+		if err != nil {
+			return ctx, errors.Wrapf(err, "remove command failed")
+		}
 	}
 
 	return ctx, nil

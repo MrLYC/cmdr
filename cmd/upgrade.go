@@ -25,6 +25,9 @@ var upgradeCmd = &cobra.Command{
 			core.NewDownloader(),
 			core.NewBinaryInstaller(),
 			core.NewCommandInstaller(),
+			core.NewBinaryActivator(),
+			core.NewCommandDeactivator(),
+			core.NewCommandActivator(),
 		)
 
 		if !upgradeCmdFlag.keep {
@@ -32,11 +35,9 @@ var upgradeCmd = &cobra.Command{
 				core.NewContextValueSetter(map[define.ContextKey]interface{}{
 					define.ContextKeyVersion: define.Version,
 				}),
-				core.NewCommandQuerierByNameAndVersion(
+				core.NewCommandListQuerierByNameAndVersion(
 					define.Name, define.Version,
 				),
-				core.NewBinaryRemover(),
-				core.NewCommandRemover(),
 				core.NewBinaryRemover(),
 				core.NewCommandRemover(),
 			)
