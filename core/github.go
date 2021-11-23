@@ -22,7 +22,7 @@ func (r *ReleaseSearcher) String() string {
 
 func (r *ReleaseSearcher) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
-	logger.Debug("searching cmdr release", map[string]interface{}{
+	logger.Info("searching cmdr release", map[string]interface{}{
 		"release": r.release,
 		"asset":   r.asset,
 	})
@@ -53,6 +53,10 @@ func (r *ReleaseSearcher) Run(ctx context.Context) (context.Context, error) {
 		return ctx, errors.Wrapf(ErrAssetNotFound, "cmdr release not found: %s", r.asset)
 	}
 
+	logger.Info("cmdr release found", map[string]interface{}{
+		"release": version,
+		"url":     url,
+	})
 	return utils.SetIntoContext(ctx, map[define.ContextKey]interface{}{
 		define.ContextKeyVersion:  version,
 		define.ContextKeyLocation: url,

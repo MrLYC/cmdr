@@ -36,9 +36,9 @@ func (d *Downloader) Run(ctx context.Context) (context.Context, error) {
 
 	location := filepath.Join(d.tempDir, name)
 
-	logger.Debug("downloading command", map[string]interface{}{
-		"url":    url,
-		"target": location,
+	logger.Info("downloading", map[string]interface{}{
+		"url":  url,
+		"name": name,
 	})
 	err = utils.DownloadToFile(ctx, url, location)
 	if err != nil {
