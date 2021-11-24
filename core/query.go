@@ -11,16 +11,16 @@ import (
 	"github.com/mrlyc/cmdr/model"
 )
 
-type CommandListQuerier struct {
+type CommandsQuerier struct {
 	BaseStep
 	matchers []q.Matcher
 }
 
-func (c *CommandListQuerier) String() string {
+func (c *CommandsQuerier) String() string {
 	return "commands-querier"
 }
 
-func (c *CommandListQuerier) Run(ctx context.Context) (context.Context, error) {
+func (c *CommandsQuerier) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
 	var commands []*model.Command
 	client := GetDBClientFromContext(ctx)
@@ -38,13 +38,13 @@ func (c *CommandListQuerier) Run(ctx context.Context) (context.Context, error) {
 	return context.WithValue(ctx, define.ContextKeyCommands, commands), nil
 }
 
-func NewCommandsQuerier(matchers []q.Matcher) *CommandListQuerier {
-	return &CommandListQuerier{
+func NewCommandsQuerier(matchers []q.Matcher) *CommandsQuerier {
+	return &CommandsQuerier{
 		matchers: matchers,
 	}
 }
 
-func NewSimpleCommandsQuerier(name, version, location string, activated bool) *CommandListQuerier {
+func NewFullCommandsQuerier(name, version, location string, activated bool) *CommandsQuerier {
 	logger := define.Logger
 	filters := make([]q.Matcher, 0)
 
@@ -79,40 +79,7 @@ func NewSimpleCommandsQuerier(name, version, location string, activated bool) *C
 	return NewCommandsQuerier(filters)
 }
 
-type CommandQuerier struct {
-	BaseStep
-	matchers []q.Matcher
-}
-
-func (c *CommandQuerier) String() string {
-	return "command-querier"
-}
-
-func (c *CommandQuerier) Run(ctx context.Context) (context.Context, error) {
-	logger := define.Logger
-	var command model.Command
-	client := GetDBClientFromContext(ctx)
-	err := client.Select(c.matchers...).First(&command)
-	if errors.Cause(err) == storm.ErrNotFound {
-		return ctx, nil
-	} else if err != nil {
-		return ctx, errors.Wrap(err, "query command failed")
-	}
-
-	logger.Info("command queried", map[string]interface{}{
-		"name":    command.Name,
-		"version": command.Version,
-	})
-	return context.WithValue(ctx, define.ContextKeyCommand, &command), nil
-}
-
-func NewCommandQuerier(matchers []q.Matcher) *CommandQuerier {
-	return &CommandQuerier{
-		matchers: matchers,
-	}
-}
-
-func NewCommandListQuerierByNameAndVersion(name, version string) *CommandListQuerier {
+func NewSimpleCommandsQuerier(name, version string) *CommandsQuerier {
 	return NewCommandsQuerier(
 		[]q.Matcher{q.Eq("Name", name), q.Eq("Version", version)},
 	)

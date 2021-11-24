@@ -19,7 +19,7 @@ var listCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
-			core.NewSimpleCommandsQuerier(
+			core.NewFullCommandsQuerier(
 				simpleCmdFlag.name, simpleCmdFlag.version, simpleCmdFlag.location, listCmdFlag.activated,
 			),
 			core.NewCommandPrinter(),

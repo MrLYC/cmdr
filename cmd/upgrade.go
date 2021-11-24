@@ -35,7 +35,7 @@ var upgradeCmd = &cobra.Command{
 				core.NewContextValueSetter(map[define.ContextKey]interface{}{
 					define.ContextKeyVersion: define.Version,
 				}),
-				core.NewCommandListQuerierByNameAndVersion(
+				core.NewSimpleCommandsQuerier(
 					define.Name, define.Version,
 				),
 				core.NewBinaryRemover(),

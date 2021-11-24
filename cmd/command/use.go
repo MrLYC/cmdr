@@ -15,9 +15,9 @@ var useCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
-			core.NewCommandListQuerierByNameAndVersion(simpleCmdFlag.name, simpleCmdFlag.version),
-			core.NewBinaryActivator(),
+			core.NewSimpleCommandsQuerier(simpleCmdFlag.name, simpleCmdFlag.version),
 			core.NewCommandDeactivator(),
+			core.NewBinaryActivator(),
 			core.NewCommandActivator(),
 		)
 

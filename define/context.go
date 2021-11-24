@@ -10,5 +10,4 @@ const (
 	ContextKeyDBClient
 	ContextKeyCommandManaged
 	ContextKeyCommands
-	ContextKeyCommand
 )

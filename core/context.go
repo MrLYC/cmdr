@@ -14,20 +14,6 @@ func GetDBClientFromContext(ctx context.Context) DBClient {
 	return ctx.Value(define.ContextKeyDBClient).(DBClient)
 }
 
-func getCommandFromContext(ctx context.Context) *model.Command {
-	value := utils.GetInterfaceFromContext(ctx, define.ContextKeyCommand)
-	if value == nil {
-		return nil
-	}
-
-	command, ok := value.(*model.Command)
-	if !ok {
-		return nil
-	}
-
-	return command
-}
-
 func getCommandsFromContext(ctx context.Context) []*model.Command {
 	values := utils.GetInterfaceFromContext(ctx, define.ContextKeyCommands)
 	if values == nil {
@@ -43,11 +29,6 @@ func getCommandsFromContext(ctx context.Context) []*model.Command {
 }
 
 func GetCommandFromContext(ctx context.Context) (*model.Command, error) {
-	command := getCommandFromContext(ctx)
-	if command != nil {
-		return command, nil
-	}
-
 	commands := getCommandsFromContext(ctx)
 	if commands != nil && len(commands) > 0 {
 		return commands[0], nil
@@ -57,11 +38,6 @@ func GetCommandFromContext(ctx context.Context) (*model.Command, error) {
 }
 
 func GetCommandsFromContext(ctx context.Context) ([]*model.Command, error) {
-	command := getCommandFromContext(ctx)
-	if command != nil {
-		return []*model.Command{command}, nil
-	}
-
 	commands := getCommandsFromContext(ctx)
 	if commands != nil && len(commands) > 0 {
 		return commands, nil

@@ -14,12 +14,11 @@ func _() {
 	_ = x[ContextKeyDBClient-3]
 	_ = x[ContextKeyCommandManaged-4]
 	_ = x[ContextKeyCommands-5]
-	_ = x[ContextKeyCommand-6]
 }
 
-const _ContextKey_name = "ContextKeyNameContextKeyVersionContextKeyLocationContextKeyDBClientContextKeyCommandManagedContextKeyCommandsContextKeyCommand"
+const _ContextKey_name = "ContextKeyNameContextKeyVersionContextKeyLocationContextKeyDBClientContextKeyCommandManagedContextKeyCommands"
 
-var _ContextKey_index = [...]uint8{0, 14, 31, 49, 67, 91, 109, 126}
+var _ContextKey_index = [...]uint8{0, 14, 31, 49, 67, 91, 109}
 
 func (i ContextKey) String() string {
 	if i < 0 || i >= ContextKey(len(_ContextKey_index)-1) {
