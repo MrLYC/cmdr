@@ -15,7 +15,7 @@ var defineCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
-			core.NewCommandInstaller(),
+			core.NewCommandDefiner(),
 		)
 
 		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{

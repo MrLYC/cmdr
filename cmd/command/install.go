@@ -17,7 +17,7 @@ var installCmd = &cobra.Command{
 			core.NewDBClientMaker(),
 			core.NewDownloader(),
 			core.NewBinaryInstaller(),
-			core.NewCommandInstaller(),
+			core.NewCommandDefiner(),
 		)
 
 		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{

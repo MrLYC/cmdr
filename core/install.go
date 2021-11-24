@@ -5,9 +5,9 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -106,48 +106,47 @@ func NewBinariesInstaller() *BinariesInstaller {
 	return &BinariesInstaller{}
 }
 
-type CommandInstaller struct {
+type BinaryUninstaller struct {
 	BaseStep
 }
 
-func (i *CommandInstaller) String() string {
-	return "command-installer"
+func (s *BinaryUninstaller) String() string {
+	return "binary-uninstaller"
 }
 
-func (i *CommandInstaller) Run(ctx context.Context) (context.Context, error) {
+func (s *BinaryUninstaller) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
-	name := utils.GetStringFromContext(ctx, define.ContextKeyName)
-	version := utils.GetStringFromContext(ctx, define.ContextKeyVersion)
-	managed := utils.GetBoolFromContext(ctx, define.ContextKeyCommandManaged)
-	client := GetDBClientFromContext(ctx)
-	var location string
-	if managed {
-		location = GetCommandPath(name, version)
-	} else {
-		location = utils.GetStringFromContext(ctx, define.ContextKeyLocation)
+	fs := define.FS
+
+	command, err := GetCommandFromContext(ctx)
+	if err != nil {
+		return ctx, nil
 	}
 
-	logger.Info("installing command", map[string]interface{}{
-		"name":     name,
-		"version":  version,
-		"location": location,
-		"managed":  managed,
+	if !command.Managed {
+		return ctx, nil
+	}
+
+	exists, err := afero.Exists(fs, command.Location)
+	if !exists || err != nil {
+		logger.Debug("binary not found", map[string]interface{}{
+			"location": command.Location,
+		})
+		return ctx, nil
+	}
+
+	logger.Info("removing binary", map[string]interface{}{
+		"location": command.Location,
 	})
 
-	err := client.Save(&model.Command{
-		Name:     name,
-		Version:  version,
-		Location: location,
-		Managed:  managed,
-	})
-
+	err = fs.Remove(command.Location)
 	if err != nil {
-		return ctx, errors.Wrapf(err, "create command failed")
+		return ctx, errors.Wrapf(err, "remove binary failed")
 	}
 
 	return ctx, nil
 }
 
-func NewCommandInstaller() *CommandInstaller {
-	return &CommandInstaller{}
+func NewBinaryUninstaller() *BinaryUninstaller {
+	return &BinaryUninstaller{}
 }

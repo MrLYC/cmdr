@@ -37,7 +37,7 @@ var setupCmd = &cobra.Command{
 		if !setupCmdFlag.doNotInstall {
 			runner.Add(
 				core.NewBinaryInstaller(),
-				core.NewCommandInstaller(),
+				core.NewCommandDefiner(),
 			)
 		}
 

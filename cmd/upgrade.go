@@ -24,7 +24,7 @@ var upgradeCmd = &cobra.Command{
 			core.NewReleaseSearcher(upgradeCmdFlag.release, upgradeCmdFlag.asset),
 			core.NewDownloader(),
 			core.NewBinaryInstaller(),
-			core.NewCommandInstaller(),
+			core.NewCommandDefiner(),
 			core.NewBinaryActivator(),
 			core.NewCommandDeactivator(),
 			core.NewCommandActivator(),
@@ -38,8 +38,8 @@ var upgradeCmd = &cobra.Command{
 				core.NewSimpleCommandsQuerier(
 					define.Name, define.Version,
 				),
-				core.NewBinaryRemover(),
-				core.NewCommandRemover(),
+				core.NewBinaryUninstaller(),
+				core.NewCommandUndefiner(),
 			)
 		}
 

@@ -25,7 +25,7 @@ var doctorCmd = &cobra.Command{
 			core.NewDBClientMaker(),
 			core.NewDBMigrator(new(model.Command)),
 			core.NewCommandsQuerier([]q.Matcher{q.Eq("Activated", true)}),
-			core.NewBrokenCommandsRemover(),
+			core.NewBrokenCommandsFixer(),
 			core.NewDirectoryRemover(map[string]string{
 				"bin": binDir,
 			}),
