@@ -22,6 +22,7 @@ var listCmd = &cobra.Command{
 			core.NewFullCommandsQuerier(
 				simpleCmdFlag.name, simpleCmdFlag.version, simpleCmdFlag.location, listCmdFlag.activated,
 			),
+			core.NewCommandSorter(),
 			core.NewCommandPrinter(),
 		)
 
