@@ -50,6 +50,8 @@ func (s *FinalizeCommandRunner) String() string {
 }
 
 func (s *FinalizeCommandRunner) Finish(ctx context.Context) error {
+	logger := define.Logger
+	logger.Info("executing cmdr setup command")
 	return s.run(ctx)
 }
 
