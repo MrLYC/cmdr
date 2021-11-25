@@ -19,6 +19,7 @@ var upgradeCmd = &cobra.Command{
 	Use:   "upgrade",
 	Short: "Upgrade cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := define.Logger
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
 			core.NewReleaseSearcher(upgradeCmdFlag.release, upgradeCmdFlag.asset),
@@ -38,6 +39,7 @@ var upgradeCmd = &cobra.Command{
 				core.NewSimpleCommandsQuerier(
 					define.Name, define.Version,
 				),
+				core.NewStepLoggerWithFields("uninstalling cmdr", define.ContextKeyVersion),
 				core.NewBinaryUninstaller(),
 				core.NewCommandUndefiner(),
 			)
@@ -47,6 +49,10 @@ var upgradeCmd = &cobra.Command{
 			define.ContextKeyName:           define.Name,
 			define.ContextKeyCommandManaged: true,
 		})), "upgrade failed")
+
+		logger.Info("upgraded command", map[string]interface{}{
+			"name": define.Name,
+		})
 	},
 }
 

@@ -12,8 +12,9 @@ import (
 )
 
 var setupCmdFlag struct {
-	doNotInstall      bool
-	doNotWriteProfile bool
+	skipInstall bool
+	skipProfile bool
+	upgrade     bool
 }
 
 // setupCmd represents the setup command
@@ -34,15 +35,17 @@ var setupCmd = &cobra.Command{
 		cmdrLocation, err := os.Executable()
 		utils.CheckError(err)
 
-		if !setupCmdFlag.doNotInstall {
+		if !setupCmdFlag.skipInstall && !setupCmdFlag.upgrade {
 			runner.Add(
+				core.NewStepLoggerWithFields("installing command", define.ContextKeyName, define.ContextKeyVersion),
 				core.NewBinaryInstaller(),
 				core.NewCommandDefiner(),
 			)
 		}
 
-		if !setupCmdFlag.doNotWriteProfile {
+		if !setupCmdFlag.skipProfile {
 			runner.Add(
+				core.NewStepLoggerWithFields("writing profile"),
 				core.NewShellProfiler(os.Getenv("SHELL")),
 			)
 		}
@@ -60,6 +63,7 @@ func init() {
 	rootCmd.AddCommand(setupCmd)
 
 	flags := setupCmd.Flags()
-	flags.BoolVar(&setupCmdFlag.doNotInstall, "skip-install", false, "do not install cmdr")
-	flags.BoolVar(&setupCmdFlag.doNotWriteProfile, "skip-profile", false, "do not write profile")
+	flags.BoolVar(&setupCmdFlag.skipInstall, "skip-install", false, "do not install cmdr")
+	flags.BoolVar(&setupCmdFlag.skipProfile, "skip-profile", false, "do not write profile")
+	flags.BoolVar(&setupCmdFlag.upgrade, "upgrade", false, "for upgrade setup")
 }
