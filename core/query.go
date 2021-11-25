@@ -24,6 +24,7 @@ func (c *CommandsQuerier) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
 	var commands []*model.Command
 	client := GetDBClientFromContext(ctx)
+
 	err := client.Select(c.matchers...).Find(&commands)
 	if errors.Cause(err) == storm.ErrNotFound {
 		return ctx, nil

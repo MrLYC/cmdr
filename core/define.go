@@ -31,25 +31,27 @@ func (i *CommandDefiner) Run(ctx context.Context) (context.Context, error) {
 		location = utils.GetStringFromContext(ctx, define.ContextKeyLocation)
 	}
 
-	logger.Info("installing command", map[string]interface{}{
+	logger.Info("define command", map[string]interface{}{
 		"name":     name,
 		"version":  version,
 		"location": location,
 		"managed":  managed,
 	})
 
-	err := client.Save(&model.Command{
+	command := model.Command{
 		Name:     name,
 		Version:  version,
 		Location: location,
 		Managed:  managed,
-	})
+	}
+
+	err := client.Save(&command)
 
 	if err != nil {
 		return ctx, errors.Wrapf(err, "create command failed")
 	}
 
-	return ctx, nil
+	return context.WithValue(ctx, define.ContextKeyCommands, []*model.Command{&command}), nil
 }
 
 func NewCommandDefiner() *CommandDefiner {
@@ -74,7 +76,7 @@ func (s *CommandUndefiner) Run(ctx context.Context) (context.Context, error) {
 	}
 
 	for _, command := range commands {
-		logger.Info("removing command", map[string]interface{}{
+		logger.Info("undefine command", map[string]interface{}{
 			"name":    command.Name,
 			"version": command.Version,
 		})

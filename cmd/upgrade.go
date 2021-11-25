@@ -9,9 +9,10 @@ import (
 )
 
 var upgradeCmdFlag struct {
-	release string
-	asset   string
-	keep    bool
+	release   string
+	asset     string
+	keep      bool
+	skipSetup bool
 }
 
 // upgradeCmd represents the upgrade command
@@ -20,19 +21,27 @@ var upgradeCmd = &cobra.Command{
 	Short: "Upgrade cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := define.Logger
-		runner := core.NewStepRunner(
+		runner := core.NewStepRunner()
+
+		if !upgradeCmdFlag.skipSetup {
+			runArgs := []string{"setup", "--upgrade"}
+			runArgs = append(runArgs, args...)
+			runner.Add(core.NewUpgradeSetupRunner(runArgs...))
+		}
+
+		runner.Add(
 			core.NewDBClientMaker(),
 			core.NewReleaseSearcher(upgradeCmdFlag.release, upgradeCmdFlag.asset),
 			core.NewDownloader(),
 			core.NewBinaryInstaller(),
 			core.NewCommandDefiner(),
-			core.NewBinaryActivator(),
-			core.NewCommandDeactivator(),
-			core.NewCommandActivator(),
 		)
 
 		if !upgradeCmdFlag.keep {
 			runner.Add(
+				core.NewCommandDeactivator(),
+				core.NewBinaryActivator(),
+				core.NewCommandActivator(),
 				core.NewContextValueSetter(map[define.ContextKey]interface{}{
 					define.ContextKeyVersion: define.Version,
 				}),
@@ -62,4 +71,5 @@ func init() {
 	flags.StringVarP(&upgradeCmdFlag.release, "release", "r", "latest", "cmdr release tag name")
 	flags.StringVarP(&upgradeCmdFlag.asset, "asset", "a", define.Asset, "cmdr release assert name")
 	flags.BoolVarP(&upgradeCmdFlag.keep, "keep", "k", false, "keep the last cmdr version")
+	flags.BoolVar(&upgradeCmdFlag.skipSetup, "skip-setup", false, "do not setup after cmdr installed")
 }
