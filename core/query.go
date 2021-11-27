@@ -26,9 +26,7 @@ func (c *CommandsQuerier) Run(ctx context.Context) (context.Context, error) {
 	client := GetDBClientFromContext(ctx)
 
 	err := client.Select(c.matchers...).Find(&commands)
-	if errors.Cause(err) == storm.ErrNotFound {
-		return ctx, nil
-	} else if err != nil {
+	if err != nil && errors.Cause(err) != storm.ErrNotFound {
 		return ctx, errors.Wrap(err, "query command failed")
 	}
 

@@ -1,6 +1,8 @@
 package command
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
@@ -23,7 +25,7 @@ var listCmd = &cobra.Command{
 				simpleCmdFlag.name, simpleCmdFlag.version, simpleCmdFlag.location, listCmdFlag.activated,
 			),
 			core.NewCommandSorter(),
-			core.NewCommandPrinter(),
+			core.NewCommandPrinter(os.Stdout),
 		)
 
 		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{

@@ -3,11 +3,13 @@ package core
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 )
 
 type CommandPrinter struct {
 	BaseStep
+	writer io.Writer
 }
 
 func (p *CommandPrinter) String() string {
@@ -34,12 +36,14 @@ func (p *CommandPrinter) Run(ctx context.Context) (context.Context, error) {
 			parts = append(parts, fmt.Sprintf("@%s", command.Location))
 		}
 
-		fmt.Printf("%s\n", strings.Join(parts, " "))
+		fmt.Fprintf(p.writer, "%s\n", strings.Join(parts, " "))
 	}
 
 	return ctx, nil
 }
 
-func NewCommandPrinter() *CommandPrinter {
-	return &CommandPrinter{}
+func NewCommandPrinter(writer io.Writer) *CommandPrinter {
+	return &CommandPrinter{
+		writer: writer,
+	}
 }

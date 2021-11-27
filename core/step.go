@@ -8,6 +8,8 @@ import (
 	"github.com/mrlyc/cmdr/define"
 )
 
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock Steper
+
 type Steper interface {
 	String() string
 	Run(ctx context.Context) (context.Context, error)
@@ -32,8 +34,17 @@ type StepRunner struct {
 	steps []Steper
 }
 
-func (r *StepRunner) Add(step ...Steper) {
+func (r *StepRunner) Add(step ...Steper) *StepRunner {
 	r.steps = append(r.steps, step...)
+	return r
+}
+
+func (r *StepRunner) Layout() []string {
+	var layout []string
+	for _, step := range r.steps {
+		layout = append(layout, step.String())
+	}
+	return layout
 }
 
 func (r *StepRunner) Run(ctx context.Context) (err error) {

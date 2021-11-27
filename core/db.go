@@ -16,6 +16,17 @@ type StormClient struct {
 	*storm.DB
 }
 
+func NewDBClient(path string) (DBClient, error) {
+	db, err := storm.Open(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "open database failed")
+	}
+
+	return &StormClient{
+		DB: db,
+	}, nil
+}
+
 func GetDBClient() (DBClient, error) {
 	cmdrDir := GetRootDir()
 	name := GetDBName()
@@ -25,14 +36,8 @@ func GetDBClient() (DBClient, error) {
 		"name": name,
 		"dir":  cmdrDir,
 	})
-	db, err := storm.Open(filepath.Join(cmdrDir, name))
-	if err != nil {
-		return nil, errors.Wrapf(err, "open database failed")
-	}
 
-	return &StormClient{
-		DB: db,
-	}, nil
+	return NewDBClient(filepath.Join(cmdrDir, name))
 }
 
 type DBClientMaker struct {
