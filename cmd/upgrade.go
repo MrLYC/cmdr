@@ -22,6 +22,7 @@ var upgradeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := define.Logger
 		runner := core.NewStepRunner()
+		shimsDir := core.GetShimsDir()
 
 		if !upgradeCmdFlag.skipSetup {
 			runArgs := []string{"setup", "--upgrade"}
@@ -33,8 +34,8 @@ var upgradeCmd = &cobra.Command{
 			core.NewDBClientMaker(),
 			core.NewReleaseSearcher(upgradeCmdFlag.release, upgradeCmdFlag.asset),
 			core.NewDownloader(),
-			core.NewBinaryInstaller(),
-			core.NewCommandDefiner(),
+			core.NewBinariesInstaller(shimsDir),
+			core.NewCommandDefiner(shimsDir),
 		)
 
 		if !upgradeCmdFlag.keep {
@@ -49,7 +50,7 @@ var upgradeCmd = &cobra.Command{
 					define.Name, define.Version,
 				),
 				core.NewStepLoggerWithFields("uninstalling cmdr", define.ContextKeyVersion),
-				core.NewBinaryUninstaller(),
+				core.NewBinariesUninstaller(),
 				core.NewCommandUndefiner(),
 			)
 		}

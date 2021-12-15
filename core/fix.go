@@ -12,6 +12,7 @@ import (
 
 type BrokenCommandsFixer struct {
 	BaseStep
+	shimsDir string
 }
 
 func (s *BrokenCommandsFixer) String() string {
@@ -32,7 +33,7 @@ func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) 
 	for _, command := range commands {
 		location := command.Location
 		if command.Managed {
-			location = GetCommandPath(command.Name, command.Version)
+			location = GetCommandPath(s.shimsDir, command.Name, command.Version)
 		}
 
 		_, err := fs.Stat(location)
@@ -51,6 +52,7 @@ func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) 
 		err = client.DeleteStruct(command)
 		if err != nil {
 			errs = multierror.Append(errs, errors.Wrapf(err, "remove command %s(%s) failed", command.Name, command.Version))
+			continue
 		}
 		logger.Info("command deleted", map[string]interface{}{
 			"name":    command.Name,
@@ -62,6 +64,8 @@ func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) 
 	return ctx, errs
 }
 
-func NewBrokenCommandsFixer() *BrokenCommandsFixer {
-	return &BrokenCommandsFixer{}
+func NewBrokenCommandsFixer(shimsDir string) *BrokenCommandsFixer {
+	return &BrokenCommandsFixer{
+		shimsDir: shimsDir,
+	}
 }

@@ -30,20 +30,19 @@ func getCommandsFromContext(ctx context.Context) []*model.Command {
 
 func GetCommandFromContext(ctx context.Context) (*model.Command, error) {
 	commands := getCommandsFromContext(ctx)
-	if commands != nil && len(commands) > 0 {
-		return commands[0], nil
+	if commands == nil {
+		return nil, errors.Wrapf(ErrContextValueNotFound, "commands not found")
 	}
-
-	return nil, errors.Wrapf(ErrContextValueNotFound, "command not found")
+	return commands[0], nil
 }
 
 func GetCommandsFromContext(ctx context.Context) ([]*model.Command, error) {
 	commands := getCommandsFromContext(ctx)
-	if commands != nil && len(commands) > 0 {
-		return commands, nil
+	if commands == nil {
+		return nil, errors.Wrapf(ErrContextValueNotFound, "commands not found")
 	}
+	return commands, nil
 
-	return nil, errors.Wrapf(ErrContextValueNotFound, "commands not found")
 }
 
 type ContextValueSetter struct {

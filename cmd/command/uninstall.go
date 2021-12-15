@@ -18,7 +18,7 @@ var uninstallCmd = &cobra.Command{
 			core.NewSimpleCommandsQuerier(
 				simpleCmdFlag.name, simpleCmdFlag.version,
 			),
-			core.NewBinaryUninstaller(),
+			core.NewBinariesUninstaller(),
 			core.NewCommandUndefiner(),
 		)
 

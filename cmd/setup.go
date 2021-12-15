@@ -22,9 +22,10 @@ var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Setup cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
+		shimsDir := core.GetShimsDir()
 		runner := core.NewStepRunner(
 			core.NewDirectoryMaker(map[string]string{
-				"shims": core.GetShimsDir(),
+				"shims": shimsDir,
 				"bin":   core.GetBinDir(),
 			}),
 			core.NewDBClientMaker(),
@@ -38,8 +39,8 @@ var setupCmd = &cobra.Command{
 		if !setupCmdFlag.skipInstall && !setupCmdFlag.upgrade {
 			runner.Add(
 				core.NewStepLoggerWithFields("installing command", define.ContextKeyName, define.ContextKeyVersion),
-				core.NewBinaryInstaller(),
-				core.NewCommandDefiner(),
+				core.NewBinariesInstaller(shimsDir),
+				core.NewCommandDefiner(shimsDir),
 			)
 		}
 

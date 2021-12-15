@@ -20,12 +20,13 @@ var doctorCmd = &cobra.Command{
 	Short: "Check and fix cmdr environment",
 	Run: func(cmd *cobra.Command, args []string) {
 		binDir := core.GetBinDir()
+		shimsDir := core.GetShimsDir()
 
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
 			core.NewDBMigrator(new(model.Command)),
 			core.NewCommandsQuerier([]q.Matcher{q.Eq("Activated", true)}),
-			core.NewBrokenCommandsFixer(),
+			core.NewBrokenCommandsFixer(shimsDir),
 			core.NewDirectoryRemover(map[string]string{
 				"bin": binDir,
 			}),
@@ -33,7 +34,7 @@ var doctorCmd = &cobra.Command{
 				"shims": core.GetShimsDir(),
 				"bin":   binDir,
 			}),
-			core.NewBinariesInstaller(),
+			core.NewBinariesInstaller(shimsDir),
 			core.NewBinariesActivator(),
 		)
 

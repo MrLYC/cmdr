@@ -13,9 +13,11 @@ var defineCmd = &cobra.Command{
 	Use:   "define",
 	Short: "Define command into cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
+		shimsDir := core.GetShimsDir()
+
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
-			core.NewCommandDefiner(),
+			core.NewCommandDefiner(shimsDir),
 		)
 
 		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{

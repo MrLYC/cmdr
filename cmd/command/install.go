@@ -13,11 +13,13 @@ var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install command into cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
+		shimsDir := core.GetShimsDir()
+
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
 			core.NewDownloader(),
-			core.NewBinaryInstaller(),
-			core.NewCommandDefiner(),
+			core.NewCommandDefiner(shimsDir),
+			core.NewBinariesInstaller(shimsDir),
 		)
 
 		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
