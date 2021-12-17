@@ -23,6 +23,7 @@ var upgradeCmd = &cobra.Command{
 		logger := define.Logger
 		runner := core.NewStepRunner()
 		shimsDir := core.GetShimsDir()
+		binDir := core.GetBinDir()
 
 		if !upgradeCmdFlag.skipSetup {
 			runArgs := []string{"setup", "--upgrade"}
@@ -41,7 +42,7 @@ var upgradeCmd = &cobra.Command{
 		if !upgradeCmdFlag.keep {
 			runner.Add(
 				core.NewCommandDeactivator(),
-				core.NewBinaryActivator(),
+				core.NewBinariesActivator(binDir),
 				core.NewCommandActivator(),
 				core.NewContextValueSetter(map[define.ContextKey]interface{}{
 					define.ContextKeyVersion: define.Version,
@@ -50,8 +51,8 @@ var upgradeCmd = &cobra.Command{
 					define.Name, define.Version,
 				),
 				core.NewStepLoggerWithFields("uninstalling cmdr", define.ContextKeyVersion),
-				core.NewBinariesUninstaller(),
 				core.NewCommandUndefiner(),
+				core.NewBinariesUninstaller(),
 			)
 		}
 

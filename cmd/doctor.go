@@ -35,7 +35,7 @@ var doctorCmd = &cobra.Command{
 				"bin":   binDir,
 			}),
 			core.NewBinariesInstaller(shimsDir),
-			core.NewBinariesActivator(),
+			core.NewBinariesActivator(binDir),
 		)
 
 		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{

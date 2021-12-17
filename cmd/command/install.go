@@ -18,8 +18,8 @@ var installCmd = &cobra.Command{
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
 			core.NewDownloader(),
-			core.NewCommandDefiner(shimsDir),
 			core.NewBinariesInstaller(shimsDir),
+			core.NewCommandDefiner(shimsDir),
 		)
 
 		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{

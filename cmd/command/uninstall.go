@@ -18,8 +18,8 @@ var uninstallCmd = &cobra.Command{
 			core.NewSimpleCommandsQuerier(
 				simpleCmdFlag.name, simpleCmdFlag.version,
 			),
-			core.NewBinariesUninstaller(),
 			core.NewCommandUndefiner(),
+			core.NewBinariesUninstaller(),
 		)
 
 		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{

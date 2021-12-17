@@ -20,12 +20,14 @@ var _ = Describe("Bianry", func() {
 		command1, command2 *model.Command
 		ctx                context.Context
 		shimsDir           string
+		binDir             string
 	)
 
 	BeforeEach(func() {
 		tempDir, err := afero.TempDir(define.FS, "", "")
 		Expect(err).To(BeNil())
 		shimsDir = filepath.Join(tempDir, "shims")
+		binDir = filepath.Join(tempDir, "bin")
 
 		location1 := filepath.Join(tempDir, "test1.sh")
 		err = afero.WriteFile(define.FS, location1, []byte(`#!/bin/sh\necho $@`), 0755)
@@ -159,6 +161,47 @@ var _ = Describe("Bianry", func() {
 			Expect(
 				afero.Exists(define.FS, command2.Location),
 			).To(BeFalse())
+		})
+	})
+
+	Context("BinariesActivator", func() {
+		var activator *core.BinariesActivator
+
+		BeforeEach(func() {
+			activator = core.NewBinariesActivator(binDir)
+		})
+
+		It("context not found", func() {
+			_, err := activator.Run(context.Background())
+			Expect(errors.Cause(err)).To(Equal(core.ErrContextValueNotFound))
+		})
+
+		It("activate binaries", func() {
+			_, err := activator.Run(ctx)
+			Expect(err).To(BeNil())
+
+			Expect(
+				afero.Exists(define.FS, filepath.Join(binDir, command1.Name)),
+			).To(BeTrue())
+			Expect(
+				afero.Exists(define.FS, filepath.Join(binDir, command2.Name)),
+			).To(BeTrue())
+		})
+
+		It("activate binaries that already exists", func() {
+			Expect(define.FS.MkdirAll(binDir, 0755)).To(BeNil())
+			Expect(afero.WriteFile(define.FS, filepath.Join(binDir, command1.Name), []byte(""), 0755)).To(BeNil())
+			Expect(define.FS.MkdirAll(filepath.Join(binDir, command2.Name), 0755)).To(BeNil())
+
+			_, err := activator.Run(ctx)
+			Expect(err).To(BeNil())
+
+			Expect(
+				afero.Exists(define.FS, filepath.Join(binDir, command1.Name)),
+			).To(BeTrue())
+			Expect(
+				afero.Exists(define.FS, filepath.Join(binDir, command2.Name)),
+			).To(BeTrue())
 		})
 	})
 })

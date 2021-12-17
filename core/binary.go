@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"path/filepath"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -129,4 +130,82 @@ func (s *BinariesUninstaller) Run(ctx context.Context) (context.Context, error) 
 
 func NewBinariesUninstaller() *BinariesUninstaller {
 	return &BinariesUninstaller{}
+}
+
+type BinariesActivator struct {
+	BaseStep
+	binDir string
+}
+
+func (s *BinariesActivator) String() string {
+	return "binaries-activator"
+}
+
+func (s *BinariesActivator) cleanUpBinary(binPath string) {
+	fs := define.FS
+	logger := define.Logger
+
+	info, err := fs.Stat(binPath)
+	if err != nil {
+		return
+	}
+
+	logger.Debug("remove exists binary", map[string]interface{}{
+		"path": binPath,
+	})
+
+	if info.IsDir() {
+		_ = fs.RemoveAll(binPath)
+	} else {
+		_ = fs.Remove(binPath)
+	}
+}
+
+func (s *BinariesActivator) activateBinary(name, location string) error {
+	binPath := filepath.Join(s.binDir, name)
+	s.cleanUpBinary(binPath)
+
+	linker := define.GetSymbolLinker()
+	err := linker.SymlinkIfPossible(location, binPath)
+	if err != nil {
+		return errors.Wrapf(err, "create symbol link failed")
+	}
+
+	return nil
+}
+
+func (s *BinariesActivator) Run(ctx context.Context) (context.Context, error) {
+	logger := define.Logger
+	fs := define.FS
+
+	commands, err := GetCommandsFromContext(ctx)
+	if err != nil {
+		return ctx, errors.Wrapf(ErrContextValueNotFound, "get commands from context failed")
+	}
+
+	logger.Info("activating binaries", map[string]interface{}{
+		"count": len(commands),
+	})
+
+	err = fs.MkdirAll(s.binDir, 0755)
+	if err != nil {
+		return ctx, errors.Wrapf(err, "create bin dir %s failed", s.binDir)
+	}
+
+	var errs error
+	for _, command := range commands {
+		err = s.activateBinary(command.Name, command.Location)
+		if err != nil {
+			errs = multierror.Append(errs, errors.Wrapf(err, "activate %s(%s) binary failed", command.Name, command.Version))
+			continue
+		}
+	}
+
+	return ctx, errs
+}
+
+func NewBinariesActivator(binDir string) *BinariesActivator {
+	return &BinariesActivator{
+		binDir: binDir,
+	}
 }
