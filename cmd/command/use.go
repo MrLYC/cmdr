@@ -23,11 +23,7 @@ var useCmd = &cobra.Command{
 			core.NewCommandActivator(),
 		)
 
-		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
-			define.ContextKeyName:     simpleCmdFlag.name,
-			define.ContextKeyVersion:  simpleCmdFlag.version,
-			define.ContextKeyLocation: simpleCmdFlag.location,
-		})), "activate failed")
+		utils.ExitWithError(runner.Run(cmd.Context()), "activate failed")
 
 		define.Logger.Info("used command", map[string]interface{}{
 			"name":    simpleCmdFlag.name,

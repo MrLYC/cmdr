@@ -203,5 +203,6 @@ var _ = Describe("Bianry", func() {
 				afero.Exists(define.FS, filepath.Join(binDir, command2.Name)),
 			).To(BeTrue())
 		})
+
 	})
 })

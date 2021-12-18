@@ -38,9 +38,8 @@ var setupCmd = &cobra.Command{
 
 		if !setupCmdFlag.skipInstall && !setupCmdFlag.upgrade {
 			runner.Add(
-				core.NewStepLoggerWithFields("installing command", define.ContextKeyName, define.ContextKeyVersion),
+				core.NewCommandDefiner(shimsDir, define.Name, define.Version, cmdrLocation, true),
 				core.NewBinariesInstaller(shimsDir),
-				core.NewCommandDefiner(shimsDir),
 			)
 		}
 
@@ -51,12 +50,7 @@ var setupCmd = &cobra.Command{
 			)
 		}
 
-		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
-			define.ContextKeyName:           define.Name,
-			define.ContextKeyVersion:        define.Version,
-			define.ContextKeyLocation:       cmdrLocation,
-			define.ContextKeyCommandManaged: true,
-		})), "setup failed")
+		utils.ExitWithError(runner.Run(cmd.Context()), "setup failed")
 	},
 }
 

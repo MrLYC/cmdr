@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
-	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/utils"
 )
@@ -38,10 +37,7 @@ var doctorCmd = &cobra.Command{
 			core.NewBinariesActivator(binDir),
 		)
 
-		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
-			define.ContextKeyName:           define.Name,
-			define.ContextKeyCommandManaged: true,
-		})), "doctor failed")
+		utils.ExitWithError(runner.Run(cmd.Context()), "doctor failed")
 	},
 }
 

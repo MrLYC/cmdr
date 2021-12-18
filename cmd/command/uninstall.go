@@ -22,15 +22,11 @@ var uninstallCmd = &cobra.Command{
 			core.NewBinariesUninstaller(),
 		)
 
-		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
-			define.ContextKeyName:    simpleCmdFlag.name,
-			define.ContextKeyVersion: simpleCmdFlag.version,
-		})), "list failed")
+		utils.ExitWithError(runner.Run(cmd.Context()), "list failed")
 
 		define.Logger.Info("uninstalled command", map[string]interface{}{
-			"name":     simpleCmdFlag.name,
-			"version":  simpleCmdFlag.version,
-			"location": simpleCmdFlag.location,
+			"name":    simpleCmdFlag.name,
+			"version": simpleCmdFlag.version,
 		})
 	},
 }

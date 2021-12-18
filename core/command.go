@@ -10,12 +10,12 @@ import (
 
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/model"
-	"github.com/mrlyc/cmdr/utils"
 )
 
 type CommandDefiner struct {
 	BaseStep
 	shimsDir string
+	command  model.Command
 }
 
 func (i *CommandDefiner) String() string {
@@ -24,55 +24,60 @@ func (i *CommandDefiner) String() string {
 
 func (i *CommandDefiner) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
-	name := utils.GetStringFromContext(ctx, define.ContextKeyName)
-	version := utils.GetStringFromContext(ctx, define.ContextKeyVersion)
-	if name == "" {
-		return ctx, errors.Wrapf(ErrContextValueNotFound, "name is empty")
-	} else if version == "" {
-		return ctx, errors.Wrapf(ErrContextValueNotFound, "version is empty")
-	}
-
-	managed := utils.GetBoolFromContext(ctx, define.ContextKeyCommandManaged)
 	client := GetDBClientFromContext(ctx)
-	var location string
-	if managed {
-		location = GetCommandPath(i.shimsDir, name, version)
-	} else {
-		location = utils.GetStringFromContext(ctx, define.ContextKeyLocation)
-	}
 
 	logger.Info("define command", map[string]interface{}{
-		"name":     name,
-		"version":  version,
-		"location": location,
-		"managed":  managed,
+		"name":     i.command.Name,
+		"version":  i.command.Version,
+		"location": i.command.Location,
+		"managed":  i.command.Managed,
 	})
 
-	command := model.Command{
-		Name:    name,
-		Version: version,
-	}
-
-	err := client.Select(q.Eq("name", name), q.Eq("version", version)).First(&command)
+	var command model.Command
+	err := client.Select(q.Eq("Name", i.command.Name), q.Eq("Version", i.command.Version)).First(&command)
 	switch errors.Cause(err) {
-	case nil, storm.ErrNotFound:
-		command.Location = location
-		command.Managed = managed
+	case nil:
+		i.command.ID = command.ID
+	case storm.ErrNotFound:
 	default:
 		return ctx, errors.Wrapf(err, "define command failed")
 	}
 
-	err = client.Save(&command)
-	if err != nil {
-		return ctx, errors.Wrapf(err, "update command failed")
-	}
-
-	return context.WithValue(ctx, define.ContextKeyCommands, []*model.Command{&command}), nil
+	return context.WithValue(ctx, define.ContextKeyCommands, []*model.Command{&i.command}), nil
 }
 
-func NewCommandDefiner(shimsDir string) *CommandDefiner {
+func (i *CommandDefiner) Commit(ctx context.Context) error {
+	logger := define.Logger
+	client := GetDBClientFromContext(ctx)
+
+	if i.command.Managed {
+		i.command.Location = GetCommandPath(i.shimsDir, i.command.Name, i.command.Version)
+	}
+
+	logger.Debug("saving command", map[string]interface{}{
+		"name":     i.command.Name,
+		"version":  i.command.Version,
+		"location": i.command.Location,
+		"managed":  i.command.Managed,
+	})
+
+	err := client.Save(&i.command)
+	if err != nil {
+		return errors.Wrapf(err, "save command failed")
+	}
+
+	return nil
+}
+
+func NewCommandDefiner(shimsDir, name, version, location string, managed bool) *CommandDefiner {
 	return &CommandDefiner{
 		shimsDir: shimsDir,
+		command: model.Command{
+			Name:     name,
+			Version:  version,
+			Location: location,
+			Managed:  managed,
+		},
 	}
 }
 
@@ -153,50 +158,67 @@ func NewCommandActivator() *CommandActivator {
 	return &CommandActivator{}
 }
 
-type CommandDeactivator struct {
+type CommandsDeactivator struct {
 	BaseStep
 }
 
-func (s *CommandDeactivator) String() string {
+func (s *CommandsDeactivator) String() string {
 	return "command-deactivator"
 }
 
-func (s *CommandDeactivator) Run(ctx context.Context) (context.Context, error) {
+func (s *CommandsDeactivator) deactivateCommand(ctx context.Context, command *model.Command) error {
 	logger := define.Logger
 	client := GetDBClientFromContext(ctx)
-	name := utils.GetStringFromContext(ctx, define.ContextKeyName)
-	if name == "" {
-		return ctx, errors.Wrapf(ErrContextValueNotFound, "name is empty")
-	}
+	var queriedCommands []*model.Command
 
-	var commands []*model.Command
-
-	err := client.Select(q.Eq("Name", name), q.Eq("Activated", true)).Find(&commands)
+	err := client.Select(q.Eq("Name", command.Name), q.Eq("Activated", true)).Find(&queriedCommands)
 	switch err {
 	case nil:
 	case storm.ErrNotFound:
-		return ctx, nil
+		return nil
 	default:
-		return ctx, errors.Wrapf(err, "get command failed")
+		return errors.Wrapf(err, "query command %s failed", command.Name)
 	}
 
 	var errs error
-	for _, command := range commands {
+	for _, queried := range queriedCommands {
+		if queried.Name == command.Name && queried.Version == command.Version {
+			continue
+		}
+
 		logger.Info("deactivating command", map[string]interface{}{
-			"name":    command.Name,
-			"version": command.Version,
+			"name":    queried.Name,
+			"version": queried.Version,
 		})
 
-		command.Activated = false
-		err = client.Save(command)
+		queried.Activated = false
+		err = client.Save(queried)
 		if err != nil {
 			errs = multierror.Append(errs, errors.Wrapf(err, "deactivate command failed"))
+		}
+	}
+
+	return errs
+}
+
+func (s *CommandsDeactivator) Run(ctx context.Context) (context.Context, error) {
+	var errs error
+
+	commands, err := GetCommandsFromContext(ctx)
+	if err != nil {
+		return ctx, errors.Wrapf(err, "get commands from context failed")
+	}
+
+	for _, command := range commands {
+		err := s.deactivateCommand(ctx, command)
+		if err != nil {
+			errs = multierror.Append(errs, err)
 		}
 	}
 
 	return ctx, errs
 }
 
-func NewCommandDeactivator() *CommandDeactivator {
-	return &CommandDeactivator{}
+func NewCommandDeactivator() *CommandsDeactivator {
+	return &CommandsDeactivator{}
 }

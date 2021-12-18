@@ -165,7 +165,7 @@ func (s *BinariesActivator) activateBinary(name, location string) error {
 	binPath := filepath.Join(s.binDir, name)
 	s.cleanUpBinary(binPath)
 
-	linker := define.GetSymbolLinker()
+	linker := utils.GetSymbolLinker()
 	err := linker.SymlinkIfPossible(location, binPath)
 	if err != nil {
 		return errors.Wrapf(err, "create symbol link failed")

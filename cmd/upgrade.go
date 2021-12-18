@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
@@ -24,6 +26,8 @@ var upgradeCmd = &cobra.Command{
 		runner := core.NewStepRunner()
 		shimsDir := core.GetShimsDir()
 		binDir := core.GetBinDir()
+		cmdrLocation, err := os.Executable()
+		utils.CheckError(err)
 
 		if !upgradeCmdFlag.skipSetup {
 			runArgs := []string{"setup", "--upgrade"}
@@ -33,10 +37,10 @@ var upgradeCmd = &cobra.Command{
 
 		runner.Add(
 			core.NewDBClientMaker(),
+			core.NewCommandDefiner(shimsDir, define.Name, define.Version, cmdrLocation, true),
 			core.NewReleaseSearcher(upgradeCmdFlag.release, upgradeCmdFlag.asset),
 			core.NewDownloader(),
 			core.NewBinariesInstaller(shimsDir),
-			core.NewCommandDefiner(shimsDir),
 		)
 
 		if !upgradeCmdFlag.keep {
@@ -44,22 +48,15 @@ var upgradeCmd = &cobra.Command{
 				core.NewCommandDeactivator(),
 				core.NewBinariesActivator(binDir),
 				core.NewCommandActivator(),
-				core.NewContextValueSetter(map[define.ContextKey]interface{}{
-					define.ContextKeyVersion: define.Version,
-				}),
 				core.NewSimpleCommandsQuerier(
 					define.Name, define.Version,
 				),
-				core.NewStepLoggerWithFields("uninstalling cmdr", define.ContextKeyVersion),
 				core.NewCommandUndefiner(),
 				core.NewBinariesUninstaller(),
 			)
 		}
 
-		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
-			define.ContextKeyName:           define.Name,
-			define.ContextKeyCommandManaged: true,
-		})), "upgrade failed")
+		utils.ExitWithError(runner.Run(cmd.Context()), "upgrade failed")
 
 		logger.Info("upgraded command", map[string]interface{}{
 			"name": define.Name,

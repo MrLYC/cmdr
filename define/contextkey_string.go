@@ -8,17 +8,13 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[ContextKeyName-0]
-	_ = x[ContextKeyVersion-1]
-	_ = x[ContextKeyLocation-2]
-	_ = x[ContextKeyDBClient-3]
-	_ = x[ContextKeyCommandManaged-4]
-	_ = x[ContextKeyCommands-5]
+	_ = x[ContextKeyDBClient-0]
+	_ = x[ContextKeyCommands-1]
 }
 
-const _ContextKey_name = "ContextKeyNameContextKeyVersionContextKeyLocationContextKeyDBClientContextKeyCommandManagedContextKeyCommands"
+const _ContextKey_name = "ContextKeyDBClientContextKeyCommands"
 
-var _ContextKey_index = [...]uint8{0, 14, 31, 49, 67, 91, 109}
+var _ContextKey_index = [...]uint8{0, 18, 36}
 
 func (i ContextKey) String() string {
 	if i < 0 || i >= ContextKey(len(_ContextKey_index)-1) {

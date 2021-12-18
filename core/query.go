@@ -83,3 +83,9 @@ func NewSimpleCommandsQuerier(name, version string) *CommandsQuerier {
 		[]q.Matcher{q.Eq("Name", name), q.Eq("Version", version)},
 	)
 }
+
+func NewNamedCommandsQuerier(name string) *CommandsQuerier {
+	return NewCommandsQuerier(
+		[]q.Matcher{q.Eq("Name", name)},
+	)
+}

@@ -49,7 +49,7 @@ func (s *FinalizeCommandRunner) String() string {
 	return "finalize-command-runner"
 }
 
-func (s *FinalizeCommandRunner) Finish(ctx context.Context) error {
+func (s *FinalizeCommandRunner) Commit(ctx context.Context) error {
 	logger := define.Logger
 	logger.Info("executing cmdr setup command")
 	return s.run(ctx)

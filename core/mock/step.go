@@ -34,18 +34,30 @@ func (m *MockSteper) EXPECT() *MockSteperMockRecorder {
 	return m.recorder
 }
 
-// Finish mocks base method.
-func (m *MockSteper) Finish(ctx context.Context) error {
+// Commit mocks base method.
+func (m *MockSteper) Commit(ctx context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Finish", ctx)
+	ret := m.ctrl.Call(m, "Commit", ctx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Finish indicates an expected call of Finish.
-func (mr *MockSteperMockRecorder) Finish(ctx interface{}) *gomock.Call {
+// Commit indicates an expected call of Commit.
+func (mr *MockSteperMockRecorder) Commit(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Finish", reflect.TypeOf((*MockSteper)(nil).Finish), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockSteper)(nil).Commit), ctx)
+}
+
+// Rollback mocks base method.
+func (m *MockSteper) Rollback(ctx context.Context) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Rollback", ctx)
+}
+
+// Rollback indicates an expected call of Rollback.
+func (mr *MockSteperMockRecorder) Rollback(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockSteper)(nil).Rollback), ctx)
 }
 
 // Run mocks base method.

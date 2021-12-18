@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
-	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -28,11 +27,7 @@ var listCmd = &cobra.Command{
 			core.NewCommandPrinter(os.Stdout),
 		)
 
-		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
-			define.ContextKeyName:     simpleCmdFlag.name,
-			define.ContextKeyVersion:  simpleCmdFlag.version,
-			define.ContextKeyLocation: simpleCmdFlag.location,
-		})), "list failed")
+		utils.ExitWithError(runner.Run(cmd.Context()), "list failed")
 	},
 }
 

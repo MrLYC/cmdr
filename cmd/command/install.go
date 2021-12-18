@@ -17,17 +17,12 @@ var installCmd = &cobra.Command{
 
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
+			core.NewCommandDefiner(shimsDir, simpleCmdFlag.name, simpleCmdFlag.version, simpleCmdFlag.location, true),
 			core.NewDownloader(),
 			core.NewBinariesInstaller(shimsDir),
-			core.NewCommandDefiner(shimsDir),
 		)
 
-		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
-			define.ContextKeyName:           simpleCmdFlag.name,
-			define.ContextKeyVersion:        simpleCmdFlag.version,
-			define.ContextKeyLocation:       simpleCmdFlag.location,
-			define.ContextKeyCommandManaged: true,
-		})), "install failed")
+		utils.ExitWithError(runner.Run(cmd.Context()), "install failed")
 
 		define.Logger.Info("installed command", map[string]interface{}{
 			"name":     simpleCmdFlag.name,

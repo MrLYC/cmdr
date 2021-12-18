@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 
 	"github.com/mrlyc/cmdr/define"
 )
@@ -23,7 +24,7 @@ func CopyFile(src, dst string) error {
 	fs := define.FS
 	stat, err := os.Stat(src)
 	if err != nil {
-		return errors.Wrapf(err, "stat src file %s failed", src)
+		return errors.Wrapf(err, "stat source file %s failed", src)
 	}
 
 	in, err := fs.Open(src)
@@ -52,4 +53,37 @@ func CopyFile(src, dst string) error {
 	}
 
 	return nil
+}
+
+func GetSymbolLinker() afero.Linker {
+	linker, ok := define.FS.(afero.Linker)
+	if !ok {
+		return nil
+	}
+
+	return linker
+}
+
+func GetSymbolLinkReader() afero.LinkReader {
+	reader, ok := define.FS.(afero.LinkReader)
+	if !ok {
+		return nil
+	}
+
+	return reader
+}
+
+func GetRealPath(path string) string {
+	linkReader := GetSymbolLinkReader()
+
+	if linkReader == nil {
+		return path
+	}
+
+	realPath, err := linkReader.ReadlinkIfPossible(path)
+	if err != nil {
+		return path
+	}
+
+	return realPath
 }

@@ -2,7 +2,7 @@ package core_test
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -43,7 +43,7 @@ var _ = Describe("Step", func() {
 					histories = append(histories, "run-step1")
 					return ctx, nil
 				}).AnyTimes()
-				step1.EXPECT().Finish(gomock.Any()).Do(func(ctx context.Context) error {
+				step1.EXPECT().Commit(gomock.Any()).Do(func(ctx context.Context) error {
 					histories = append(histories, "finish-step1")
 					return nil
 				}).AnyTimes()
@@ -52,7 +52,7 @@ var _ = Describe("Step", func() {
 					histories = append(histories, "run-step2")
 					return ctx, nil
 				}).AnyTimes()
-				step2.EXPECT().Finish(gomock.Any()).Do(func(ctx context.Context) error {
+				step2.EXPECT().Commit(gomock.Any()).Do(func(ctx context.Context) error {
 					histories = append(histories, "finish-step2")
 					return nil
 				}).AnyTimes()
@@ -73,24 +73,14 @@ var _ = Describe("Step", func() {
 		})
 
 		Context("fail", func() {
-			It("on run", func() {
-				step1.EXPECT().Run(gomock.Any()).Return(context.Background(), errors.New("error"))
-				step1.EXPECT().Finish(gomock.Any()).Times(0)
-				step2.EXPECT().Run(gomock.Any()).Times(0)
-				step2.EXPECT().Finish(gomock.Any()).Times(0)
+			It("check rollback", func() {
+				step1.EXPECT().Run(gomock.Any()).Return(context.Background(), nil)
+				step1.EXPECT().Rollback(gomock.Any())
+				step2.EXPECT().Run(gomock.Any()).Return(context.Background(), fmt.Errorf("error"))
+				step3 := mock.NewMockSteper(ctrl)
 
-				runner := NewStepRunner(step1, step2)
-				Expect(runner.Run(context.Background())).To(MatchError("error"))
-			})
-
-			It("on finish", func() {
-				step1.EXPECT().Run(gomock.Any()).Times(1)
-				step1.EXPECT().Finish(gomock.Any()).Return(errors.New("error")).Times(1)
-				step2.EXPECT().Run(gomock.Any()).Times(1)
-				step2.EXPECT().Finish(gomock.Any()).Times(1)
-
-				runner := NewStepRunner(step1, step2)
-				Expect(runner.Run(context.Background())).To(MatchError("error"))
+				runner := NewStepRunner(step1, step2, step3)
+				Expect(runner.Run(context.Background())).NotTo(Succeed())
 			})
 		})
 	})

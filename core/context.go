@@ -42,7 +42,6 @@ func GetCommandsFromContext(ctx context.Context) ([]*model.Command, error) {
 		return nil, errors.Wrapf(ErrContextValueNotFound, "commands not found")
 	}
 	return commands, nil
-
 }
 
 type ContextValueSetter struct {

@@ -13,7 +13,8 @@ import (
 type Steper interface {
 	String() string
 	Run(ctx context.Context) (context.Context, error)
-	Finish(ctx context.Context) error
+	Commit(ctx context.Context) error
+	Rollback(ctx context.Context)
 }
 
 type BaseStep struct{}
@@ -26,8 +27,11 @@ func (s *BaseStep) Run(ctx context.Context) (context.Context, error) {
 	return ctx, nil
 }
 
-func (s *BaseStep) Finish(ctx context.Context) error {
+func (s *BaseStep) Commit(ctx context.Context) error {
 	return nil
+}
+
+func (s *BaseStep) Rollback(ctx context.Context) {
 }
 
 type StepRunner struct {
@@ -47,9 +51,10 @@ func (r *StepRunner) Layout() []string {
 	return layout
 }
 
-func (r *StepRunner) Run(ctx context.Context) (err error) {
+func (r *StepRunner) Run(ctx context.Context) (errs error) {
 	logger := define.Logger
-	var errs error
+	failed := false
+	var err error
 
 	for _, step := range r.steps {
 		logger.Debug("running step", map[string]interface{}{
@@ -62,15 +67,24 @@ func (r *StepRunner) Run(ctx context.Context) (err error) {
 				"step":  step,
 				"error": err,
 			})
-			return err
+			failed = true
+			errs = multierror.Append(errs, err)
+			break
 		}
 
 		defer func(step Steper) {
+			if failed {
+				logger.Warn("step rollback", map[string]interface{}{
+					"step": step,
+				})
+				step.Rollback(ctx)
+				return
+			}
+
 			logger.Debug("step finished", map[string]interface{}{
 				"step": step,
 			})
-
-			err = step.Finish(ctx)
+			err := step.Commit(ctx)
 			if err != nil {
 				logger.Debug("step error", map[string]interface{}{
 					"step":  step,

@@ -44,6 +44,9 @@ var _ = Describe("Command", func() {
 		location = filepath.Join(tempDir, "run.sh")
 
 		ctx = context.Background()
+		ctx = context.WithValue(ctx, define.ContextKeyDBClient, db)
+		ctx = context.WithValue(ctx, define.ContextKeyCommands, commands)
+
 		name = "test"
 		version = "1.0.0"
 
@@ -78,52 +81,11 @@ var _ = Describe("Command", func() {
 		ctrl.Finish()
 	})
 
-	setContext := func(keys ...define.ContextKey) {
-		for _, key := range keys {
-			switch key {
-			case define.ContextKeyName:
-				ctx = context.WithValue(ctx, define.ContextKeyName, name)
-			case define.ContextKeyVersion:
-				ctx = context.WithValue(ctx, define.ContextKeyVersion, version)
-			case define.ContextKeyLocation:
-				ctx = context.WithValue(ctx, define.ContextKeyLocation, location)
-			case define.ContextKeyDBClient:
-				ctx = context.WithValue(ctx, define.ContextKeyDBClient, db)
-			case define.ContextKeyCommands:
-				ctx = context.WithValue(ctx, define.ContextKeyCommands, commands)
-			}
-		}
-	}
-
 	Context("CommandDefiner", func() {
-		var (
-			definer *core.CommandDefiner
-		)
-
-		BeforeEach(func() {
-			definer = core.NewCommandDefiner(shimsDir)
-			setContext(define.ContextKeyName, define.ContextKeyVersion, define.ContextKeyLocation, define.ContextKeyDBClient)
-		})
-
-		It("name not found", func() {
-			ctx = context.WithValue(ctx, define.ContextKeyName, "")
-
-			_, err := definer.Run(ctx)
-			Expect(errors.Cause(err)).To(Equal(core.ErrContextValueNotFound))
-		})
-
-		It("version not found", func() {
-			ctx = context.WithValue(ctx, define.ContextKeyName, "")
-
-			_, err := definer.Run(ctx)
-			Expect(errors.Cause(err)).To(Equal(core.ErrContextValueNotFound))
-		})
-
 		It("should define managed command", func() {
-			ctx = context.WithValue(ctx, define.ContextKeyCommandManaged, true)
 			dbQuery.EXPECT().First(gomock.Any()).Return(nil)
-			db.EXPECT().Save(gomock.Any()).Return(nil)
 
+			definer := core.NewCommandDefiner(shimsDir, name, version, location, true)
 			resultCtx, err := definer.Run(ctx)
 			Expect(err).To(BeNil())
 
@@ -131,14 +93,13 @@ var _ = Describe("Command", func() {
 			command := commands[0]
 			Expect(command.Name).To(Equal(name))
 			Expect(command.Version).To(Equal(version))
-			Expect(command.Location).To(Equal(filepath.Join(shimsDir, name, fmt.Sprintf("%s_%s", name, version))))
+			Expect(command.Location).To(Equal(location))
 		})
 
 		It("should define unmanaged command", func() {
-			ctx = context.WithValue(ctx, define.ContextKeyCommandManaged, false)
 			dbQuery.EXPECT().First(gomock.Any()).Return(nil)
-			db.EXPECT().Save(gomock.Any()).Return(nil)
 
+			definer := core.NewCommandDefiner(shimsDir, name, version, location, false)
 			resultCtx, err := definer.Run(ctx)
 			Expect(err).To(BeNil())
 
@@ -150,24 +111,16 @@ var _ = Describe("Command", func() {
 		})
 
 		It("query failed", func() {
-			ctx = context.WithValue(ctx, define.ContextKeyCommandManaged, false)
 			dbQuery.EXPECT().First(gomock.Any()).Return(fmt.Errorf("error"))
 
+			definer := core.NewCommandDefiner(shimsDir, name, version, location, true)
 			_, err := definer.Run(ctx)
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("should update command", func() {
-			ctx = context.WithValue(ctx, define.ContextKeyCommandManaged, true)
-			dbQuery.EXPECT().First(gomock.Any()).DoAndReturn(func(c interface{}) error {
-				command := c.(*model.Command)
-				command.ID = 1
-				return nil
-			})
-
 			db.EXPECT().Save(gomock.Any()).DoAndReturn(func(c interface{}) error {
 				command := c.(*model.Command)
-				Expect(command.ID).To(Equal(1))
 				Expect(command.Name).To(Equal(name))
 				Expect(command.Version).To(Equal(version))
 				Expect(command.Location).To(Equal(filepath.Join(shimsDir, name, fmt.Sprintf("%s_%s", name, version))))
@@ -176,7 +129,8 @@ var _ = Describe("Command", func() {
 				return nil
 			})
 
-			_, err := definer.Run(ctx)
+			definer := core.NewCommandDefiner(shimsDir, name, version, location, true)
+			err := definer.Commit(ctx)
 			Expect(err).To(BeNil())
 		})
 	})
@@ -188,11 +142,10 @@ var _ = Describe("Command", func() {
 
 		BeforeEach(func() {
 			undefiner = core.NewCommandUndefiner()
-			setContext(define.ContextKeyDBClient, define.ContextKeyCommands)
 		})
 
 		It("commands not found", func() {
-			ctx = context.WithValue(ctx, define.ContextKeyCommands, []*model.Command{})
+			ctx = context.WithValue(ctx, define.ContextKeyCommands, nil)
 			_, err := undefiner.Run(ctx)
 			Expect(errors.Cause(err)).To(Equal(core.ErrContextValueNotFound))
 		})
@@ -233,11 +186,10 @@ var _ = Describe("Command", func() {
 
 		BeforeEach(func() {
 			activator = core.NewCommandActivator()
-			setContext(define.ContextKeyDBClient, define.ContextKeyCommands)
 		})
 
 		It("commands not found", func() {
-			ctx = context.WithValue(ctx, define.ContextKeyCommands, []*model.Command{})
+			ctx = context.WithValue(ctx, define.ContextKeyCommands, nil)
 			_, err := activator.Run(ctx)
 			Expect(errors.Cause(err)).To(Equal(core.ErrContextValueNotFound))
 		})
@@ -268,65 +220,62 @@ var _ = Describe("Command", func() {
 
 	Context("CommandDeactivator", func() {
 		var (
-			deactivator *core.CommandDeactivator
+			deactivator *core.CommandsDeactivator
 		)
 
 		BeforeEach(func() {
 			deactivator = core.NewCommandDeactivator()
-			setContext(define.ContextKeyDBClient, define.ContextKeyName)
 		})
 
-		It("name not found", func() {
-			ctx = context.WithValue(ctx, define.ContextKeyName, "")
+		It("context commands not found", func() {
+			ctx = context.WithValue(ctx, define.ContextKeyCommands, nil)
 
 			_, err := deactivator.Run(ctx)
 			Expect(errors.Cause(err)).To(Equal(core.ErrContextValueNotFound))
 		})
 
-		It("commands not found", func() {
-			dbQuery.EXPECT().Find(gomock.Any()).Return(storm.ErrNotFound)
+		It("query not found", func() {
+			dbQuery.EXPECT().Find(gomock.Any()).Return(storm.ErrNotFound).AnyTimes()
 
 			_, err := deactivator.Run(ctx)
 			Expect(err).To(BeNil())
 		})
 
 		It("query failed", func() {
-			dbQuery.EXPECT().Find(gomock.Any()).Return(fmt.Errorf("test"))
+			dbQuery.EXPECT().Find(gomock.Any()).Return(fmt.Errorf("test")).AnyTimes()
 
 			_, err := deactivator.Run(ctx)
 			Expect(err).NotTo(BeNil())
 		})
 
 		It("deactivated", func() {
-			command1.Activated = true
-			command2.Activated = true
-			histories := make([]int, 0, 2)
+			count := 0
 
 			dbQuery.EXPECT().Find(gomock.Any()).DoAndReturn(func(c interface{}) error {
 				commandsPtr := c.(*[]*model.Command)
-				*commandsPtr = commands
+				*commandsPtr = []*model.Command{{Activated: true}}
 
 				return nil
-			})
+			}).AnyTimes()
 			db.EXPECT().Save(gomock.Any()).DoAndReturn(func(data interface{}) error {
 				command := data.(*model.Command)
-				histories = append(histories, command.ID)
 				Expect(command.Activated).To(BeFalse())
+				count++
 				return nil
 			}).AnyTimes()
 
 			_, err := deactivator.Run(ctx)
 			Expect(err).To(BeNil())
-			Expect(histories).To(Equal([]int{command1.ID, command2.ID}))
+			Expect(count).To(Equal(2))
 		})
 
 		It("save failed", func() {
 			dbQuery.EXPECT().Find(gomock.Any()).DoAndReturn(func(c interface{}) error {
 				commandsPtr := c.(*[]*model.Command)
-				*commandsPtr = commands
+				*commandsPtr = []*model.Command{{Activated: true}}
 
 				return nil
-			})
+			}).AnyTimes()
 
 			db.EXPECT().Save(gomock.Any()).Return(fmt.Errorf("test")).AnyTimes()
 			_, err := deactivator.Run(ctx)

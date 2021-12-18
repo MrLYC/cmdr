@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 
 	"github.com/mrlyc/cmdr/define"
@@ -22,37 +24,45 @@ func (d *Downloader) String() string {
 }
 
 func (d *Downloader) Run(ctx context.Context) (context.Context, error) {
-	name := utils.GetStringFromContext(ctx, define.ContextKeyName)
-	url := utils.GetStringFromContext(ctx, define.ContextKeyLocation)
 	logger := define.Logger
-	var err error
-
-	if !d.schemaRegexp.MatchString(url) {
-		return ctx, nil
-	}
-
-	d.tempDir, err = afero.TempDir(define.FS, "", "")
-	utils.ExitWithError(err, "create temporary dir failed")
-
-	location := filepath.Join(d.tempDir, name)
-
-	logger.Info("downloading", map[string]interface{}{
-		"url":  url,
-		"name": name,
-	})
-	err = utils.DownloadToFile(ctx, url, location)
+	commands, err := GetCommandsFromContext(ctx)
 	if err != nil {
-		return ctx, err
+		return ctx, errors.Wrapf(err, "get commands from context failed")
 	}
 
-	logger.Info("command downloaded", map[string]interface{}{
-		"url": url,
-	})
+	var errs error
+	for _, command := range commands {
+		name := command.Name
+		url := command.Location
+		if !d.schemaRegexp.MatchString(url) {
+			continue
+		}
 
-	return context.WithValue(ctx, define.ContextKeyLocation, location), nil
+		d.tempDir, err = afero.TempDir(define.FS, "", "")
+		utils.ExitWithError(err, "create temporary dir failed")
+
+		location := filepath.Join(d.tempDir, name)
+		command.Location = location
+
+		logger.Info("downloading", map[string]interface{}{
+			"url":  url,
+			"name": name,
+		})
+		err = utils.DownloadToFile(ctx, url, location)
+		if err != nil {
+			errs = multierror.Append(errs, errors.Wrapf(err, "download %s failed", url))
+			continue
+		}
+
+		logger.Info("command downloaded", map[string]interface{}{
+			"url": url,
+		})
+	}
+
+	return ctx, errs
 }
 
-func (d *Downloader) Finish(ctx context.Context) error {
+func (d *Downloader) Commit(ctx context.Context) error {
 	if d.tempDir == "" {
 		return nil
 	}

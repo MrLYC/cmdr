@@ -4,10 +4,6 @@ package define
 type ContextKey int
 
 const (
-	ContextKeyName ContextKey = iota
-	ContextKeyVersion
-	ContextKeyLocation
-	ContextKeyDBClient
-	ContextKeyCommandManaged
+	ContextKeyDBClient ContextKey = iota
 	ContextKeyCommands
 )

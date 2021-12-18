@@ -22,9 +22,16 @@ func (r *ReleaseSearcher) String() string {
 
 func (r *ReleaseSearcher) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
-	logger.Info("searching cmdr release", map[string]interface{}{
+
+	command, err := GetCommandFromContext(ctx)
+	if err != nil {
+		return ctx, errors.Wrapf(err, "get command from context failed")
+	}
+
+	logger.Info("searching release", map[string]interface{}{
 		"release": r.release,
 		"asset":   r.asset,
+		"name":    command.Name,
 	})
 	release, err := utils.GetCMDRRelease(ctx, r.release)
 	if err != nil {
@@ -32,8 +39,9 @@ func (r *ReleaseSearcher) Run(ctx context.Context) (context.Context, error) {
 	}
 
 	version := strings.TrimPrefix(*release.TagName, "v")
-	logger.Debug("searching cmdr asset", map[string]interface{}{
+	logger.Debug("searching asset", map[string]interface{}{
 		"version": version,
+		"name":    command.Name,
 	})
 
 	var url string
@@ -50,17 +58,18 @@ func (r *ReleaseSearcher) Run(ctx context.Context) (context.Context, error) {
 	}
 
 	if url == "" {
-		return ctx, errors.Wrapf(ErrAssetNotFound, "cmdr release not found: %s", r.asset)
+		return ctx, errors.Wrapf(ErrAssetNotFound, "release not found: %s", r.asset)
 	}
 
-	logger.Info("cmdr release found", map[string]interface{}{
+	command.Version = version
+	command.Location = url
+
+	logger.Info("release found", map[string]interface{}{
+		"name":    command.Name,
 		"release": version,
 		"url":     url,
 	})
-	return utils.SetIntoContext(ctx, map[define.ContextKey]interface{}{
-		define.ContextKeyVersion:  version,
-		define.ContextKeyLocation: url,
-	}), nil
+	return ctx, nil
 }
 
 func NewReleaseSearcher(release, asset string) *ReleaseSearcher {

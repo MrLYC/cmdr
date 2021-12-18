@@ -17,15 +17,10 @@ var defineCmd = &cobra.Command{
 
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
-			core.NewCommandDefiner(shimsDir),
+			core.NewCommandDefiner(shimsDir, simpleCmdFlag.name, simpleCmdFlag.version, simpleCmdFlag.location, false),
 		)
 
-		utils.ExitWithError(runner.Run(utils.SetIntoContext(cmd.Context(), map[define.ContextKey]interface{}{
-			define.ContextKeyName:           simpleCmdFlag.name,
-			define.ContextKeyVersion:        simpleCmdFlag.version,
-			define.ContextKeyLocation:       simpleCmdFlag.location,
-			define.ContextKeyCommandManaged: false,
-		})), "install failed")
+		utils.ExitWithError(runner.Run(cmd.Context()), "install failed")
 
 		define.Logger.Info("defined command", map[string]interface{}{
 			"name":     simpleCmdFlag.name,

@@ -65,8 +65,12 @@ func (m *DBClientMaker) Run(ctx context.Context) (context.Context, error) {
 	return context.WithValue(ctx, define.ContextKeyDBClient, m.client), nil
 }
 
-func (m *DBClientMaker) Finish(ctx context.Context) error {
+func (m *DBClientMaker) Commit(ctx context.Context) error {
 	return m.client.Close()
+}
+
+func (m *DBClientMaker) Rollback(ctx context.Context) {
+	_ = m.client.Close()
 }
 
 func NewDBClientMaker() *DBClientMaker {
