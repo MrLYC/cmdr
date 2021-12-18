@@ -75,10 +75,10 @@ var _ = Describe("Bianry", func() {
 			Expect(err).To(BeNil())
 
 			Expect(
-				afero.Exists(define.FS, core.GetCommandPath(shimsDir, command1.Name, command1.Version)),
+				afero.Exists(define.FS, core.GetCommandShimsPath(shimsDir, command1.Name, command1.Version)),
 			).To(BeTrue())
 			Expect(
-				afero.Exists(define.FS, core.GetCommandPath(shimsDir, command2.Name, command2.Version)),
+				afero.Exists(define.FS, core.GetCommandShimsPath(shimsDir, command2.Name, command2.Version)),
 			).To(BeTrue())
 		})
 
@@ -89,10 +89,10 @@ var _ = Describe("Bianry", func() {
 			Expect(err).NotTo(BeNil())
 
 			Expect(afero.Exists(
-				define.FS, core.GetCommandPath(shimsDir, command1.Name, command1.Version),
+				define.FS, core.GetCommandShimsPath(shimsDir, command1.Name, command1.Version),
 			)).To(BeFalse())
 			Expect(afero.Exists(
-				define.FS, core.GetCommandPath(shimsDir, command2.Name, command2.Version),
+				define.FS, core.GetCommandShimsPath(shimsDir, command2.Name, command2.Version),
 			)).To(BeTrue())
 		})
 
@@ -103,10 +103,10 @@ var _ = Describe("Bianry", func() {
 			Expect(err).To(BeNil())
 
 			Expect(afero.Exists(
-				define.FS, core.GetCommandPath(shimsDir, command1.Name, command1.Version),
+				define.FS, core.GetCommandShimsPath(shimsDir, command1.Name, command1.Version),
 			)).To(BeTrue())
 			Expect(afero.Exists(
-				define.FS, core.GetCommandPath(shimsDir, command2.Name, command2.Version),
+				define.FS, core.GetCommandShimsPath(shimsDir, command2.Name, command2.Version),
 			)).To(BeFalse())
 		})
 	})
@@ -168,7 +168,12 @@ var _ = Describe("Bianry", func() {
 		var activator *core.BinariesActivator
 
 		BeforeEach(func() {
-			activator = core.NewBinariesActivator(binDir)
+			command1.Managed = true
+			command2.Managed = false
+
+			Expect(define.FS.MkdirAll(core.GetCommandShimsDir(shimsDir, command1.Name), 0755)).To(Succeed())
+			Expect(define.FS.Rename(command1.Location, core.GetCommandShimsPath(shimsDir, command1.Name, command1.Version))).To(Succeed())
+			activator = core.NewBinariesActivator(binDir, shimsDir)
 		})
 
 		It("context not found", func() {

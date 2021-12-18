@@ -51,7 +51,7 @@ func (i *CommandDefiner) Commit(ctx context.Context) error {
 	client := GetDBClientFromContext(ctx)
 
 	if i.command.Managed {
-		i.command.Location = GetCommandPath(i.shimsDir, i.command.Name, i.command.Version)
+		i.command.Location = GetCommandShimsPath(i.shimsDir, i.command.Name, i.command.Version)
 	}
 
 	logger.Debug("saving command", map[string]interface{}{

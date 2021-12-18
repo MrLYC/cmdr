@@ -73,6 +73,15 @@ func GetSymbolLinkReader() afero.LinkReader {
 	return reader
 }
 
+func GetFsLstater() afero.Lstater {
+	lister, ok := define.FS.(afero.Lstater)
+	if !ok {
+		return nil
+	}
+
+	return lister
+}
+
 func GetRealPath(path string) string {
 	linkReader := GetSymbolLinkReader()
 

@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"path/filepath"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -38,8 +37,8 @@ func (i *BinariesInstaller) Run(ctx context.Context) (context.Context, error) {
 		name := command.Name
 		version := command.Version
 		location := command.Location
-		dir := GetCommandDir(i.shimsDir, name)
-		target := GetCommandPath(i.shimsDir, name, version)
+		dir := GetCommandShimsDir(i.shimsDir, name)
+		target := GetCommandShimsPath(i.shimsDir, name, version)
 
 		logger.Info("installing binary", map[string]interface{}{
 			"name":     name,
@@ -134,7 +133,8 @@ func NewBinariesUninstaller() *BinariesUninstaller {
 
 type BinariesActivator struct {
 	BaseStep
-	binDir string
+	shimsDir string
+	binDir   string
 }
 
 func (s *BinariesActivator) String() string {
@@ -143,9 +143,10 @@ func (s *BinariesActivator) String() string {
 
 func (s *BinariesActivator) cleanUpBinary(binPath string) {
 	fs := define.FS
+	lstater := utils.GetFsLstater()
 	logger := define.Logger
 
-	info, err := fs.Stat(binPath)
+	info, _, err := lstater.LstatIfPossible(binPath)
 	if err != nil {
 		return
 	}
@@ -162,7 +163,7 @@ func (s *BinariesActivator) cleanUpBinary(binPath string) {
 }
 
 func (s *BinariesActivator) activateBinary(name, location string) error {
-	binPath := filepath.Join(s.binDir, name)
+	binPath := GetCommandBinPath(s.binDir, name)
 	s.cleanUpBinary(binPath)
 
 	linker := utils.GetSymbolLinker()
@@ -194,7 +195,12 @@ func (s *BinariesActivator) Run(ctx context.Context) (context.Context, error) {
 
 	var errs error
 	for _, command := range commands {
-		err = s.activateBinary(command.Name, command.Location)
+		location := command.Location
+		if command.Managed {
+			location = GetCommandShimsPath(s.shimsDir, command.Name, command.Version)
+		}
+
+		err = s.activateBinary(command.Name, location)
 		if err != nil {
 			errs = multierror.Append(errs, errors.Wrapf(err, "activate %s(%s) binary failed", command.Name, command.Version))
 			continue
@@ -204,8 +210,9 @@ func (s *BinariesActivator) Run(ctx context.Context) (context.Context, error) {
 	return ctx, errs
 }
 
-func NewBinariesActivator(binDir string) *BinariesActivator {
+func NewBinariesActivator(binDir, shimsDir string) *BinariesActivator {
 	return &BinariesActivator{
-		binDir: binDir,
+		binDir:   binDir,
+		shimsDir: shimsDir,
 	}
 }

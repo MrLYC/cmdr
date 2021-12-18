@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/define"
 )
@@ -68,7 +69,7 @@ func (r *StepRunner) Run(ctx context.Context) (errs error) {
 				"error": err,
 			})
 			failed = true
-			errs = multierror.Append(errs, err)
+			errs = multierror.Append(errs, errors.WithMessagef(err, "run on step %s", step))
 			break
 		}
 
@@ -90,7 +91,7 @@ func (r *StepRunner) Run(ctx context.Context) (errs error) {
 					"step":  step,
 					"error": err,
 				})
-				errs = multierror.Append(errs, err)
+				errs = multierror.Append(errs, errors.WithMessagef(err, "commit on step %s", step))
 			}
 		}(step)
 	}

@@ -14,12 +14,13 @@ var useCmd = &cobra.Command{
 	Short: "Activate a command",
 	Run: func(cmd *cobra.Command, args []string) {
 		binDir := core.GetBinDir()
+		shimsDir := core.GetShimsDir()
 
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
 			core.NewSimpleCommandsQuerier(simpleCmdFlag.name, simpleCmdFlag.version),
 			core.NewCommandDeactivator(),
-			core.NewBinariesActivator(binDir),
+			core.NewBinariesActivator(binDir, shimsDir),
 			core.NewCommandActivator(),
 		)
 

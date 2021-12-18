@@ -23,6 +23,7 @@ var setupCmd = &cobra.Command{
 	Short: "Setup cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
 		shimsDir := core.GetShimsDir()
+		binDir := core.GetBinDir()
 		runner := core.NewStepRunner(
 			core.NewDirectoryMaker(map[string]string{
 				"shims": shimsDir,
@@ -30,7 +31,6 @@ var setupCmd = &cobra.Command{
 			}),
 			core.NewDBClientMaker(),
 			core.NewDBMigrator(new(model.Command)),
-			core.NewShellProfiler(os.Getenv("SHELL")),
 		)
 
 		cmdrLocation, err := os.Executable()
@@ -46,7 +46,7 @@ var setupCmd = &cobra.Command{
 		if !setupCmdFlag.skipProfile {
 			runner.Add(
 				core.NewStepLoggerWithFields("writing profile"),
-				core.NewShellProfiler(os.Getenv("SHELL")),
+				core.NewShellProfiler(binDir, os.Getenv("SHELL")),
 			)
 		}
 

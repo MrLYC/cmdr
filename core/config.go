@@ -23,10 +23,14 @@ func GetDBName() string {
 	return define.Configuration.GetString("database.name")
 }
 
-func GetCommandDir(shimsDir, name string) string {
+func GetCommandShimsDir(shimsDir, name string) string {
 	return filepath.Join(shimsDir, name)
 }
 
-func GetCommandPath(shimsDir, name, version string) string {
-	return filepath.Join(GetCommandDir(shimsDir, name), fmt.Sprintf("%s_%s", name, version))
+func GetCommandShimsPath(shimsDir, name, version string) string {
+	return filepath.Join(GetCommandShimsDir(shimsDir, name), fmt.Sprintf("%s_%s", name, version))
+}
+
+func GetCommandBinPath(binDir, name string) string {
+	return filepath.Join(binDir, name)
 }

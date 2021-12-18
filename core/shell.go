@@ -49,7 +49,7 @@ func (s *ShellProfiler) Run(ctx context.Context) (context.Context, error) {
 		return ctx, errors.Wrapf(err, "failed to get user home dir")
 	}
 
-	script := `eval "$(cmdr init)`
+	script := s.script
 	var profile string
 	switch s.shell {
 	case "bash":
@@ -81,9 +81,9 @@ func (s *ShellProfiler) Run(ctx context.Context) (context.Context, error) {
 	return ctx, nil
 }
 
-func NewShellProfiler(shell string) *ShellProfiler {
+func NewShellProfiler(binDir, shell string) *ShellProfiler {
 	return &ShellProfiler{
 		shell:  filepath.Base(shell),
-		script: `eval "$(cmdr init)`,
+		script: fmt.Sprintf(`eval "$(%s init)"`, GetCommandBinPath(binDir, define.Name)),
 	}
 }
