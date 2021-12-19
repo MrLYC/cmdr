@@ -14,31 +14,31 @@ func GetDBClientFromContext(ctx context.Context) DBClient {
 	return ctx.Value(define.ContextKeyDBClient).(DBClient)
 }
 
-func getCommandsFromContext(ctx context.Context) []*model.Command {
+func getCommandsFromContext(ctx context.Context) ([]*model.Command, bool) {
 	values := utils.GetInterfaceFromContext(ctx, define.ContextKeyCommands)
 	if values == nil {
-		return nil
+		return nil, false
 	}
 
 	commands, ok := values.([]*model.Command)
-	if !ok || len(commands) == 0 {
-		return nil
+	if !ok {
+		return nil, false
 	}
 
-	return commands
+	return commands, true
 }
 
 func GetCommandFromContext(ctx context.Context) (*model.Command, error) {
-	commands := getCommandsFromContext(ctx)
-	if commands == nil {
-		return nil, errors.Wrapf(ErrContextValueNotFound, "commands not found")
+	commands, ok := getCommandsFromContext(ctx)
+	if !ok {
+		return nil, errors.Wrapf(ErrContextValueNotFound, "command not found")
 	}
 	return commands[0], nil
 }
 
 func GetCommandsFromContext(ctx context.Context) ([]*model.Command, error) {
-	commands := getCommandsFromContext(ctx)
-	if commands == nil {
+	commands, ok := getCommandsFromContext(ctx)
+	if !ok {
 		return nil, errors.Wrapf(ErrContextValueNotFound, "commands not found")
 	}
 	return commands, nil

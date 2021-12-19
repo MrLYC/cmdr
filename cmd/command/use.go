@@ -18,7 +18,7 @@ var useCmd = &cobra.Command{
 
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
-			core.NewSimpleCommandsQuerier(simpleCmdFlag.name, simpleCmdFlag.version),
+			core.NewSimpleCommandsQuerier(simpleCmdFlag.name, simpleCmdFlag.version).StrictMode(),
 			core.NewCommandDeactivator(),
 			core.NewBinariesActivator(binDir, shimsDir),
 			core.NewCommandActivator(),

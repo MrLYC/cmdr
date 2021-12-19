@@ -15,9 +15,7 @@ var uninstallCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		runner := core.NewStepRunner(
 			core.NewDBClientMaker(),
-			core.NewSimpleCommandsQuerier(
-				simpleCmdFlag.name, simpleCmdFlag.version,
-			),
+			core.NewSimpleCommandsQuerier(simpleCmdFlag.name, simpleCmdFlag.version).StrictMode(),
 			core.NewCommandUndefiner(),
 			core.NewBinariesUninstaller(),
 		)

@@ -13,7 +13,13 @@ import (
 
 type CommandsQuerier struct {
 	BaseStep
-	matchers []q.Matcher
+	matchers   []q.Matcher
+	strictMode bool
+}
+
+func (c *CommandsQuerier) StrictMode() *CommandsQuerier {
+	c.strictMode = true
+	return c
 }
 
 func (c *CommandsQuerier) String() string {
@@ -26,8 +32,14 @@ func (c *CommandsQuerier) Run(ctx context.Context) (context.Context, error) {
 	client := GetDBClientFromContext(ctx)
 
 	err := client.Select(c.matchers...).Find(&commands)
-	if err != nil && errors.Cause(err) != storm.ErrNotFound {
-		return ctx, errors.Wrap(err, "query command failed")
+	switch errors.Cause(err) {
+	case nil:
+	case storm.ErrNotFound:
+		if c.strictMode {
+			return ctx, errors.Wrapf(err, "commands not found")
+		}
+	default:
+		return ctx, errors.Wrapf(err, "query commands failed")
 	}
 
 	logger.Debug("commands queried", map[string]interface{}{
@@ -39,7 +51,8 @@ func (c *CommandsQuerier) Run(ctx context.Context) (context.Context, error) {
 
 func NewCommandsQuerier(matchers []q.Matcher) *CommandsQuerier {
 	return &CommandsQuerier{
-		matchers: matchers,
+		matchers:   matchers,
+		strictMode: false,
 	}
 }
 
@@ -79,13 +92,9 @@ func NewFullCommandsQuerier(name, version, location string, activated bool) *Com
 }
 
 func NewSimpleCommandsQuerier(name, version string) *CommandsQuerier {
-	return NewCommandsQuerier(
-		[]q.Matcher{q.Eq("Name", name), q.Eq("Version", version)},
-	)
+	return NewCommandsQuerier([]q.Matcher{q.Eq("Name", name), q.Eq("Version", version)})
 }
 
 func NewNamedCommandsQuerier(name string) *CommandsQuerier {
-	return NewCommandsQuerier(
-		[]q.Matcher{q.Eq("Name", name)},
-	)
+	return NewCommandsQuerier([]q.Matcher{q.Eq("Name", name)})
 }
