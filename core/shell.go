@@ -16,7 +16,6 @@ import (
 
 type ShellProfiler struct {
 	BaseStep
-	shell  string
 	script string
 }
 
@@ -41,26 +40,38 @@ func (s *ShellProfiler) isContainsProfile(path string) bool {
 	return bytes.Contains(content, []byte(s.script))
 }
 
-func (s *ShellProfiler) Run(ctx context.Context) (context.Context, error) {
-	fs := define.FS
-	logger := define.Logger
+func (s *ShellProfiler) getProfilePath() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return ctx, errors.Wrapf(err, "failed to get user home dir")
+		return "", errors.Wrapf(err, "failed to get user home dir")
 	}
 
-	script := s.script
-	var profile string
-	switch s.shell {
+	profilePath := os.Getenv("CMDR_PROFILE_PATH")
+	if profilePath != "" {
+		return profilePath, nil
+	}
+
+	shell := filepath.Base(os.Getenv("SHELL"))
+
+	switch shell {
 	case "bash":
-		profile = filepath.Join(homeDir, ".bashrc")
+		profilePath = filepath.Join(homeDir, ".bashrc")
 	case "zsh":
-		profile = filepath.Join(homeDir, ".zshrc")
+		profilePath = filepath.Join(homeDir, ".zshrc")
 	default:
-		logger.Warn("shell is not supported, please execute this script to init cmdr environment", map[string]interface{}{
-			"shell":  s.shell,
-			"script": script,
-		})
+		return "", errors.Wrapf(ErrNotSupported, shell)
+	}
+
+	return profilePath, nil
+}
+
+func (s *ShellProfiler) Run(ctx context.Context) (context.Context, error) {
+	fs := define.FS
+
+	script := s.script
+	profile, err := s.getProfilePath()
+	if err != nil {
+		return ctx, err
 	}
 
 	if s.isContainsProfile(profile) {
@@ -73,7 +84,7 @@ func (s *ShellProfiler) Run(ctx context.Context) (context.Context, error) {
 	}
 	defer utils.CallClose(file)
 
-	_, err = fmt.Fprintf(file, "\n%s\n", script)
+	_, err = fmt.Fprintf(file, "\n%s", script)
 	if err != nil {
 		return ctx, errors.Wrapf(err, "failed to write to profile file")
 	}
@@ -81,9 +92,8 @@ func (s *ShellProfiler) Run(ctx context.Context) (context.Context, error) {
 	return ctx, nil
 }
 
-func NewShellProfiler(binDir, shell string) *ShellProfiler {
+func NewShellProfiler(binDir string) *ShellProfiler {
 	return &ShellProfiler{
-		shell:  filepath.Base(shell),
 		script: fmt.Sprintf(`eval "$(%s init)"`, GetCommandBinPath(binDir, define.Name)),
 	}
 }

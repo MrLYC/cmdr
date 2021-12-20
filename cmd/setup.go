@@ -46,7 +46,7 @@ var setupCmd = &cobra.Command{
 		if !setupCmdFlag.skipProfile {
 			runner.Add(
 				core.NewStepLoggerWithFields("writing profile"),
-				core.NewShellProfiler(binDir, os.Getenv("SHELL")),
+				core.NewShellProfiler(binDir),
 			)
 		}
 
