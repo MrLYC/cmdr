@@ -19,7 +19,7 @@ func (m *DirectoryMaker) String() string {
 func (m *DirectoryMaker) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
 	for n, p := range m.dirs {
-		logger.Info("createing dir", map[string]interface{}{
+		logger.Info("creating dir", map[string]interface{}{
 			"name": n,
 			"dir":  p,
 		})
