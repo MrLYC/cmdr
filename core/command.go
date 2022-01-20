@@ -222,3 +222,29 @@ func (s *CommandsDeactivator) Run(ctx context.Context) (context.Context, error) 
 func NewCommandDeactivator() *CommandsDeactivator {
 	return &CommandsDeactivator{}
 }
+
+type CommandHandler struct {
+	BaseStep
+	name   string
+	runner func(context.Context, []*model.Command) error
+}
+
+func (c *CommandHandler) String() string {
+	return c.name
+}
+
+func (c *CommandHandler) Run(ctx context.Context) (context.Context, error) {
+	commands, err := GetCommandsFromContext(ctx)
+	if err != nil {
+		return ctx, errors.Wrapf(err, "get commands from context failed")
+	}
+
+	return ctx, c.runner(ctx, commands)
+}
+
+func NewCommandHandler(name string, runner func(ctx context.Context, commands []*model.Command) error) *CommandHandler {
+	return &CommandHandler{
+		name:   name,
+		runner: runner,
+	}
+}

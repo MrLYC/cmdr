@@ -33,9 +33,7 @@ var listCmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(listCmd)
-
-	flags := listCmd.Flags()
-	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
-	flags.StringVarP(&simpleCmdFlag.version, "version", "v", "", "command version")
-	flags.StringVarP(&simpleCmdFlag.location, "location", "l", "", "command location")
+	cmdFlagsHelper.declareFlagName(listCmd)
+	cmdFlagsHelper.declareFlagVersion(listCmd)
+	cmdFlagsHelper.declareFlagLocation(listCmd)
 }

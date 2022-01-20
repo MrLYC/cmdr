@@ -47,10 +47,10 @@ var installCmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(installCmd)
+	cmdFlagsHelper.declareFlagName(installCmd)
+	cmdFlagsHelper.declareFlagVersion(installCmd)
 
 	flags := installCmd.Flags()
-	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
-	flags.StringVarP(&simpleCmdFlag.version, "version", "v", "", "command version")
 	flags.StringVarP(&simpleCmdFlag.location, "location", "l", "", "command location")
 	flags.BoolVarP(&installCmdFlag.activate, "activate", "a", false, "activate command")
 

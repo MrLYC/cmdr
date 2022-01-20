@@ -32,11 +32,8 @@ var defineCmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(defineCmd)
-
-	flags := defineCmd.Flags()
-	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
-	flags.StringVarP(&simpleCmdFlag.version, "version", "v", "", "command version")
-	flags.StringVarP(&simpleCmdFlag.location, "location", "l", "", "command location")
+	cmdFlagsHelper.declareFlagName(defineCmd)
+	cmdFlagsHelper.declareFlagVersion(defineCmd)
 
 	defineCmd.MarkFlagRequired("name")
 	defineCmd.MarkFlagRequired("version")

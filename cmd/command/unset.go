@@ -29,9 +29,7 @@ var unsetCmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(unsetCmd)
-
-	flags := unsetCmd.Flags()
-	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
+	cmdFlagsHelper.declareFlagName(unsetCmd)
 
 	unsetCmd.MarkFlagRequired("name")
 }

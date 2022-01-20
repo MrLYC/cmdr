@@ -35,10 +35,8 @@ var useCmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(useCmd)
-
-	flags := useCmd.Flags()
-	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
-	flags.StringVarP(&simpleCmdFlag.version, "version", "v", "", "command version")
+	cmdFlagsHelper.declareFlagName(useCmd)
+	cmdFlagsHelper.declareFlagVersion(useCmd)
 
 	useCmd.MarkFlagRequired("name")
 	useCmd.MarkFlagRequired("version")

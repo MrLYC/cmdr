@@ -31,10 +31,8 @@ var uninstallCmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(uninstallCmd)
-
-	flags := uninstallCmd.Flags()
-	flags.StringVarP(&simpleCmdFlag.name, "name", "n", "", "command name")
-	flags.StringVarP(&simpleCmdFlag.version, "version", "v", "", "command version")
+	cmdFlagsHelper.declareFlagName(uninstallCmd)
+	cmdFlagsHelper.declareFlagVersion(uninstallCmd)
 
 	uninstallCmd.MarkFlagRequired("name")
 	uninstallCmd.MarkFlagRequired("version")

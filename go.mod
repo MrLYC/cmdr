@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/asdine/storm/v3 v3.2.1
+	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/go-github/v39 v39.1.1-0.20211008144426-6b0f37fa430d
