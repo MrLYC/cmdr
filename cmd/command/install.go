@@ -5,38 +5,22 @@ import (
 
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/runner"
-	"github.com/mrlyc/cmdr/utils"
 )
-
-var installCmdFlag struct {
-	activate bool
-}
 
 // installCmd represents the install command
 var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install command into cmdr",
-	Run: func(cmd *cobra.Command, args []string) {
-		runner := runner.NewInstallRunner(define.Config)
-
-		utils.ExitWithError(runner.Run(cmd.Context()), "install failed")
-
-		define.Logger.Info("installed command", map[string]interface{}{
-			"name":     simpleCmdFlag.name,
-			"version":  simpleCmdFlag.version,
-			"location": simpleCmdFlag.location,
-		})
-	},
+	Run:   executeRunner(runner.NewInstallRunner),
 }
 
 func init() {
 	Cmd.AddCommand(installCmd)
-	cmdFlagsHelper.declareFlagName(installCmd)
-	cmdFlagsHelper.declareFlagVersion(installCmd)
-
 	flags := installCmd.Flags()
-	flags.StringVarP(&simpleCmdFlag.location, "location", "l", "", "command location")
-	flags.BoolVarP(&installCmdFlag.activate, "activate", "a", false, "activate command")
+	flags.StringP("name", "n", "", "command name")
+	flags.StringP("version", "v", "", "command version")
+	flags.StringP("location", "l", "", "command location")
+	flags.BoolP("activate", "a", false, "activate command")
 
 	cfg := define.Config
 	cfg.BindPFlag(runner.CfgKeyCommandInstallName, flags.Lookup("name"))
