@@ -1,4 +1,4 @@
-package core
+package operator
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 )
 
 type CommandsQuerier struct {
-	BaseStep
+	BaseOperator
 	matchers   []q.Matcher
 	strictMode bool
 }

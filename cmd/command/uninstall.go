@@ -3,8 +3,8 @@ package command
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
+	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -13,11 +13,11 @@ var uninstallCmd = &cobra.Command{
 	Use:   "uninstall",
 	Short: "Uninstall command from cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
-		runner := core.NewStepRunner(
-			core.NewDBClientMaker(),
-			core.NewSimpleCommandsQuerier(simpleCmdFlag.name, simpleCmdFlag.version).StrictMode(),
-			core.NewCommandUndefiner(),
-			core.NewBinariesUninstaller(),
+		runner := operator.NewOperatorRunner(
+			operator.NewDBClientMaker(),
+			operator.NewSimpleCommandsQuerier(simpleCmdFlag.name, simpleCmdFlag.version).StrictMode(),
+			operator.NewCommandUndefiner(),
+			operator.NewBinariesUninstaller(),
 		)
 
 		utils.ExitWithError(runner.Run(cmd.Context()), "list failed")

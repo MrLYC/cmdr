@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/model"
+	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -22,15 +22,15 @@ var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Setup cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
-		shimsDir := core.GetShimsDir()
-		binDir := core.GetBinDir()
-		runner := core.NewStepRunner(
-			core.NewDirectoryMaker(map[string]string{
+		shimsDir := operator.GetShimsDir()
+		binDir := operator.GetBinDir()
+		runner := operator.NewOperatorRunner(
+			operator.NewDirectoryMaker(map[string]string{
 				"shims": shimsDir,
-				"bin":   core.GetBinDir(),
+				"bin":   operator.GetBinDir(),
 			}),
-			core.NewDBClientMaker(),
-			core.NewDBMigrator(new(model.Command)),
+			operator.NewDBClientMaker(),
+			operator.NewDBMigrator(new(model.Command)),
 		)
 
 		cmdrLocation, err := os.Executable()
@@ -38,15 +38,15 @@ var setupCmd = &cobra.Command{
 
 		if !setupCmdFlag.skipInstall && !setupCmdFlag.upgrade {
 			runner.Add(
-				core.NewCommandDefiner(shimsDir, define.Name, define.Version, cmdrLocation, true),
-				core.NewBinariesInstaller(shimsDir),
+				operator.NewCommandDefiner(shimsDir, define.Name, define.Version, cmdrLocation, true),
+				operator.NewBinariesInstaller(shimsDir),
 			)
 		}
 
 		if !setupCmdFlag.skipProfile {
 			runner.Add(
-				core.NewStepLoggerWithFields("writing profile"),
-				core.NewShellProfiler(binDir),
+				operator.NewOperatorLoggerWithFields("writing profile"),
+				operator.NewShellProfiler(binDir),
 			)
 		}
 

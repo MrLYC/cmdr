@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -18,13 +18,13 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List commands",
 	Run: func(cmd *cobra.Command, args []string) {
-		runner := core.NewStepRunner(
-			core.NewDBClientMaker(),
-			core.NewFullCommandsQuerier(
+		runner := operator.NewOperatorRunner(
+			operator.NewDBClientMaker(),
+			operator.NewFullCommandsQuerier(
 				simpleCmdFlag.name, simpleCmdFlag.version, simpleCmdFlag.location, listCmdFlag.activated,
 			),
-			core.NewCommandSorter(),
-			core.NewCommandPrinter(os.Stdout),
+			operator.NewCommandSorter(),
+			operator.NewCommandPrinter(os.Stdout),
 		)
 
 		utils.ExitWithError(runner.Run(cmd.Context()), "list failed")

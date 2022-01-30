@@ -1,4 +1,4 @@
-package core_test
+package operator_test
 
 import (
 	"context"
@@ -9,9 +9,9 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/spf13/afero"
 
-	. "github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/model"
+	. "github.com/mrlyc/cmdr/operator"
 )
 
 var _ = Describe("Query", func() {

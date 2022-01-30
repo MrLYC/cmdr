@@ -8,7 +8,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    steps:
+    operators:
       - name: Checkout
         uses: actions/checkout@v2
         with:

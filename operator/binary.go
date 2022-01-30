@@ -1,4 +1,4 @@
-package core
+package operator
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 )
 
 type BinariesInstaller struct {
-	BaseStep
+	BaseOperator
 	shimsDir string
 }
 
@@ -83,7 +83,7 @@ func NewBinariesInstaller(shimsDir string) *BinariesInstaller {
 }
 
 type BinariesUninstaller struct {
-	BaseStep
+	BaseOperator
 }
 
 func (s *BinariesUninstaller) String() string {
@@ -132,7 +132,7 @@ func NewBinariesUninstaller() *BinariesUninstaller {
 }
 
 type BinariesActivator struct {
-	BaseStep
+	BaseOperator
 	shimsDir string
 	binDir   string
 }

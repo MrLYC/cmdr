@@ -1,4 +1,4 @@
-package core
+package operator
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 )
 
 type CommandDefiner struct {
-	BaseStep
+	BaseOperator
 	shimsDir string
 	command  model.Command
 }
@@ -82,7 +82,7 @@ func NewCommandDefiner(shimsDir, name, version, location string, managed bool) *
 }
 
 type CommandUndefiner struct {
-	BaseStep
+	BaseOperator
 }
 
 func (s *CommandUndefiner) String() string {
@@ -121,7 +121,7 @@ func NewCommandUndefiner() *CommandUndefiner {
 }
 
 type CommandActivator struct {
-	BaseStep
+	BaseOperator
 }
 
 func (s *CommandActivator) String() string {
@@ -159,7 +159,7 @@ func NewCommandActivator() *CommandActivator {
 }
 
 type CommandsDeactivator struct {
-	BaseStep
+	BaseOperator
 }
 
 func (s *CommandsDeactivator) String() string {
@@ -224,7 +224,7 @@ func NewCommandDeactivator() *CommandsDeactivator {
 }
 
 type CommandHandler struct {
-	BaseStep
+	BaseOperator
 	name   string
 	runner func(context.Context, []*model.Command) error
 }

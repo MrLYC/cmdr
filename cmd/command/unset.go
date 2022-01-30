@@ -3,8 +3,8 @@ package command
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
+	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -13,10 +13,10 @@ var unsetCmd = &cobra.Command{
 	Use:   "unset",
 	Short: "Deactivate a command",
 	Run: func(cmd *cobra.Command, args []string) {
-		runner := core.NewStepRunner(
-			core.NewDBClientMaker(),
-			core.NewNamedCommandsQuerier(simpleCmdFlag.name),
-			core.NewCommandDeactivator(),
+		runner := operator.NewOperatorRunner(
+			operator.NewDBClientMaker(),
+			operator.NewNamedCommandsQuerier(simpleCmdFlag.name),
+			operator.NewCommandDeactivator(),
 		)
 
 		utils.ExitWithError(runner.Run(cmd.Context()), "deactivate failed")

@@ -10,8 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
+	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -25,7 +25,7 @@ var initCmd = &cobra.Command{
 
 		var buffer bytes.Buffer
 		utils.CheckError(tmpl.Execute(&buffer, map[string]interface{}{
-			"BinDir": core.GetBinDir(),
+			"BinDir": operator.GetBinDir(),
 		}))
 
 		fmt.Println(buffer.String())

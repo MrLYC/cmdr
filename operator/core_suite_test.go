@@ -1,4 +1,4 @@
-package core_test
+package operator_test
 
 import (
 	"testing"

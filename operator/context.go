@@ -1,4 +1,4 @@
-package core
+package operator
 
 import (
 	"context"
@@ -45,7 +45,7 @@ func GetCommandsFromContext(ctx context.Context) ([]*model.Command, error) {
 }
 
 type ContextValueSetter struct {
-	BaseStep
+	BaseOperator
 	values map[define.ContextKey]interface{}
 }
 

@@ -1,4 +1,4 @@
-package core
+package operator
 
 import (
 	"context"
@@ -78,7 +78,7 @@ func NewDBClientMaker() *DBClientMaker {
 }
 
 type DBMigrator struct {
-	BaseStep
+	BaseOperator
 	models []interface{}
 }
 

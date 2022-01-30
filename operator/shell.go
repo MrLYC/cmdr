@@ -1,4 +1,4 @@
-package core
+package operator
 
 import (
 	"bytes"
@@ -15,7 +15,7 @@ import (
 )
 
 type ShellProfiler struct {
-	BaseStep
+	BaseOperator
 	script string
 }
 

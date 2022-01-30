@@ -1,4 +1,4 @@
-package core
+package operator
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 )
 
 type DirectoryMaker struct {
-	BaseStep
+	BaseOperator
 	dirs map[string]string
 }
 
@@ -39,7 +39,7 @@ func NewDirectoryMaker(dirs map[string]string) *DirectoryMaker {
 }
 
 type DirectoryRemover struct {
-	BaseStep
+	BaseOperator
 	dirs map[string]string
 }
 

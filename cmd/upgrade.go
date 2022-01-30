@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
+	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -27,32 +27,32 @@ var upgradeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := cmd.Context()
 		logger := define.Logger
-		shimsDir := core.GetShimsDir()
-		binDir := core.GetBinDir()
-		runner := core.NewStepRunner(
-			core.NewDBClientMaker(),
-			core.NewCommandDefiner(shimsDir, define.Name, define.Version, upgradeCmdFlag.location, true),
+		shimsDir := operator.GetShimsDir()
+		binDir := operator.GetBinDir()
+		runner := operator.NewOperatorRunner(
+			operator.NewDBClientMaker(),
+			operator.NewCommandDefiner(shimsDir, define.Name, define.Version, upgradeCmdFlag.location, true),
 		)
 
 		if upgradeCmdFlag.location == "" {
 			runner.Add(
-				core.NewReleaseSearcher(upgradeCmdFlag.release, upgradeCmdFlag.asset),
-				core.NewDownloader(),
+				operator.NewReleaseSearcher(upgradeCmdFlag.release, upgradeCmdFlag.asset),
+				operator.NewDownloader(),
 			)
 		}
 
 		runner.Add(
-			core.NewBinariesInstaller(shimsDir),
+			operator.NewBinariesInstaller(shimsDir),
 		)
 
 		if !upgradeCmdFlag.keep {
 			runner.Add(
-				core.NewCommandDeactivator(),
-				core.NewBinariesActivator(binDir, shimsDir),
-				core.NewCommandActivator(),
-				core.NewNamedCommandsQuerier(define.Name),
-				core.NewCommandUndefiner(),
-				core.NewBinariesUninstaller(),
+				operator.NewCommandDeactivator(),
+				operator.NewBinariesActivator(binDir, shimsDir),
+				operator.NewCommandActivator(),
+				operator.NewNamedCommandsQuerier(define.Name),
+				operator.NewCommandUndefiner(),
+				operator.NewBinariesUninstaller(),
 			)
 		}
 
@@ -76,7 +76,7 @@ var upgradeCmd = &cobra.Command{
 			"args": runArgs,
 		})
 
-		utils.ExitWithError(utils.WaitProcess(ctx, filepath.Join(core.GetBinDir(), define.Name), runArgs), "setup failed")
+		utils.ExitWithError(utils.WaitProcess(ctx, filepath.Join(operator.GetBinDir(), define.Name), runArgs), "setup failed")
 	},
 }
 

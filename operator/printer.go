@@ -1,4 +1,4 @@
-package core
+package operator
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 )
 
 type CommandPrinter struct {
-	BaseStep
+	BaseOperator
 	writer io.Writer
 }
 

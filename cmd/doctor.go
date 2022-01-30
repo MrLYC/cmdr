@@ -4,8 +4,8 @@ import (
 	"github.com/asdine/storm/v3/q"
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/model"
+	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -18,23 +18,23 @@ var doctorCmd = &cobra.Command{
 	Use:   "doctor",
 	Short: "Check and fix cmdr environment",
 	Run: func(cmd *cobra.Command, args []string) {
-		binDir := core.GetBinDir()
-		shimsDir := core.GetShimsDir()
+		binDir := operator.GetBinDir()
+		shimsDir := operator.GetShimsDir()
 
-		runner := core.NewStepRunner(
-			core.NewDBClientMaker(),
-			core.NewDBMigrator(new(model.Command)),
-			core.NewCommandsQuerier([]q.Matcher{q.Eq("Activated", true)}),
-			core.NewBrokenCommandsFixer(shimsDir),
-			core.NewDirectoryRemover(map[string]string{
+		runner := operator.NewOperatorRunner(
+			operator.NewDBClientMaker(),
+			operator.NewDBMigrator(new(model.Command)),
+			operator.NewCommandsQuerier([]q.Matcher{q.Eq("Activated", true)}),
+			operator.NewBrokenCommandsFixer(shimsDir),
+			operator.NewDirectoryRemover(map[string]string{
 				"bin": binDir,
 			}),
-			core.NewDirectoryMaker(map[string]string{
-				"shims": core.GetShimsDir(),
+			operator.NewDirectoryMaker(map[string]string{
+				"shims": operator.GetShimsDir(),
 				"bin":   binDir,
 			}),
-			core.NewBinariesInstaller(shimsDir),
-			core.NewBinariesActivator(binDir, shimsDir),
+			operator.NewBinariesInstaller(shimsDir),
+			operator.NewBinariesActivator(binDir, shimsDir),
 		)
 
 		utils.ExitWithError(runner.Run(cmd.Context()), "doctor failed")

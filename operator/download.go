@@ -1,4 +1,4 @@
-package core
+package operator
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 )
 
 type Downloader struct {
-	BaseStep
+	BaseOperator
 	schemaRegexp *regexp.Regexp
 	tempDir      string
 }

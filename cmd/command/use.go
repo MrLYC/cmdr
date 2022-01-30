@@ -3,8 +3,8 @@ package command
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
+	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -13,15 +13,15 @@ var useCmd = &cobra.Command{
 	Use:   "use",
 	Short: "Activate a command",
 	Run: func(cmd *cobra.Command, args []string) {
-		binDir := core.GetBinDir()
-		shimsDir := core.GetShimsDir()
+		binDir := operator.GetBinDir()
+		shimsDir := operator.GetShimsDir()
 
-		runner := core.NewStepRunner(
-			core.NewDBClientMaker(),
-			core.NewSimpleCommandsQuerier(simpleCmdFlag.name, simpleCmdFlag.version).StrictMode(),
-			core.NewCommandDeactivator(),
-			core.NewBinariesActivator(binDir, shimsDir),
-			core.NewCommandActivator(),
+		runner := operator.NewOperatorRunner(
+			operator.NewDBClientMaker(),
+			operator.NewSimpleCommandsQuerier(simpleCmdFlag.name, simpleCmdFlag.version).StrictMode(),
+			operator.NewCommandDeactivator(),
+			operator.NewBinariesActivator(binDir, shimsDir),
+			operator.NewCommandActivator(),
 		)
 
 		utils.ExitWithError(runner.Run(cmd.Context()), "activate failed")

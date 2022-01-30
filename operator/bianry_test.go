@@ -1,4 +1,4 @@
-package core_test
+package operator_test
 
 import (
 	"context"
@@ -10,9 +10,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 
-	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/model"
+	"github.com/mrlyc/cmdr/operator"
 )
 
 var _ = Describe("Bianry", func() {
@@ -59,15 +59,15 @@ var _ = Describe("Bianry", func() {
 	})
 
 	Context("BinariesInstaller", func() {
-		var installer *core.BinariesInstaller
+		var installer *operator.BinariesInstaller
 
 		BeforeEach(func() {
-			installer = core.NewBinariesInstaller(shimsDir)
+			installer = operator.NewBinariesInstaller(shimsDir)
 		})
 
 		It("context not found", func() {
 			_, err := installer.Run(context.Background())
-			Expect(errors.Cause(err)).To(Equal(core.ErrContextValueNotFound))
+			Expect(errors.Cause(err)).To(Equal(operator.ErrContextValueNotFound))
 		})
 
 		It("install binaries", func() {
@@ -75,10 +75,10 @@ var _ = Describe("Bianry", func() {
 			Expect(err).To(BeNil())
 
 			Expect(
-				afero.Exists(define.FS, core.GetCommandShimsPath(shimsDir, command1.Name, command1.Version)),
+				afero.Exists(define.FS, operator.GetCommandShimsPath(shimsDir, command1.Name, command1.Version)),
 			).To(BeTrue())
 			Expect(
-				afero.Exists(define.FS, core.GetCommandShimsPath(shimsDir, command2.Name, command2.Version)),
+				afero.Exists(define.FS, operator.GetCommandShimsPath(shimsDir, command2.Name, command2.Version)),
 			).To(BeTrue())
 		})
 
@@ -89,10 +89,10 @@ var _ = Describe("Bianry", func() {
 			Expect(err).NotTo(BeNil())
 
 			Expect(afero.Exists(
-				define.FS, core.GetCommandShimsPath(shimsDir, command1.Name, command1.Version),
+				define.FS, operator.GetCommandShimsPath(shimsDir, command1.Name, command1.Version),
 			)).To(BeFalse())
 			Expect(afero.Exists(
-				define.FS, core.GetCommandShimsPath(shimsDir, command2.Name, command2.Version),
+				define.FS, operator.GetCommandShimsPath(shimsDir, command2.Name, command2.Version),
 			)).To(BeTrue())
 		})
 
@@ -103,19 +103,19 @@ var _ = Describe("Bianry", func() {
 			Expect(err).To(BeNil())
 
 			Expect(afero.Exists(
-				define.FS, core.GetCommandShimsPath(shimsDir, command1.Name, command1.Version),
+				define.FS, operator.GetCommandShimsPath(shimsDir, command1.Name, command1.Version),
 			)).To(BeTrue())
 			Expect(afero.Exists(
-				define.FS, core.GetCommandShimsPath(shimsDir, command2.Name, command2.Version),
+				define.FS, operator.GetCommandShimsPath(shimsDir, command2.Name, command2.Version),
 			)).To(BeFalse())
 		})
 	})
 
 	Context("BinariesUninstaller", func() {
-		var uninstaller *core.BinariesUninstaller
+		var uninstaller *operator.BinariesUninstaller
 
 		BeforeEach(func() {
-			uninstaller = core.NewBinariesUninstaller()
+			uninstaller = operator.NewBinariesUninstaller()
 		})
 
 		It("uninstall binaries", func() {
@@ -132,7 +132,7 @@ var _ = Describe("Bianry", func() {
 
 		It("context not found", func() {
 			_, err := uninstaller.Run(context.Background())
-			Expect(errors.Cause(err)).To(Equal(core.ErrContextValueNotFound))
+			Expect(errors.Cause(err)).To(Equal(operator.ErrContextValueNotFound))
 		})
 
 		It("uninstall binaries with not managed", func() {
@@ -165,20 +165,20 @@ var _ = Describe("Bianry", func() {
 	})
 
 	Context("BinariesActivator", func() {
-		var activator *core.BinariesActivator
+		var activator *operator.BinariesActivator
 
 		BeforeEach(func() {
 			command1.Managed = true
 			command2.Managed = false
 
-			Expect(define.FS.MkdirAll(core.GetCommandShimsDir(shimsDir, command1.Name), 0755)).To(Succeed())
-			Expect(define.FS.Rename(command1.Location, core.GetCommandShimsPath(shimsDir, command1.Name, command1.Version))).To(Succeed())
-			activator = core.NewBinariesActivator(binDir, shimsDir)
+			Expect(define.FS.MkdirAll(operator.GetCommandShimsDir(shimsDir, command1.Name), 0755)).To(Succeed())
+			Expect(define.FS.Rename(command1.Location, operator.GetCommandShimsPath(shimsDir, command1.Name, command1.Version))).To(Succeed())
+			activator = operator.NewBinariesActivator(binDir, shimsDir)
 		})
 
 		It("context not found", func() {
 			_, err := activator.Run(context.Background())
-			Expect(errors.Cause(err)).To(Equal(core.ErrContextValueNotFound))
+			Expect(errors.Cause(err)).To(Equal(operator.ErrContextValueNotFound))
 		})
 
 		It("activate binaries", func() {

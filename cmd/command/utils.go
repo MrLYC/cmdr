@@ -8,8 +8,8 @@ import (
 	"github.com/asdine/storm/v3/q"
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/model"
+	"github.com/mrlyc/cmdr/operator"
 )
 
 var cmdFlagsHelper commandFlagsHelper
@@ -38,11 +38,11 @@ func (f *commandFlagsHelper) declareFlagLocation(cmd *cobra.Command) {
 }
 
 func (f *commandFlagsHelper) queryCommands(matchers []q.Matcher, handler func(ctx context.Context, commands []*model.Command) error) {
-	runner := core.NewStepRunner(
-		core.NewDBClientMaker(),
-		core.NewCommandsQuerier(matchers),
-		core.NewCommandSorter(),
-		core.NewCommandHandler("command-filter", handler),
+	runner := operator.NewOperatorRunner(
+		operator.NewDBClientMaker(),
+		operator.NewCommandsQuerier(matchers),
+		operator.NewCommandSorter(),
+		operator.NewCommandHandler("command-filter", handler),
 	)
 	_ = runner.Run(context.Background())
 }

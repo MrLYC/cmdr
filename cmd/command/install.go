@@ -3,8 +3,8 @@ package command
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
+	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -17,21 +17,21 @@ var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install command into cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
-		binDir := core.GetBinDir()
-		shimsDir := core.GetShimsDir()
+		binDir := operator.GetBinDir()
+		shimsDir := operator.GetShimsDir()
 
-		runner := core.NewStepRunner(
-			core.NewDBClientMaker(),
-			core.NewCommandDefiner(shimsDir, simpleCmdFlag.name, simpleCmdFlag.version, simpleCmdFlag.location, true),
-			core.NewDownloader(),
-			core.NewBinariesInstaller(shimsDir),
+		runner := operator.NewOperatorRunner(
+			operator.NewDBClientMaker(),
+			operator.NewCommandDefiner(shimsDir, simpleCmdFlag.name, simpleCmdFlag.version, simpleCmdFlag.location, true),
+			operator.NewDownloader(),
+			operator.NewBinariesInstaller(shimsDir),
 		)
 
 		if installCmdFlag.activate {
 			runner.Add(
-				core.NewCommandDeactivator(),
-				core.NewBinariesActivator(binDir, shimsDir),
-				core.NewCommandActivator(),
+				operator.NewCommandDeactivator(),
+				operator.NewBinariesActivator(binDir, shimsDir),
+				operator.NewCommandActivator(),
 			)
 		}
 

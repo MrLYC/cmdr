@@ -1,4 +1,4 @@
-package core_test
+package operator_test
 
 import (
 	"context"
@@ -12,10 +12,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 
-	"github.com/mrlyc/cmdr/core"
-	"github.com/mrlyc/cmdr/core/mock"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/model"
+	"github.com/mrlyc/cmdr/operator"
+	"github.com/mrlyc/cmdr/operator/mock"
 )
 
 var _ = Describe("Command", func() {
@@ -85,7 +85,7 @@ var _ = Describe("Command", func() {
 		It("should define managed command", func() {
 			dbQuery.EXPECT().First(gomock.Any()).Return(nil)
 
-			definer := core.NewCommandDefiner(shimsDir, name, version, location, true)
+			definer := operator.NewCommandDefiner(shimsDir, name, version, location, true)
 			resultCtx, err := definer.Run(ctx)
 			Expect(err).To(BeNil())
 
@@ -99,7 +99,7 @@ var _ = Describe("Command", func() {
 		It("should define unmanaged command", func() {
 			dbQuery.EXPECT().First(gomock.Any()).Return(nil)
 
-			definer := core.NewCommandDefiner(shimsDir, name, version, location, false)
+			definer := operator.NewCommandDefiner(shimsDir, name, version, location, false)
 			resultCtx, err := definer.Run(ctx)
 			Expect(err).To(BeNil())
 
@@ -113,7 +113,7 @@ var _ = Describe("Command", func() {
 		It("query failed", func() {
 			dbQuery.EXPECT().First(gomock.Any()).Return(fmt.Errorf("error"))
 
-			definer := core.NewCommandDefiner(shimsDir, name, version, location, true)
+			definer := operator.NewCommandDefiner(shimsDir, name, version, location, true)
 			_, err := definer.Run(ctx)
 			Expect(err).To(HaveOccurred())
 		})
@@ -129,7 +129,7 @@ var _ = Describe("Command", func() {
 				return nil
 			})
 
-			definer := core.NewCommandDefiner(shimsDir, name, version, location, true)
+			definer := operator.NewCommandDefiner(shimsDir, name, version, location, true)
 			err := definer.Commit(ctx)
 			Expect(err).To(BeNil())
 		})
@@ -137,17 +137,17 @@ var _ = Describe("Command", func() {
 
 	Context("CommandUndefiner", func() {
 		var (
-			undefiner *core.CommandUndefiner
+			undefiner *operator.CommandUndefiner
 		)
 
 		BeforeEach(func() {
-			undefiner = core.NewCommandUndefiner()
+			undefiner = operator.NewCommandUndefiner()
 		})
 
 		It("commands not found", func() {
 			ctx = context.WithValue(ctx, define.ContextKeyCommands, nil)
 			_, err := undefiner.Run(ctx)
-			Expect(errors.Cause(err)).To(Equal(core.ErrContextValueNotFound))
+			Expect(errors.Cause(err)).To(Equal(operator.ErrContextValueNotFound))
 		})
 
 		It("commands deleted", func() {
@@ -181,17 +181,17 @@ var _ = Describe("Command", func() {
 
 	Context("CommandActivator", func() {
 		var (
-			activator *core.CommandActivator
+			activator *operator.CommandActivator
 		)
 
 		BeforeEach(func() {
-			activator = core.NewCommandActivator()
+			activator = operator.NewCommandActivator()
 		})
 
 		It("commands not found", func() {
 			ctx = context.WithValue(ctx, define.ContextKeyCommands, nil)
 			_, err := activator.Run(ctx)
-			Expect(errors.Cause(err)).To(Equal(core.ErrContextValueNotFound))
+			Expect(errors.Cause(err)).To(Equal(operator.ErrContextValueNotFound))
 		})
 
 		It("commands activated", func() {
@@ -220,18 +220,18 @@ var _ = Describe("Command", func() {
 
 	Context("CommandDeactivator", func() {
 		var (
-			deactivator *core.CommandsDeactivator
+			deactivator *operator.CommandsDeactivator
 		)
 
 		BeforeEach(func() {
-			deactivator = core.NewCommandDeactivator()
+			deactivator = operator.NewCommandDeactivator()
 		})
 
 		It("context commands not found", func() {
 			ctx = context.WithValue(ctx, define.ContextKeyCommands, nil)
 
 			_, err := deactivator.Run(ctx)
-			Expect(errors.Cause(err)).To(Equal(core.ErrContextValueNotFound))
+			Expect(errors.Cause(err)).To(Equal(operator.ErrContextValueNotFound))
 		})
 
 		It("query not found", func() {

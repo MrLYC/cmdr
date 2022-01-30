@@ -1,4 +1,4 @@
-package core
+package operator
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 )
 
 type CommandSorter struct {
-	BaseStep
+	BaseOperator
 }
 
 func (s *CommandSorter) String() string {

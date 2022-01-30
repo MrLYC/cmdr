@@ -1,4 +1,4 @@
-package core
+package operator
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 )
 
 type BrokenCommandsFixer struct {
-	BaseStep
+	BaseOperator
 	shimsDir string
 }
 
