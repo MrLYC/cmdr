@@ -3,6 +3,7 @@ module github.com/mrlyc/cmdr
 go 1.16
 
 require (
+	github.com/ahmetb/go-linq/v3 v3.2.0 // indirect
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect

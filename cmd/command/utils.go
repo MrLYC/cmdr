@@ -2,9 +2,10 @@ package command
 
 import (
 	"context"
+	"strings"
 
+	"github.com/ahmetb/go-linq/v3"
 	"github.com/asdine/storm/v3/q"
-	"github.com/emirpasic/gods/sets/treeset"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
@@ -48,17 +49,22 @@ func (f *commandFlagsHelper) queryCommands(matchers []q.Matcher, handler func(ct
 
 func (f *commandFlagsHelper) registerCommandSuggestions(cmd *cobra.Command, name string, getter func(command *model.Command) string) {
 	cmd.RegisterFlagCompletionFunc(name, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		set := treeset.NewWithStringComparator()
+		results := []string{}
 		f.queryCommands(f.getMagicMatchers(), func(ctx context.Context, commands []*model.Command) error {
-			for _, command := range commands {
-				set.Add(getter(command))
-			}
+			linq.From(commands).
+				GroupBy(func(i interface{}) interface{} {
+					return getter(i.(*model.Command))
+				}, func(i interface{}) interface{} {
+					return i
+				}).
+				Select(func(i interface{}) interface{} {
+					return i.(linq.Group).Key
+				}).
+				Where(func(i interface{}) bool {
+					return strings.HasPrefix(i.(string), toComplete)
+				}).
+				ToSlice(&results)
 			return nil
-		})
-
-		results := make([]string, 0, set.Size())
-		set.Each(func(index int, value interface{}) {
-			results = append(results, value.(string))
 		})
 
 		return results, cobra.ShellCompDirectiveDefault
