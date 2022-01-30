@@ -9,3 +9,7 @@ build:
 .PHONY: goreleaser
 goreleaser:
 	goreleaser build --skip-validate --single-target --rm-dist --snapshot
+
+.PHONY: test
+test:
+	go test ./...

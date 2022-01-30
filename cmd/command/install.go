@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/operator"
+	"github.com/mrlyc/cmdr/runner"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -17,23 +17,7 @@ var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install command into cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
-		binDir := operator.GetBinDir()
-		shimsDir := operator.GetShimsDir()
-
-		runner := operator.NewOperatorRunner(
-			operator.NewDBClientMaker(),
-			operator.NewCommandDefiner(shimsDir, simpleCmdFlag.name, simpleCmdFlag.version, simpleCmdFlag.location, true),
-			operator.NewDownloader(),
-			operator.NewBinariesInstaller(shimsDir),
-		)
-
-		if installCmdFlag.activate {
-			runner.Add(
-				operator.NewCommandDeactivator(),
-				operator.NewBinariesActivator(binDir, shimsDir),
-				operator.NewCommandActivator(),
-			)
-		}
+		runner := runner.NewInstallRunner(define.Config)
 
 		utils.ExitWithError(runner.Run(cmd.Context()), "install failed")
 
@@ -53,6 +37,12 @@ func init() {
 	flags := installCmd.Flags()
 	flags.StringVarP(&simpleCmdFlag.location, "location", "l", "", "command location")
 	flags.BoolVarP(&installCmdFlag.activate, "activate", "a", false, "activate command")
+
+	cfg := define.Config
+	cfg.BindPFlag(runner.CfgKeyCommandInstallName, flags.Lookup("name"))
+	cfg.BindPFlag(runner.CfgKeyCommandInstallVersion, flags.Lookup("version"))
+	cfg.BindPFlag(runner.CfgKeyCommandInstallLocation, flags.Lookup("location"))
+	cfg.BindPFlag(runner.CfgKeyCommandInstallActivate, flags.Lookup("activate"))
 
 	installCmd.MarkFlagRequired("name")
 	installCmd.MarkFlagRequired("version")

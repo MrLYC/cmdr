@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/mrlyc/cmdr/runner"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/define"
@@ -24,7 +25,7 @@ var setupCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		shimsDir := operator.GetShimsDir()
 		binDir := operator.GetBinDir()
-		runner := operator.NewOperatorRunner(
+		runner := runner.New(
 			operator.NewDirectoryMaker(map[string]string{
 				"shims": shimsDir,
 				"bin":   operator.GetBinDir(),

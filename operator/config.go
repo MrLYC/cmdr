@@ -8,19 +8,19 @@ import (
 )
 
 func GetRootDir() string {
-	return define.Configuration.GetString("cmdr.root")
+	return define.Config.GetString(define.CfgKeyCmdrRoot)
 }
 
 func GetBinDir() string {
-	return filepath.Join(GetRootDir(), "bin")
+	return filepath.Join(GetRootDir(), define.Config.GetString(define.CfgKeyBinDir))
 }
 
 func GetShimsDir() string {
-	return filepath.Join(GetRootDir(), "shims")
+	return filepath.Join(GetRootDir(), define.Config.GetString(define.CfgKeyShimsDir))
 }
 
-func GetDBName() string {
-	return define.Configuration.GetString("database.name")
+func GetDatabasePath() string {
+	return filepath.Join(GetRootDir(), define.Config.GetString(define.CfgKeyDatabase))
 }
 
 func GetCommandShimsDir(shimsDir, name string) string {

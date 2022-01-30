@@ -2,7 +2,6 @@ package operator
 
 import (
 	"context"
-	"path/filepath"
 
 	"github.com/asdine/storm/v3"
 	"github.com/pkg/errors"
@@ -34,16 +33,14 @@ func NewDBClient(path string) (DBClient, error) {
 }
 
 func GetDBClient() (DBClient, error) {
-	cmdrDir := GetRootDir()
-	name := GetDBName()
+	db := GetDatabasePath()
 	logger := define.Logger
 
 	logger.Debug("opening database", map[string]interface{}{
-		"name": name,
-		"dir":  cmdrDir,
+		"name": db,
 	})
 
-	return NewDBClient(filepath.Join(cmdrDir, name))
+	return NewDBClient(db)
 }
 
 type DBClientMaker struct {

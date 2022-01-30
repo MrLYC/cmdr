@@ -23,10 +23,10 @@ var configCmd = &cobra.Command{
 
 		if configCmdFlag.list {
 			logger.Debug("listing configurations", map[string]interface{}{
-				"path": define.Configuration.ConfigFileUsed(),
+				"path": define.Config.ConfigFileUsed(),
 			})
 
-			settings := define.Configuration.AllSettings()
+			settings := define.Config.AllSettings()
 			content, err := yaml.Marshal(settings)
 			utils.ExitWithError(err, "marshaling settings")
 

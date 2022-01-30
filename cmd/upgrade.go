@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/mrlyc/cmdr/runner"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -29,7 +30,7 @@ var upgradeCmd = &cobra.Command{
 		logger := define.Logger
 		shimsDir := operator.GetShimsDir()
 		binDir := operator.GetBinDir()
-		runner := operator.NewOperatorRunner(
+		runner := runner.New(
 			operator.NewDBClientMaker(),
 			operator.NewCommandDefiner(shimsDir, define.Name, define.Version, upgradeCmdFlag.location, true),
 		)

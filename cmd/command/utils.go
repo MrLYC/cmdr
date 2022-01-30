@@ -6,6 +6,7 @@ import (
 
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/asdine/storm/v3/q"
+	"github.com/mrlyc/cmdr/runner"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/model"
@@ -38,7 +39,7 @@ func (f *commandFlagsHelper) declareFlagLocation(cmd *cobra.Command) {
 }
 
 func (f *commandFlagsHelper) queryCommands(matchers []q.Matcher, handler func(ctx context.Context, commands []*model.Command) error) {
-	runner := operator.NewOperatorRunner(
+	runner := runner.New(
 		operator.NewDBClientMaker(),
 		operator.NewCommandsQuerier(matchers),
 		operator.NewCommandSorter(),

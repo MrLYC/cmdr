@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/operator"
+	"github.com/mrlyc/cmdr/runner"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -13,16 +13,7 @@ var useCmd = &cobra.Command{
 	Use:   "use",
 	Short: "Activate a command",
 	Run: func(cmd *cobra.Command, args []string) {
-		binDir := operator.GetBinDir()
-		shimsDir := operator.GetShimsDir()
-
-		runner := operator.NewOperatorRunner(
-			operator.NewDBClientMaker(),
-			operator.NewSimpleCommandsQuerier(simpleCmdFlag.name, simpleCmdFlag.version).StrictMode(),
-			operator.NewCommandDeactivator(),
-			operator.NewBinariesActivator(binDir, shimsDir),
-			operator.NewCommandActivator(),
-		)
+		runner := runner.NewUseRunner(define.Config)
 
 		utils.ExitWithError(runner.Run(cmd.Context()), "activate failed")
 
@@ -37,6 +28,11 @@ func init() {
 	Cmd.AddCommand(useCmd)
 	cmdFlagsHelper.declareFlagName(useCmd)
 	cmdFlagsHelper.declareFlagVersion(useCmd)
+
+	flags := useCmd.Flags()
+	cfg := define.Config
+	cfg.BindPFlag(runner.CfgKeyCommandUseName, flags.Lookup("name"))
+	cfg.BindPFlag(runner.CfgKeyCommandUseVersion, flags.Lookup("version"))
 
 	useCmd.MarkFlagRequired("name")
 	useCmd.MarkFlagRequired("version")

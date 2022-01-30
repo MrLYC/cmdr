@@ -12,6 +12,11 @@ import (
 	"logur.dev/logur"
 )
 
+const (
+	CfgKeyLogLevel  = "log.level"
+	CfgKeyLogOutput = "log.output"
+)
+
 var Logger logur.Logger
 
 type terminalLogger struct {
@@ -19,10 +24,6 @@ type terminalLogger struct {
 	level          logur.Level
 	withErrorStack bool
 	errorKey       string
-}
-
-func (l *terminalLogger) getMessage(msg string) string {
-	return strings.ToUpper(msg[:1]) + msg[1:]
 }
 
 func (l *terminalLogger) getFieldsMessages(fields []map[string]interface{}) []string {
@@ -101,12 +102,12 @@ func (l *terminalLogger) Error(msg string, fields ...map[string]interface{}) {
 }
 
 func InitLogger() {
-	level, ok := logur.ParseLevel(Configuration.GetString("log.level"))
+	level, ok := logur.ParseLevel(Config.GetString(CfgKeyLogLevel))
 	if !ok {
 		level = logur.Info
 	}
 
-	switch Configuration.GetString("log.output") {
+	switch Config.GetString(CfgKeyLogOutput) {
 	case "stdout":
 		color.SetOutput(os.Stdout)
 	default:
@@ -121,5 +122,5 @@ func InitLogger() {
 }
 
 func init() {
-	Logger = logur.NewNoopLogger()
+	Logger = logur.NoopLogger{}
 }

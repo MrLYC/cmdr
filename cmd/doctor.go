@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/asdine/storm/v3/q"
+	"github.com/mrlyc/cmdr/runner"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/model"
@@ -21,7 +22,7 @@ var doctorCmd = &cobra.Command{
 		binDir := operator.GetBinDir()
 		shimsDir := operator.GetShimsDir()
 
-		runner := operator.NewOperatorRunner(
+		runner := runner.New(
 			operator.NewDBClientMaker(),
 			operator.NewDBMigrator(new(model.Command)),
 			operator.NewCommandsQuerier([]q.Matcher{q.Eq("Activated", true)}),

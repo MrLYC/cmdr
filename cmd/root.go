@@ -55,7 +55,7 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	cfg := define.Configuration
+	cfg := define.Config
 
 	_, err := define.FS.Stat(cfgFile)
 
