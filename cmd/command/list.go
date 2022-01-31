@@ -25,5 +25,4 @@ func init() {
 	cfg.BindPFlag(runner.CfgKeyCommandListName, flags.Lookup("name"))
 	cfg.BindPFlag(runner.CfgKeyCommandListVersion, flags.Lookup("version"))
 	cfg.BindPFlag(runner.CfgKeyCommandListLocation, flags.Lookup("location"))
-
 }
