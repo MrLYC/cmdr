@@ -10,7 +10,7 @@ const (
 	CfgKeyCommandUseVersion = "command.use.version"
 )
 
-func NewUseRunner(cfg define.Configuration) *Runner {
+func NewUseRunner(cfg define.Configuration) Runner {
 	binDir := operator.GetBinDir()
 	shimsDir := operator.GetShimsDir()
 

@@ -9,7 +9,7 @@ const (
 	CfgKeyCommandUnsetName = "command.unset.name"
 )
 
-func NewUnsetRunner(cfg define.Configuration) *Runner {
+func NewUnsetRunner(cfg define.Configuration) Runner {
 	return New(
 		operator.NewDBClientMaker(),
 		operator.NewNamedCommandsQuerier(cfg.GetString(CfgKeyCommandUnsetName)),

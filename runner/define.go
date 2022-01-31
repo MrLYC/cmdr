@@ -11,7 +11,7 @@ const (
 	CfgKeyCommandDefineLocation = "command.define.location"
 )
 
-func NewDefineRunner(cfg define.Configuration) *Runner {
+func NewDefineRunner(cfg define.Configuration) Runner {
 	shimsDir := operator.GetShimsDir()
 
 	return New(

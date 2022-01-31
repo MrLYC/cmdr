@@ -10,7 +10,7 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
-func executeRunner(factory func(define.Configuration) *runner.Runner) func(cmd *cobra.Command, args []string) {
+func executeRunner(factory func(define.Configuration) runner.Runner) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		cfg := define.Config
 		logger := define.Logger

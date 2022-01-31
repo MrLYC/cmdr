@@ -10,16 +10,22 @@ import (
 	op "github.com/mrlyc/cmdr/operator"
 )
 
-type Runner struct {
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock Runner
+
+type Runner interface {
+	Run(ctx context.Context) (errs error)
+}
+
+type OperatorRunner struct {
 	operators []op.Operator
 }
 
-func (r *Runner) Add(operator ...op.Operator) *Runner {
+func (r *OperatorRunner) Add(operator ...op.Operator) Runner {
 	r.operators = append(r.operators, operator...)
 	return r
 }
 
-func (r *Runner) Layout() []string {
+func (r *OperatorRunner) Layout() []string {
 	var layout []string
 	for _, operator := range r.operators {
 		layout = append(layout, operator.String())
@@ -27,7 +33,7 @@ func (r *Runner) Layout() []string {
 	return layout
 }
 
-func (r *Runner) Run(ctx context.Context) (errs error) {
+func (r *OperatorRunner) Run(ctx context.Context) (errs error) {
 	logger := define.Logger
 	failed := false
 	var err error
@@ -74,8 +80,8 @@ func (r *Runner) Run(ctx context.Context) (errs error) {
 	return errs
 }
 
-func New(operators ...op.Operator) *Runner {
-	return &Runner{
+func New(operators ...op.Operator) *OperatorRunner {
+	return &OperatorRunner{
 		operators: operators,
 	}
 }

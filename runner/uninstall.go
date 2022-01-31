@@ -10,7 +10,7 @@ const (
 	CfgKeyCommandUninstallVersion = "command.uninstall.version"
 )
 
-func NewUninstallRunner(cfg define.Configuration) *Runner {
+func NewUninstallRunner(cfg define.Configuration) Runner {
 	return New(
 		operator.NewDBClientMaker(),
 		operator.NewSimpleCommandsQuerier(

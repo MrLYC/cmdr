@@ -19,6 +19,7 @@ func init() {
 	flags := defineCmd.Flags()
 	flags.StringP("name", "n", "", "command name")
 	flags.StringP("version", "v", "", "command version")
+	flags.StringP("location", "l", "", "command location")
 
 	cfg := define.Config
 	cfg.BindPFlag(runner.CfgKeyCommandDefineName, flags.Lookup("name"))

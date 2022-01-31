@@ -14,7 +14,7 @@ const (
 	CfgKeyCommandListActivate = "command.list.activate"
 )
 
-func NewListRunner(cfg define.Configuration) *Runner {
+func NewListRunner(cfg define.Configuration) Runner {
 	return New(
 		operator.NewDBClientMaker(),
 		operator.NewFullCommandsQuerier(

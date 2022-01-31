@@ -20,9 +20,11 @@ func init() {
 	flags.StringP("name", "n", "", "command name")
 	flags.StringP("version", "v", "", "command version")
 	flags.StringP("location", "l", "", "command location")
+	flags.BoolP("activate", "a", false, "activate command")
 
 	cfg := define.Config
 	cfg.BindPFlag(runner.CfgKeyCommandListName, flags.Lookup("name"))
 	cfg.BindPFlag(runner.CfgKeyCommandListVersion, flags.Lookup("version"))
 	cfg.BindPFlag(runner.CfgKeyCommandListLocation, flags.Lookup("location"))
+	cfg.BindPFlag(runner.CfgKeyCommandListActivate, flags.Lookup("activate"))
 }

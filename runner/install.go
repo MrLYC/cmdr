@@ -12,7 +12,7 @@ const (
 	CfgKeyCommandInstallActivate = "command.install.activate"
 )
 
-func NewInstallRunner(cfg define.Configuration) *Runner {
+func NewInstallRunner(cfg define.Configuration) Runner {
 	binDir := cfg.GetString(define.CfgKeyBinDir)
 	shimsDir := cfg.GetString(define.CfgKeyShimsDir)
 
