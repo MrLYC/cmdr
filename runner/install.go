@@ -1,35 +1,29 @@
 package runner
 
 import (
+	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/operator"
 )
 
-const (
-	CfgKeyCommandInstallName     = "command.install.name"
-	CfgKeyCommandInstallVersion  = "command.install.version"
-	CfgKeyCommandInstallLocation = "command.install.location"
-	CfgKeyCommandInstallActivate = "command.install.activate"
-)
-
 func NewInstallRunner(cfg define.Configuration) Runner {
-	binDir := cfg.GetString(define.CfgKeyBinDir)
-	shimsDir := cfg.GetString(define.CfgKeyShimsDir)
+	binDir := cfg.GetString(config.CfgKeyBinDir)
+	shimsDir := cfg.GetString(config.CfgKeyShimsDir)
 
 	runner := New(
 		operator.NewDBClientMaker(),
 		operator.NewCommandDefiner(
 			shimsDir,
-			cfg.GetString(CfgKeyCommandInstallName),
-			cfg.GetString(CfgKeyCommandInstallVersion),
-			cfg.GetString(CfgKeyCommandInstallLocation),
+			cfg.GetString(config.CfgKeyCommandInstallName),
+			cfg.GetString(config.CfgKeyCommandInstallVersion),
+			cfg.GetString(config.CfgKeyCommandInstallLocation),
 			true,
 		),
 		operator.NewDownloader(),
 		operator.NewBinariesInstaller(shimsDir),
 	)
 
-	if cfg.GetBool(CfgKeyCommandInstallActivate) {
+	if cfg.GetBool(config.CfgKeyCommandInstallActivate) {
 		runner.Add(
 			operator.NewCommandDeactivator(),
 			operator.NewBinariesActivator(binDir, shimsDir),

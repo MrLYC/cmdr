@@ -73,12 +73,12 @@ func initConfig() {
 
 func initLogger() {
 	cfg := config.Global
-	level, ok := logur.ParseLevel(cfg.GetString(define.CfgKeyLogLevel))
+	level, ok := logur.ParseLevel(cfg.GetString(config.CfgKeyLogLevel))
 	if !ok {
 		level = logur.Info
 	}
 
-	switch cfg.GetString(define.CfgKeyLogOutput) {
+	switch cfg.GetString(config.CfgKeyLogOutput) {
 	case "stdout":
 		color.SetOutput(os.Stdout)
 	default:

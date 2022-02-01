@@ -10,6 +10,7 @@ import (
 
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/model"
+	"github.com/mrlyc/cmdr/utils"
 )
 
 type CommandDefiner struct {
@@ -51,7 +52,7 @@ func (i *CommandDefiner) Commit(ctx context.Context) error {
 	client := GetDBClientFromContext(ctx)
 
 	if i.command.Managed {
-		i.command.Location = GetCommandShimsPath(i.shimsDir, i.command.Name, i.command.Version)
+		i.command.Location = utils.GetCommandShimsPath(i.shimsDir, i.command.Name, i.command.Version)
 	}
 
 	logger.Debug("saving command", map[string]interface{}{

@@ -37,8 +37,8 @@ func (i *BinariesInstaller) Run(ctx context.Context) (context.Context, error) {
 		name := command.Name
 		version := command.Version
 		location := command.Location
-		dir := GetCommandShimsDir(i.shimsDir, name)
-		target := GetCommandShimsPath(i.shimsDir, name, version)
+		dir := utils.GetCommandShimsDir(i.shimsDir, name)
+		target := utils.GetCommandShimsPath(i.shimsDir, name, version)
 
 		logger.Info("installing binary", map[string]interface{}{
 			"name":     name,
@@ -163,7 +163,7 @@ func (s *BinariesActivator) cleanUpBinary(binPath string) {
 }
 
 func (s *BinariesActivator) activateBinary(name, location string) error {
-	binPath := GetCommandBinPath(s.binDir, name)
+	binPath := utils.GetCommandBinPath(s.binDir, name)
 	s.cleanUpBinary(binPath)
 
 	linker := utils.GetSymbolLinker()
@@ -197,7 +197,7 @@ func (s *BinariesActivator) Run(ctx context.Context) (context.Context, error) {
 	for _, command := range commands {
 		location := command.Location
 		if command.Managed {
-			location = GetCommandShimsPath(s.shimsDir, command.Name, command.Version)
+			location = utils.GetCommandShimsPath(s.shimsDir, command.Name, command.Version)
 		}
 
 		err = s.activateBinary(command.Name, location)

@@ -11,11 +11,6 @@ import (
 	"logur.dev/logur"
 )
 
-const (
-	CfgKeyLogLevel  = "log.level"
-	CfgKeyLogOutput = "log.output"
-)
-
 var Logger logur.Logger
 
 type terminalLogger struct {

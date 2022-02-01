@@ -20,7 +20,7 @@ func init() {
 	flags.StringP("name", "n", "", "command name")
 
 	cfg := config.Global
-	cfg.BindPFlag(runner.CfgKeyCommandUnsetName, flags.Lookup("name"))
+	cfg.BindPFlag(config.CfgKeyCommandUnsetName, flags.Lookup("name"))
 
 	unsetCmd.MarkFlagRequired("name")
 }

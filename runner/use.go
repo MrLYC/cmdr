@@ -1,24 +1,20 @@
 package runner
 
 import (
+	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/operator"
 )
 
-const (
-	CfgKeyCommandUseName    = "command.use.name"
-	CfgKeyCommandUseVersion = "command.use.version"
-)
-
 func NewUseRunner(cfg define.Configuration) Runner {
-	binDir := operator.GetBinDir()
-	shimsDir := operator.GetShimsDir()
+	binDir := config.GetBinDir()
+	shimsDir := config.GetShimsDir()
 
 	return New(
 		operator.NewDBClientMaker(),
 		operator.NewSimpleCommandsQuerier(
-			cfg.GetString(CfgKeyCommandUseName),
-			cfg.GetString(CfgKeyCommandUseVersion),
+			cfg.GetString(config.CfgKeyCommandUseName),
+			cfg.GetString(config.CfgKeyCommandUseVersion),
 		).StrictMode(),
 		operator.NewCommandDeactivator(),
 		operator.NewBinariesActivator(binDir, shimsDir),

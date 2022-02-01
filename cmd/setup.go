@@ -3,12 +3,13 @@ package cmd
 import (
 	"os"
 
-	"github.com/mrlyc/cmdr/runner"
 	"github.com/spf13/cobra"
 
+	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/operator"
+	"github.com/mrlyc/cmdr/runner"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -23,12 +24,12 @@ var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Setup cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
-		shimsDir := operator.GetShimsDir()
-		binDir := operator.GetBinDir()
+		shimsDir := config.GetShimsDir()
+		binDir := config.GetBinDir()
 		runner := runner.New(
 			operator.NewDirectoryMaker(map[string]string{
 				"shims": shimsDir,
-				"bin":   operator.GetBinDir(),
+				"bin":   config.GetBinDir(),
 			}),
 			operator.NewDBClientMaker(),
 			operator.NewDBMigrator(new(model.Command)),

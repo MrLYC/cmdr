@@ -1,26 +1,21 @@
 package runner
 
 import (
+	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/operator"
 )
 
-const (
-	CfgKeyCommandDefineName     = "command.define.name"
-	CfgKeyCommandDefineVersion  = "command.define.version"
-	CfgKeyCommandDefineLocation = "command.define.location"
-)
-
 func NewDefineRunner(cfg define.Configuration) Runner {
-	shimsDir := operator.GetShimsDir()
+	shimsDir := config.GetShimsDir()
 
 	return New(
 		operator.NewDBClientMaker(),
 		operator.NewCommandDefiner(
 			shimsDir,
-			cfg.GetString(CfgKeyCommandInstallName),
-			cfg.GetString(CfgKeyCommandInstallVersion),
-			cfg.GetString(CfgKeyCommandInstallLocation),
+			cfg.GetString(config.CfgKeyCommandInstallName),
+			cfg.GetString(config.CfgKeyCommandInstallVersion),
+			cfg.GetString(config.CfgKeyCommandInstallLocation),
 			false,
 		),
 	)

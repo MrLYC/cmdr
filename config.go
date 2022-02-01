@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/mrlyc/cmdr/config"
-	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -15,10 +14,10 @@ func init() {
 
 	cfg := config.Global
 
-	cfg.SetDefault(define.CfgKeyCmdrRoot, filepath.Join(homeDir, ".cmdr"))
-	cfg.SetDefault(define.CfgKeyBinDir, "bin")
-	cfg.SetDefault(define.CfgKeyShimsDir, "shims")
-	cfg.SetDefault(define.CfgKeyDatabase, "cmdr.db")
-	cfg.SetDefault(define.CfgKeyLogLevel, "info")
-	cfg.SetDefault(define.CfgKeyLogOutput, "stderr")
+	cfg.SetDefault(config.CfgKeyCmdrRoot, filepath.Join(homeDir, ".cmdr"))
+	cfg.SetDefault(config.CfgKeyBinDir, "bin")
+	cfg.SetDefault(config.CfgKeyShimsDir, "shims")
+	cfg.SetDefault(config.CfgKeyDatabase, "cmdr.db")
+	cfg.SetDefault(config.CfgKeyLogLevel, "info")
+	cfg.SetDefault(config.CfgKeyLogOutput, "stderr")
 }

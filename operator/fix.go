@@ -8,6 +8,7 @@ import (
 
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/model"
+	"github.com/mrlyc/cmdr/utils"
 )
 
 type BrokenCommandsFixer struct {
@@ -33,7 +34,7 @@ func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) 
 	for _, command := range commands {
 		location := command.Location
 		if command.Managed {
-			location = GetCommandShimsPath(s.shimsDir, command.Name, command.Version)
+			location = utils.GetCommandShimsPath(s.shimsDir, command.Name, command.Version)
 		}
 
 		_, err := fs.Stat(location)

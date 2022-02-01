@@ -21,8 +21,8 @@ func init() {
 	flags.StringP("version", "v", "", "command version")
 
 	cfg := config.Global
-	cfg.BindPFlag(runner.CfgKeyCommandUninstallName, flags.Lookup("name"))
-	cfg.BindPFlag(runner.CfgKeyCommandUninstallVersion, flags.Lookup("version"))
+	cfg.BindPFlag(config.CfgKeyCommandUninstallName, flags.Lookup("name"))
+	cfg.BindPFlag(config.CfgKeyCommandUninstallVersion, flags.Lookup("version"))
 
 	uninstallCmd.MarkFlagRequired("name")
 	uninstallCmd.MarkFlagRequired("version")

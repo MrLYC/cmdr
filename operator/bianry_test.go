@@ -13,6 +13,7 @@ import (
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/operator"
+	"github.com/mrlyc/cmdr/utils"
 )
 
 var _ = Describe("Bianry", func() {
@@ -75,10 +76,10 @@ var _ = Describe("Bianry", func() {
 			Expect(err).To(BeNil())
 
 			Expect(
-				afero.Exists(define.FS, operator.GetCommandShimsPath(shimsDir, command1.Name, command1.Version)),
+				afero.Exists(define.FS, utils.GetCommandShimsPath(shimsDir, command1.Name, command1.Version)),
 			).To(BeTrue())
 			Expect(
-				afero.Exists(define.FS, operator.GetCommandShimsPath(shimsDir, command2.Name, command2.Version)),
+				afero.Exists(define.FS, utils.GetCommandShimsPath(shimsDir, command2.Name, command2.Version)),
 			).To(BeTrue())
 		})
 
@@ -89,10 +90,10 @@ var _ = Describe("Bianry", func() {
 			Expect(err).NotTo(BeNil())
 
 			Expect(afero.Exists(
-				define.FS, operator.GetCommandShimsPath(shimsDir, command1.Name, command1.Version),
+				define.FS, utils.GetCommandShimsPath(shimsDir, command1.Name, command1.Version),
 			)).To(BeFalse())
 			Expect(afero.Exists(
-				define.FS, operator.GetCommandShimsPath(shimsDir, command2.Name, command2.Version),
+				define.FS, utils.GetCommandShimsPath(shimsDir, command2.Name, command2.Version),
 			)).To(BeTrue())
 		})
 
@@ -103,10 +104,10 @@ var _ = Describe("Bianry", func() {
 			Expect(err).To(BeNil())
 
 			Expect(afero.Exists(
-				define.FS, operator.GetCommandShimsPath(shimsDir, command1.Name, command1.Version),
+				define.FS, utils.GetCommandShimsPath(shimsDir, command1.Name, command1.Version),
 			)).To(BeTrue())
 			Expect(afero.Exists(
-				define.FS, operator.GetCommandShimsPath(shimsDir, command2.Name, command2.Version),
+				define.FS, utils.GetCommandShimsPath(shimsDir, command2.Name, command2.Version),
 			)).To(BeFalse())
 		})
 	})
@@ -171,8 +172,8 @@ var _ = Describe("Bianry", func() {
 			command1.Managed = true
 			command2.Managed = false
 
-			Expect(define.FS.MkdirAll(operator.GetCommandShimsDir(shimsDir, command1.Name), 0755)).To(Succeed())
-			Expect(define.FS.Rename(command1.Location, operator.GetCommandShimsPath(shimsDir, command1.Name, command1.Version))).To(Succeed())
+			Expect(define.FS.MkdirAll(utils.GetCommandShimsDir(shimsDir, command1.Name), 0755)).To(Succeed())
+			Expect(define.FS.Rename(command1.Location, utils.GetCommandShimsPath(shimsDir, command1.Name, command1.Version))).To(Succeed())
 			activator = operator.NewBinariesActivator(binDir, shimsDir)
 		})
 

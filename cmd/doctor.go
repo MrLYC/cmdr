@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"github.com/asdine/storm/v3/q"
-	"github.com/mrlyc/cmdr/runner"
 	"github.com/spf13/cobra"
 
+	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/operator"
+	"github.com/mrlyc/cmdr/runner"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -19,8 +20,8 @@ var doctorCmd = &cobra.Command{
 	Use:   "doctor",
 	Short: "Check and fix cmdr environment",
 	Run: func(cmd *cobra.Command, args []string) {
-		binDir := operator.GetBinDir()
-		shimsDir := operator.GetShimsDir()
+		binDir := config.GetBinDir()
+		shimsDir := config.GetShimsDir()
 
 		runner := runner.New(
 			operator.NewDBClientMaker(),
@@ -31,7 +32,7 @@ var doctorCmd = &cobra.Command{
 				"bin": binDir,
 			}),
 			operator.NewDirectoryMaker(map[string]string{
-				"shims": operator.GetShimsDir(),
+				"shims": config.GetShimsDir(),
 				"bin":   binDir,
 			}),
 			operator.NewBinariesInstaller(shimsDir),

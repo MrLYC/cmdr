@@ -6,6 +6,7 @@ import (
 	"github.com/asdine/storm/v3"
 	"github.com/pkg/errors"
 
+	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
 )
 
@@ -33,7 +34,7 @@ func NewDBClient(path string) (DBClient, error) {
 }
 
 func GetDBClient() (DBClient, error) {
-	db := GetDatabasePath()
+	db := config.GetDatabasePath()
 	logger := define.Logger
 
 	logger.Debug("opening database", map[string]interface{}{

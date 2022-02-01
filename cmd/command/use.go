@@ -21,8 +21,8 @@ func init() {
 	flags.StringP("version", "v", "", "command version")
 
 	cfg := config.Global
-	cfg.BindPFlag(runner.CfgKeyCommandUseName, flags.Lookup("name"))
-	cfg.BindPFlag(runner.CfgKeyCommandUseVersion, flags.Lookup("version"))
+	cfg.BindPFlag(config.CfgKeyCommandUseName, flags.Lookup("name"))
+	cfg.BindPFlag(config.CfgKeyCommandUseVersion, flags.Lookup("version"))
 
 	useCmd.MarkFlagRequired("name")
 	useCmd.MarkFlagRequired("version")

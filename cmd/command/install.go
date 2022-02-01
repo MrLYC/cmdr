@@ -23,10 +23,10 @@ func init() {
 	flags.BoolP("activate", "a", false, "activate command")
 
 	cfg := config.Global
-	cfg.BindPFlag(runner.CfgKeyCommandInstallName, flags.Lookup("name"))
-	cfg.BindPFlag(runner.CfgKeyCommandInstallVersion, flags.Lookup("version"))
-	cfg.BindPFlag(runner.CfgKeyCommandInstallLocation, flags.Lookup("location"))
-	cfg.BindPFlag(runner.CfgKeyCommandInstallActivate, flags.Lookup("activate"))
+	cfg.BindPFlag(config.CfgKeyCommandInstallName, flags.Lookup("name"))
+	cfg.BindPFlag(config.CfgKeyCommandInstallVersion, flags.Lookup("version"))
+	cfg.BindPFlag(config.CfgKeyCommandInstallLocation, flags.Lookup("location"))
+	cfg.BindPFlag(config.CfgKeyCommandInstallActivate, flags.Lookup("activate"))
 
 	installCmd.MarkFlagRequired("name")
 	installCmd.MarkFlagRequired("version")

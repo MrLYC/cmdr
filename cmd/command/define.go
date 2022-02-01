@@ -22,9 +22,9 @@ func init() {
 	flags.StringP("location", "l", "", "command location")
 
 	cfg := config.Global
-	cfg.BindPFlag(runner.CfgKeyCommandDefineName, flags.Lookup("name"))
-	cfg.BindPFlag(runner.CfgKeyCommandDefineVersion, flags.Lookup("version"))
-	cfg.BindPFlag(runner.CfgKeyCommandDefineLocation, flags.Lookup("location"))
+	cfg.BindPFlag(config.CfgKeyCommandDefineName, flags.Lookup("name"))
+	cfg.BindPFlag(config.CfgKeyCommandDefineVersion, flags.Lookup("version"))
+	cfg.BindPFlag(config.CfgKeyCommandDefineLocation, flags.Lookup("location"))
 
 	defineCmd.MarkFlagRequired("name")
 	defineCmd.MarkFlagRequired("version")

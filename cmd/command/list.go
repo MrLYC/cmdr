@@ -23,8 +23,8 @@ func init() {
 	flags.BoolP("activate", "a", false, "activate command")
 
 	cfg := config.Global
-	cfg.BindPFlag(runner.CfgKeyCommandListName, flags.Lookup("name"))
-	cfg.BindPFlag(runner.CfgKeyCommandListVersion, flags.Lookup("version"))
-	cfg.BindPFlag(runner.CfgKeyCommandListLocation, flags.Lookup("location"))
-	cfg.BindPFlag(runner.CfgKeyCommandListActivate, flags.Lookup("activate"))
+	cfg.BindPFlag(config.CfgKeyCommandListName, flags.Lookup("name"))
+	cfg.BindPFlag(config.CfgKeyCommandListVersion, flags.Lookup("version"))
+	cfg.BindPFlag(config.CfgKeyCommandListLocation, flags.Lookup("location"))
+	cfg.BindPFlag(config.CfgKeyCommandListActivate, flags.Lookup("activate"))
 }

@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/mrlyc/cmdr/runner"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/operator"
+	"github.com/mrlyc/cmdr/runner"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -28,8 +29,8 @@ var upgradeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := cmd.Context()
 		logger := define.Logger
-		shimsDir := operator.GetShimsDir()
-		binDir := operator.GetBinDir()
+		shimsDir := config.GetShimsDir()
+		binDir := config.GetBinDir()
 		runner := runner.New(
 			operator.NewDBClientMaker(),
 			operator.NewCommandDefiner(shimsDir, define.Name, define.Version, upgradeCmdFlag.location, true),
@@ -77,7 +78,7 @@ var upgradeCmd = &cobra.Command{
 			"args": runArgs,
 		})
 
-		utils.ExitWithError(utils.WaitProcess(ctx, filepath.Join(operator.GetBinDir(), define.Name), runArgs), "setup failed")
+		utils.ExitWithError(utils.WaitProcess(ctx, filepath.Join(config.GetBinDir(), define.Name), runArgs), "setup failed")
 	},
 }
 
