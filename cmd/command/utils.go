@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -21,7 +22,8 @@ func executeRunner(factory func(define.Configuration) runner.Runner) func(cmd *c
 			"command": name,
 		})
 
+		ctx := cmd.Context()
 		runner := factory(cfg)
-		utils.ExitWithError(runner.Run(cmd.Context()), fmt.Sprintf("command %s failed", name))
+		utils.ExitWithError(runner.Run(context.WithValue(ctx, define.ContextKeyConfiguration, cfg)), fmt.Sprintf("command %s failed", name))
 	}
 }

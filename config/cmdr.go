@@ -2,20 +2,22 @@ package config
 
 import (
 	"path/filepath"
+
+	"github.com/mrlyc/cmdr/define"
 )
 
-func GetCmdrRoot() string {
-	return Global.GetString(CfgKeyCmdrRoot)
+func GetCmdrRoot(cfg define.Configuration) string {
+	return cfg.GetString(CfgKeyCmdrRoot)
 }
 
-func GetBinDir() string {
-	return filepath.Join(GetCmdrRoot(), Global.GetString(CfgKeyBinDir))
+func GetBinDir(cfg define.Configuration) string {
+	return filepath.Join(GetCmdrRoot(cfg), Global.GetString(CfgKeyBinDir))
 }
 
-func GetShimsDir() string {
-	return filepath.Join(GetCmdrRoot(), Global.GetString(CfgKeyShimsDir))
+func GetShimsDir(cfg define.Configuration) string {
+	return filepath.Join(GetCmdrRoot(cfg), Global.GetString(CfgKeyShimsDir))
 }
 
-func GetDatabasePath() string {
-	return filepath.Join(GetCmdrRoot(), Global.GetString(CfgKeyDatabase))
+func GetDatabasePath(cfg define.Configuration) string {
+	return filepath.Join(GetCmdrRoot(cfg), Global.GetString(CfgKeyDatabase))
 }

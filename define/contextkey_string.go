@@ -9,12 +9,13 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[ContextKeyDBClient-0]
-	_ = x[ContextKeyCommands-1]
+	_ = x[ContextKeyConfiguration-1]
+	_ = x[ContextKeyCommands-2]
 }
 
-const _ContextKey_name = "ContextKeyDBClientContextKeyCommands"
+const _ContextKey_name = "ContextKeyDBClientContextKeyConfigurationContextKeyCommands"
 
-var _ContextKey_index = [...]uint8{0, 18, 36}
+var _ContextKey_index = [...]uint8{0, 18, 41, 59}
 
 func (i ContextKey) String() string {
 	if i < 0 || i >= ContextKey(len(_ContextKey_index)-1) {

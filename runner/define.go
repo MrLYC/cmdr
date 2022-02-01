@@ -7,12 +7,9 @@ import (
 )
 
 func NewDefineRunner(cfg define.Configuration) Runner {
-	shimsDir := config.GetShimsDir()
-
 	return New(
 		operator.NewDBClientMaker(),
 		operator.NewCommandDefiner(
-			shimsDir,
 			cfg.GetString(config.CfgKeyCommandInstallName),
 			cfg.GetString(config.CfgKeyCommandInstallVersion),
 			cfg.GetString(config.CfgKeyCommandInstallLocation),

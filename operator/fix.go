@@ -7,13 +7,11 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/utils"
 )
 
 type BrokenCommandsFixer struct {
 	BaseOperator
-	shimsDir string
 }
 
 func (s *BrokenCommandsFixer) String() string {
@@ -23,6 +21,8 @@ func (s *BrokenCommandsFixer) String() string {
 func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) {
 	fs := define.FS
 	logger := define.Logger
+	shimsDir := GetShimsDir(ctx)
+
 	var errs error
 	client := GetDBClientFromContext(ctx)
 	commands, err := GetCommandsFromContext(ctx)
@@ -30,16 +30,14 @@ func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) 
 		return ctx, err
 	}
 
-	availableCommands := make([]*model.Command, 0, len(commands))
 	for _, command := range commands {
 		location := command.Location
 		if command.Managed {
-			location = utils.GetCommandShimsPath(s.shimsDir, command.Name, command.Version)
+			location = utils.GetCommandShimsPath(shimsDir, command.Name, command.Version)
 		}
 
 		_, err := fs.Stat(location)
 		if err == nil {
-			availableCommands = append(availableCommands, command)
 			continue
 		}
 
@@ -65,8 +63,6 @@ func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) 
 	return ctx, errs
 }
 
-func NewBrokenCommandsFixer(shimsDir string) *BrokenCommandsFixer {
-	return &BrokenCommandsFixer{
-		shimsDir: shimsDir,
-	}
+func NewBrokenCommandsFixer() *BrokenCommandsFixer {
+	return &BrokenCommandsFixer{}
 }

@@ -15,8 +15,7 @@ import (
 
 type CommandDefiner struct {
 	BaseOperator
-	shimsDir string
-	command  model.Command
+	command model.Command
 }
 
 func (i *CommandDefiner) String() string {
@@ -50,9 +49,10 @@ func (i *CommandDefiner) Run(ctx context.Context) (context.Context, error) {
 func (i *CommandDefiner) Commit(ctx context.Context) error {
 	logger := define.Logger
 	client := GetDBClientFromContext(ctx)
+	shimsDir := GetShimsDir(ctx)
 
 	if i.command.Managed {
-		i.command.Location = utils.GetCommandShimsPath(i.shimsDir, i.command.Name, i.command.Version)
+		i.command.Location = utils.GetCommandShimsPath(shimsDir, i.command.Name, i.command.Version)
 	}
 
 	logger.Debug("saving command", map[string]interface{}{
@@ -70,9 +70,8 @@ func (i *CommandDefiner) Commit(ctx context.Context) error {
 	return nil
 }
 
-func NewCommandDefiner(shimsDir, name, version, location string, managed bool) *CommandDefiner {
+func NewCommandDefiner(name, version, location string, managed bool) *CommandDefiner {
 	return &CommandDefiner{
-		shimsDir: shimsDir,
 		command: model.Command{
 			Name:     name,
 			Version:  version,

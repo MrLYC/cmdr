@@ -7,26 +7,22 @@ import (
 )
 
 func NewInstallRunner(cfg define.Configuration) Runner {
-	binDir := cfg.GetString(config.CfgKeyBinDir)
-	shimsDir := cfg.GetString(config.CfgKeyShimsDir)
-
 	runner := New(
 		operator.NewDBClientMaker(),
 		operator.NewCommandDefiner(
-			shimsDir,
 			cfg.GetString(config.CfgKeyCommandInstallName),
 			cfg.GetString(config.CfgKeyCommandInstallVersion),
 			cfg.GetString(config.CfgKeyCommandInstallLocation),
 			true,
 		),
 		operator.NewDownloader(),
-		operator.NewBinariesInstaller(shimsDir),
+		operator.NewBinariesInstaller(),
 	)
 
 	if cfg.GetBool(config.CfgKeyCommandInstallActivate) {
 		runner.Add(
 			operator.NewCommandDeactivator(),
-			operator.NewBinariesActivator(binDir, shimsDir),
+			operator.NewBinariesActivator(),
 			operator.NewCommandActivator(),
 		)
 	}

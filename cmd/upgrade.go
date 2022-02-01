@@ -29,11 +29,10 @@ var upgradeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := cmd.Context()
 		logger := define.Logger
-		shimsDir := config.GetShimsDir()
-		binDir := config.GetBinDir()
+		cfg := config.GetGlobalConfiguration()
 		runner := runner.New(
 			operator.NewDBClientMaker(),
-			operator.NewCommandDefiner(shimsDir, define.Name, define.Version, upgradeCmdFlag.location, true),
+			operator.NewCommandDefiner(define.Name, define.Version, upgradeCmdFlag.location, true),
 		)
 
 		if upgradeCmdFlag.location == "" {
@@ -44,13 +43,13 @@ var upgradeCmd = &cobra.Command{
 		}
 
 		runner.Add(
-			operator.NewBinariesInstaller(shimsDir),
+			operator.NewBinariesInstaller(),
 		)
 
 		if !upgradeCmdFlag.keep {
 			runner.Add(
 				operator.NewCommandDeactivator(),
-				operator.NewBinariesActivator(binDir, shimsDir),
+				operator.NewBinariesActivator(),
 				operator.NewCommandActivator(),
 				operator.NewNamedCommandsQuerier(define.Name),
 				operator.NewCommandUndefiner(),
@@ -78,7 +77,7 @@ var upgradeCmd = &cobra.Command{
 			"args": runArgs,
 		})
 
-		utils.ExitWithError(utils.WaitProcess(ctx, filepath.Join(config.GetBinDir(), define.Name), runArgs), "setup failed")
+		utils.ExitWithError(utils.WaitProcess(ctx, filepath.Join(config.GetBinDir(cfg), define.Name), runArgs), "setup failed")
 	},
 }
 

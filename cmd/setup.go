@@ -24,12 +24,13 @@ var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Setup cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
-		shimsDir := config.GetShimsDir()
-		binDir := config.GetBinDir()
+		cfg := config.GetGlobalConfiguration()
+		shimsDir := config.GetShimsDir(cfg)
+		binDir := config.GetBinDir(cfg)
 		runner := runner.New(
 			operator.NewDirectoryMaker(map[string]string{
 				"shims": shimsDir,
-				"bin":   config.GetBinDir(),
+				"bin":   config.GetBinDir(cfg),
 			}),
 			operator.NewDBClientMaker(),
 			operator.NewDBMigrator(new(model.Command)),
@@ -40,8 +41,8 @@ var setupCmd = &cobra.Command{
 
 		if !setupCmdFlag.skipInstall && !setupCmdFlag.upgrade {
 			runner.Add(
-				operator.NewCommandDefiner(shimsDir, define.Name, define.Version, cmdrLocation, true),
-				operator.NewBinariesInstaller(shimsDir),
+				operator.NewCommandDefiner(define.Name, define.Version, cmdrLocation, true),
+				operator.NewBinariesInstaller(),
 			)
 		}
 

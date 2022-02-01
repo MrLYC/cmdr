@@ -6,7 +6,6 @@ import (
 	"github.com/asdine/storm/v3"
 	"github.com/pkg/errors"
 
-	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
 )
 
@@ -33,17 +32,6 @@ func NewDBClient(path string) (DBClient, error) {
 	}, nil
 }
 
-func GetDBClient() (DBClient, error) {
-	db := config.GetDatabasePath()
-	logger := define.Logger
-
-	logger.Debug("opening database", map[string]interface{}{
-		"name": db,
-	})
-
-	return NewDBClient(db)
-}
-
 type DBClientMaker struct {
 	client DBClient
 }
@@ -53,7 +41,8 @@ func (m *DBClientMaker) String() string {
 }
 
 func (m *DBClientMaker) Run(ctx context.Context) (context.Context, error) {
-	client, err := GetDBClient()
+	path := GetDatabasePath(ctx)
+	client, err := NewDBClient(path)
 	if err != nil {
 		return ctx, errors.Wrapf(err, "create database client failed")
 	}

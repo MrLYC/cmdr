@@ -7,9 +7,6 @@ import (
 )
 
 func NewUseRunner(cfg define.Configuration) Runner {
-	binDir := config.GetBinDir()
-	shimsDir := config.GetShimsDir()
-
 	return New(
 		operator.NewDBClientMaker(),
 		operator.NewSimpleCommandsQuerier(
@@ -17,7 +14,7 @@ func NewUseRunner(cfg define.Configuration) Runner {
 			cfg.GetString(config.CfgKeyCommandUseVersion),
 		).StrictMode(),
 		operator.NewCommandDeactivator(),
-		operator.NewBinariesActivator(binDir, shimsDir),
+		operator.NewBinariesActivator(),
 		operator.NewCommandActivator(),
 	)
 }
