@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 
+	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
 )
@@ -23,10 +24,10 @@ var configCmd = &cobra.Command{
 
 		if configCmdFlag.list {
 			logger.Debug("listing configurations", map[string]interface{}{
-				"path": define.Config.ConfigFileUsed(),
+				"path": config.Global.ConfigFileUsed(),
 			})
 
-			settings := define.Config.AllSettings()
+			settings := config.Global.AllSettings()
 			content, err := yaml.Marshal(settings)
 			utils.ExitWithError(err, "marshaling settings")
 

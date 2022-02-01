@@ -1,12 +1,8 @@
 package define
 
-import (
-	"github.com/spf13/viper"
-)
+import "github.com/spf13/viper"
 
 type Configuration = *viper.Viper
-
-var Config *viper.Viper
 
 const (
 	CfgKeyCmdrRoot = "cmdr.root_dir"
@@ -15,7 +11,3 @@ const (
 	CfgKeyShimsDir = "cmdr.shims_dir"
 	CfgKeyDatabase = "cmdr.database"
 )
-
-func init() {
-	Config = viper.GetViper()
-}

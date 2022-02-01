@@ -3,11 +3,10 @@ package command
 import (
 	"testing"
 
+	"github.com/mrlyc/cmdr/config"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/spf13/cobra"
-
-	"github.com/mrlyc/cmdr/define"
 )
 
 func TestCommand(t *testing.T) {
@@ -33,6 +32,6 @@ func checkCommandFlag(cmd *cobra.Command, name, shorthand, configKey string, val
 	}
 
 	if configKey != "" {
-		Expect(define.Config.Get(configKey)).NotTo(BeNil())
+		Expect(config.Global.Get(configKey)).NotTo(BeNil())
 	}
 }

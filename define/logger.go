@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gookit/color"
 	"github.com/muesli/termenv"
 	"github.com/spf13/cast"
 	adapter "logur.dev/adapter/template"
@@ -101,23 +100,11 @@ func (l *terminalLogger) Error(msg string, fields ...map[string]interface{}) {
 	})
 }
 
-func InitLogger() {
-	level, ok := logur.ParseLevel(Config.GetString(CfgKeyLogLevel))
-	if !ok {
-		level = logur.Info
-	}
-
-	switch Config.GetString(CfgKeyLogOutput) {
-	case "stdout":
-		color.SetOutput(os.Stdout)
-	default:
-		color.SetOutput(os.Stderr)
-	}
-
+func InitTerminalLogger(level logur.Level, withErrorStack bool, errorKey string) {
 	Logger = &terminalLogger{
 		level:          level,
-		withErrorStack: level < logur.Info,
-		errorKey:       "error",
+		withErrorStack: withErrorStack,
+		errorKey:       errorKey,
 	}
 }
 

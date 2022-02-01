@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/runner"
 	"github.com/mrlyc/cmdr/runner/mock"
@@ -18,17 +19,17 @@ import (
 
 var _ = Describe("Utils", func() {
 	var (
-		rawConfig, config define.Configuration
+		rawConfig, cfg define.Configuration
 	)
 
 	BeforeEach(func() {
-		rawConfig = define.Config
-		config = viper.New()
-		define.Config = config
+		rawConfig = config.Global
+		cfg = viper.New()
+		config.Global = cfg
 	})
 
 	AfterEach(func() {
-		define.Config = rawConfig
+		config.Global = rawConfig
 	})
 
 	Describe("executeRunner", func() {

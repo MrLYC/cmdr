@@ -3,7 +3,7 @@ package command
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/define"
+	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/runner"
 )
 
@@ -19,7 +19,7 @@ func init() {
 	flags := unsetCmd.Flags()
 	flags.StringP("name", "n", "", "command name")
 
-	cfg := define.Config
+	cfg := config.Global
 	cfg.BindPFlag(runner.CfgKeyCommandUnsetName, flags.Lookup("name"))
 
 	unsetCmd.MarkFlagRequired("name")

@@ -3,7 +3,7 @@ package command
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/define"
+	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/runner"
 )
 
@@ -20,7 +20,7 @@ func init() {
 	flags.StringP("name", "n", "", "command name")
 	flags.StringP("version", "v", "", "command version")
 
-	cfg := define.Config
+	cfg := config.Global
 	cfg.BindPFlag(runner.CfgKeyCommandUseName, flags.Lookup("name"))
 	cfg.BindPFlag(runner.CfgKeyCommandUseVersion, flags.Lookup("version"))
 

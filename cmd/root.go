@@ -6,8 +6,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/gookit/color"
 	"github.com/spf13/cobra"
+	"logur.dev/logur"
 
+	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
 )
@@ -36,7 +39,7 @@ func ExecuteContext(ctx context.Context) {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig, define.InitLogger)
+	cobra.OnInitialize(initConfig, initLogger)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
@@ -55,7 +58,7 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	cfg := define.Config
+	cfg := config.Global
 
 	_, err := define.FS.Stat(cfgFile)
 
@@ -66,4 +69,21 @@ func initConfig() {
 	}
 
 	cfg.AutomaticEnv() // read in environment variables that match
+}
+
+func initLogger() {
+	cfg := config.Global
+	level, ok := logur.ParseLevel(cfg.GetString(define.CfgKeyLogLevel))
+	if !ok {
+		level = logur.Info
+	}
+
+	switch cfg.GetString(define.CfgKeyLogOutput) {
+	case "stdout":
+		color.SetOutput(os.Stdout)
+	default:
+		color.SetOutput(os.Stderr)
+	}
+
+	define.InitTerminalLogger(level, level < logur.Info, "error")
 }
