@@ -13,9 +13,9 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/mrlyc/cmdr/define"
+	"github.com/mrlyc/cmdr/define/mock"
 	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/operator"
-	"github.com/mrlyc/cmdr/operator/mock"
 	"github.com/mrlyc/cmdr/utils"
 )
 

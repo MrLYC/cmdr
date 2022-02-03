@@ -9,7 +9,7 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
-func NewListRunner(cfg define.Configuration, helper *utils.CmdrHelper) Runner {
+func NewListRunner(cfg define.Configuration, helper *utils.CmdrHelper) define.Runner {
 	return New(
 		operator.NewDBClientMaker(helper),
 		operator.NewFullCommandsQuerier(

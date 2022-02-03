@@ -7,22 +7,14 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/define"
-	op "github.com/mrlyc/cmdr/operator"
 )
 
-//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock Runner
-
-type Runner interface {
-	Run(ctx context.Context) (errs error)
-}
-
 type OperatorRunner struct {
-	operators []op.Operator
+	operators []define.Operator
 }
 
-func (r *OperatorRunner) Add(operator ...op.Operator) Runner {
+func (r *OperatorRunner) Add(operator ...define.Operator) {
 	r.operators = append(r.operators, operator...)
-	return r
 }
 
 func (r *OperatorRunner) Layout() []string {
@@ -54,7 +46,7 @@ func (r *OperatorRunner) Run(ctx context.Context) (errs error) {
 			break
 		}
 
-		defer func(operator op.Operator) {
+		defer func(operator define.Operator) {
 			if failed {
 				logger.Warn("operator rollback", map[string]interface{}{
 					"operator": operator,
@@ -80,7 +72,7 @@ func (r *OperatorRunner) Run(ctx context.Context) (errs error) {
 	return errs
 }
 
-func New(operators ...op.Operator) *OperatorRunner {
+func New(operators ...define.Operator) *OperatorRunner {
 	return &OperatorRunner{
 		operators: operators,
 	}

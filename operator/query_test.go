@@ -17,7 +17,7 @@ import (
 var _ = Describe("Query", func() {
 	var (
 		dbPath string
-		db     DBClient
+		db     define.DBClient
 	)
 
 	BeforeEach(func() {

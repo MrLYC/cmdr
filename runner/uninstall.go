@@ -7,7 +7,7 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
-func NewUninstallRunner(cfg define.Configuration, helper *utils.CmdrHelper) Runner {
+func NewUninstallRunner(cfg define.Configuration, helper *utils.CmdrHelper) define.Runner {
 	return New(
 		operator.NewDBClientMaker(helper),
 		operator.NewSimpleCommandsQuerier(

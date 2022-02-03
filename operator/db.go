@@ -10,19 +10,11 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
-//go:generate mockgen -destination=mock/storm.go -package=mock github.com/asdine/storm/v3 Query
-
-//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock DBClient
-type DBClient interface {
-	storm.TypeStore
-	Close() error
-}
-
 type StormClient struct {
 	*storm.DB
 }
 
-func NewDBClient(path string) (DBClient, error) {
+func NewDBClient(path string) (define.DBClient, error) {
 	db, err := storm.Open(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "open database failed")
@@ -34,7 +26,7 @@ func NewDBClient(path string) (DBClient, error) {
 }
 
 type DBClientMaker struct {
-	client DBClient
+	client define.DBClient
 	helper *utils.CmdrHelper
 }
 

@@ -14,8 +14,7 @@ import (
 
 	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/runner"
-	"github.com/mrlyc/cmdr/runner/mock"
+	"github.com/mrlyc/cmdr/define/mock"
 	"github.com/mrlyc/cmdr/utils"
 )
 
@@ -51,7 +50,7 @@ var _ = Describe("Utils", func() {
 			ctrl.Finish()
 		})
 
-		mockFactory := func(define.Configuration, *utils.CmdrHelper) runner.Runner {
+		mockFactory := func(define.Configuration, *utils.CmdrHelper) define.Runner {
 			return mockRunner
 		}
 

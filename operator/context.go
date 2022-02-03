@@ -10,8 +10,8 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
-func GetDBClientFromContext(ctx context.Context) DBClient {
-	return ctx.Value(define.ContextKeyDBClient).(DBClient)
+func GetDBClientFromContext(ctx context.Context) define.DBClient {
+	return ctx.Value(define.ContextKeyDBClient).(define.DBClient)
 }
 
 func getCommandsFromContext(ctx context.Context) ([]*model.Command, bool) {

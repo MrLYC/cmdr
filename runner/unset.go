@@ -7,7 +7,7 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
-func NewUnsetRunner(cfg define.Configuration, helper *utils.CmdrHelper) Runner {
+func NewUnsetRunner(cfg define.Configuration, helper *utils.CmdrHelper) define.Runner {
 	return New(
 		operator.NewDBClientMaker(helper),
 		operator.NewNamedCommandsQuerier(cfg.GetString(config.CfgKeyCommandUnsetName)),

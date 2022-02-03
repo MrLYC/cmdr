@@ -8,23 +8,23 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/mrlyc/cmdr/operator/mock"
+	"github.com/mrlyc/cmdr/define/mock"
 	. "github.com/mrlyc/cmdr/runner"
 )
 
 var _ = Describe("Operator", func() {
 	var (
 		ctrl                 *gomock.Controller
-		operator1, operator2 *mock.MockOperatorer
+		operator1, operator2 *mock.MockOperator
 	)
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 
-		operator1 = mock.NewMockOperatorer(ctrl)
+		operator1 = mock.NewMockOperator(ctrl)
 		operator1.EXPECT().String().Return("operator1").AnyTimes()
 
-		operator2 = mock.NewMockOperatorer(ctrl)
+		operator2 = mock.NewMockOperator(ctrl)
 		operator2.EXPECT().String().Return("operator2").AnyTimes()
 	})
 
@@ -77,7 +77,7 @@ var _ = Describe("Operator", func() {
 				operator1.EXPECT().Run(gomock.Any()).Return(context.Background(), nil)
 				operator1.EXPECT().Rollback(gomock.Any())
 				operator2.EXPECT().Run(gomock.Any()).Return(context.Background(), fmt.Errorf("error"))
-				operator3 := mock.NewMockOperatorer(ctrl)
+				operator3 := mock.NewMockOperator(ctrl)
 
 				runner := New(operator1, operator2, operator3)
 				Expect(runner.Run(context.Background())).NotTo(Succeed())

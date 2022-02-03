@@ -13,3 +13,7 @@ goreleaser:
 .PHONY: test
 test:
 	go test -gcflags=all=-l ./...
+
+.PHONY: generate
+generate:
+	go generate ./...

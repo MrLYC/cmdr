@@ -7,7 +7,7 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
-func NewInstallRunner(cfg define.Configuration, helper *utils.CmdrHelper) Runner {
+func NewInstallRunner(cfg define.Configuration, helper *utils.CmdrHelper) define.Runner {
 	runner := New(
 		operator.NewDBClientMaker(helper),
 		operator.NewCommandDefiner(
