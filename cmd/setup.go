@@ -25,14 +25,14 @@ var setupCmd = &cobra.Command{
 	Short: "Setup cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.GetGlobalConfiguration()
-		shimsDir := config.GetShimsDir(cfg)
-		binDir := config.GetBinDir(cfg)
+		helper := utils.NewCmdrHelper(cfg.GetString(config.CfgKeyCmdrRoot))
+		shimsDir := helper.GetShimsDir()
 		runner := runner.New(
 			operator.NewDirectoryMaker(map[string]string{
 				"shims": shimsDir,
-				"bin":   config.GetBinDir(cfg),
+				"bin":   helper.GetBinDir(),
 			}),
-			operator.NewDBClientMaker(),
+			operator.NewDBClientMaker(helper),
 			operator.NewDBMigrator(new(model.Command)),
 		)
 
@@ -41,15 +41,15 @@ var setupCmd = &cobra.Command{
 
 		if !setupCmdFlag.skipInstall && !setupCmdFlag.upgrade {
 			runner.Add(
-				operator.NewCommandDefiner(define.Name, define.Version, cmdrLocation, true),
-				operator.NewBinariesInstaller(),
+				operator.NewCommandDefiner(define.Name, define.Version, cmdrLocation, true, helper),
+				operator.NewBinariesInstaller(helper),
 			)
 		}
 
 		if !setupCmdFlag.skipProfile {
 			runner.Add(
 				operator.NewOperatorLoggerWithFields("writing profile"),
-				operator.NewShellProfiler(binDir),
+				operator.NewShellProfiler(helper),
 			)
 		}
 

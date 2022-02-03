@@ -20,15 +20,13 @@ var _ = Describe("Bianry", func() {
 	var (
 		command1, command2 *model.Command
 		ctx                context.Context
-		shimsDir           string
-		binDir             string
+		helper             *utils.CmdrHelper
 	)
 
 	BeforeEach(func() {
 		tempDir, err := afero.TempDir(define.FS, "", "")
 		Expect(err).To(BeNil())
-		shimsDir = filepath.Join(tempDir, "shims")
-		binDir = filepath.Join(tempDir, "bin")
+		helper = utils.NewCmdrHelper(tempDir)
 
 		location1 := filepath.Join(tempDir, "test1.sh")
 		err = afero.WriteFile(define.FS, location1, []byte(`#!/bin/sh\necho $@`), 0755)
@@ -56,14 +54,14 @@ var _ = Describe("Bianry", func() {
 	})
 
 	AfterEach(func() {
-		Expect(define.FS.RemoveAll(shimsDir)).To(Succeed())
+		Expect(define.FS.RemoveAll(helper.GetRootDir())).To(Succeed())
 	})
 
 	Context("BinariesInstaller", func() {
 		var installer *operator.BinariesInstaller
 
 		BeforeEach(func() {
-			installer = operator.NewBinariesInstaller(shimsDir)
+			installer = operator.NewBinariesInstaller(helper)
 		})
 
 		It("context not found", func() {
@@ -76,10 +74,10 @@ var _ = Describe("Bianry", func() {
 			Expect(err).To(BeNil())
 
 			Expect(
-				afero.Exists(define.FS, utils.GetCommandShimsPath(shimsDir, command1.Name, command1.Version)),
+				afero.Exists(define.FS, helper.GetCommandShimsPath(command1.Name, command1.Version)),
 			).To(BeTrue())
 			Expect(
-				afero.Exists(define.FS, utils.GetCommandShimsPath(shimsDir, command2.Name, command2.Version)),
+				afero.Exists(define.FS, helper.GetCommandShimsPath(command2.Name, command2.Version)),
 			).To(BeTrue())
 		})
 
@@ -90,10 +88,10 @@ var _ = Describe("Bianry", func() {
 			Expect(err).NotTo(BeNil())
 
 			Expect(afero.Exists(
-				define.FS, utils.GetCommandShimsPath(shimsDir, command1.Name, command1.Version),
+				define.FS, helper.GetCommandShimsPath(command1.Name, command1.Version),
 			)).To(BeFalse())
 			Expect(afero.Exists(
-				define.FS, utils.GetCommandShimsPath(shimsDir, command2.Name, command2.Version),
+				define.FS, helper.GetCommandShimsPath(command2.Name, command2.Version),
 			)).To(BeTrue())
 		})
 
@@ -104,10 +102,10 @@ var _ = Describe("Bianry", func() {
 			Expect(err).To(BeNil())
 
 			Expect(afero.Exists(
-				define.FS, utils.GetCommandShimsPath(shimsDir, command1.Name, command1.Version),
+				define.FS, helper.GetCommandShimsPath(command1.Name, command1.Version),
 			)).To(BeTrue())
 			Expect(afero.Exists(
-				define.FS, utils.GetCommandShimsPath(shimsDir, command2.Name, command2.Version),
+				define.FS, helper.GetCommandShimsPath(command2.Name, command2.Version),
 			)).To(BeFalse())
 		})
 	})
@@ -172,9 +170,9 @@ var _ = Describe("Bianry", func() {
 			command1.Managed = true
 			command2.Managed = false
 
-			Expect(define.FS.MkdirAll(utils.GetCommandShimsDir(shimsDir, command1.Name), 0755)).To(Succeed())
-			Expect(define.FS.Rename(command1.Location, utils.GetCommandShimsPath(shimsDir, command1.Name, command1.Version))).To(Succeed())
-			activator = operator.NewBinariesActivator(binDir, shimsDir)
+			Expect(define.FS.MkdirAll(helper.GetCommandShimsDir(command1.Name), 0755)).To(Succeed())
+			Expect(define.FS.Rename(command1.Location, helper.GetCommandShimsPath(command1.Name, command1.Version))).To(Succeed())
+			activator = operator.NewBinariesActivator(helper)
 		})
 
 		It("context not found", func() {
@@ -187,26 +185,26 @@ var _ = Describe("Bianry", func() {
 			Expect(err).To(BeNil())
 
 			Expect(
-				afero.Exists(define.FS, filepath.Join(binDir, command1.Name)),
+				afero.Exists(define.FS, helper.GetCommandBinPath(command1.Name)),
 			).To(BeTrue())
 			Expect(
-				afero.Exists(define.FS, filepath.Join(binDir, command2.Name)),
+				afero.Exists(define.FS, helper.GetCommandBinPath(command2.Name)),
 			).To(BeTrue())
 		})
 
 		It("activate binaries that already exists", func() {
-			Expect(define.FS.MkdirAll(binDir, 0755)).To(BeNil())
-			Expect(afero.WriteFile(define.FS, filepath.Join(binDir, command1.Name), []byte(""), 0755)).To(BeNil())
-			Expect(define.FS.MkdirAll(filepath.Join(binDir, command2.Name), 0755)).To(BeNil())
+			Expect(define.FS.MkdirAll(helper.GetBinDir(), 0755)).To(BeNil())
+			Expect(afero.WriteFile(define.FS, helper.GetCommandBinPath(command1.Name), []byte(""), 0755)).To(BeNil())
+			Expect(define.FS.MkdirAll(helper.GetCommandBinPath(command2.Name), 0755)).To(BeNil())
 
 			_, err := activator.Run(ctx)
 			Expect(err).To(BeNil())
 
 			Expect(
-				afero.Exists(define.FS, filepath.Join(binDir, command1.Name)),
+				afero.Exists(define.FS, helper.GetCommandBinPath(command1.Name)),
 			).To(BeTrue())
 			Expect(
-				afero.Exists(define.FS, filepath.Join(binDir, command2.Name)),
+				afero.Exists(define.FS, helper.GetCommandBinPath(command2.Name)),
 			).To(BeTrue())
 		})
 

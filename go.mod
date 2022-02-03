@@ -3,12 +3,11 @@ module github.com/mrlyc/cmdr
 go 1.16
 
 require (
-	github.com/agiledragon/gomonkey v2.0.2+incompatible // indirect
+	github.com/agiledragon/gomonkey v2.0.2+incompatible
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/golang/mock v1.6.0
 	github.com/google/go-github/v39 v39.1.1-0.20211008144426-6b0f37fa430d
-	github.com/google/wire v0.5.0 // indirect
 	github.com/gookit/color v1.4.2
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/mattn/go-sqlite3 v1.14.8

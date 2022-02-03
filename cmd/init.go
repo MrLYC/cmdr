@@ -21,12 +21,13 @@ var initCmd = &cobra.Command{
 	Short: "Initial cmdr environment",
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.GetGlobalConfiguration()
+		helper := utils.NewCmdrHelper(cfg.GetString(config.CfgKeyCmdrRoot))
 		tmpl, err := template.New("init.sh").ParseFS(define.EmbedFS, "scripts/init.sh")
 		utils.CheckError(err)
 
 		var buffer bytes.Buffer
 		utils.CheckError(tmpl.Execute(&buffer, map[string]interface{}{
-			"BinDir": config.GetBinDir(cfg),
+			"BinDir": helper.GetBinDir(),
 		}))
 
 		fmt.Println(buffer.String())

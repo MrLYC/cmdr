@@ -16,6 +16,7 @@ import (
 	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/operator/mock"
+	"github.com/mrlyc/cmdr/utils"
 )
 
 var _ = Describe("Command", func() {
@@ -26,7 +27,7 @@ var _ = Describe("Command", func() {
 		ctx                context.Context
 		command1, command2 *model.Command
 		commands           []*model.Command
-		shimsDir           string
+		helper             *utils.CmdrHelper
 		location           string
 		name               string
 		version            string
@@ -40,8 +41,7 @@ var _ = Describe("Command", func() {
 
 		tempDir, err := afero.TempDir(define.FS, "", "")
 		Expect(err).To(BeNil())
-		shimsDir = filepath.Join(tempDir, "shims")
-		location = filepath.Join(tempDir, "run.sh")
+		helper = utils.NewCmdrHelper(tempDir)
 
 		ctx = context.Background()
 		ctx = context.WithValue(ctx, define.ContextKeyDBClient, db)
@@ -78,6 +78,7 @@ var _ = Describe("Command", func() {
 	})
 
 	AfterEach(func() {
+		Expect(define.FS.RemoveAll(helper.GetRootDir())).To(Succeed())
 		ctrl.Finish()
 	})
 
@@ -85,7 +86,7 @@ var _ = Describe("Command", func() {
 		It("should define managed command", func() {
 			dbQuery.EXPECT().First(gomock.Any()).Return(nil)
 
-			definer := operator.NewCommandDefiner(shimsDir, name, version, location, true)
+			definer := operator.NewCommandDefiner(name, version, location, true, helper)
 			resultCtx, err := definer.Run(ctx)
 			Expect(err).To(BeNil())
 
@@ -99,7 +100,7 @@ var _ = Describe("Command", func() {
 		It("should define unmanaged command", func() {
 			dbQuery.EXPECT().First(gomock.Any()).Return(nil)
 
-			definer := operator.NewCommandDefiner(shimsDir, name, version, location, false)
+			definer := operator.NewCommandDefiner(name, version, location, false, helper)
 			resultCtx, err := definer.Run(ctx)
 			Expect(err).To(BeNil())
 
@@ -113,7 +114,7 @@ var _ = Describe("Command", func() {
 		It("query failed", func() {
 			dbQuery.EXPECT().First(gomock.Any()).Return(fmt.Errorf("error"))
 
-			definer := operator.NewCommandDefiner(shimsDir, name, version, location, true)
+			definer := operator.NewCommandDefiner(name, version, location, true, helper)
 			_, err := definer.Run(ctx)
 			Expect(err).To(HaveOccurred())
 		})
@@ -123,13 +124,13 @@ var _ = Describe("Command", func() {
 				command := c.(*model.Command)
 				Expect(command.Name).To(Equal(name))
 				Expect(command.Version).To(Equal(version))
-				Expect(command.Location).To(Equal(filepath.Join(shimsDir, name, fmt.Sprintf("%s_%s", name, version))))
+				Expect(command.Location).To(Equal(helper.GetCommandShimsPath(name, version)))
 				Expect(command.Managed).To(BeTrue())
 
 				return nil
 			})
 
-			definer := operator.NewCommandDefiner(shimsDir, name, version, location, true)
+			definer := operator.NewCommandDefiner(name, version, location, true, helper)
 			err := definer.Commit(ctx)
 			Expect(err).To(BeNil())
 		})

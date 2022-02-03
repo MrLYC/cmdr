@@ -13,6 +13,7 @@ import (
 
 type BinariesInstaller struct {
 	BaseOperator
+	helper *utils.CmdrHelper
 }
 
 func (i *BinariesInstaller) String() string {
@@ -22,7 +23,6 @@ func (i *BinariesInstaller) String() string {
 func (i *BinariesInstaller) Run(ctx context.Context) (context.Context, error) {
 	fs := define.FS
 	logger := define.Logger
-	shimsDir := GetShimsDir(ctx)
 	commands, err := GetCommandsFromContext(ctx)
 	if err != nil {
 		return ctx, errors.Wrapf(err, "get commands from context failed")
@@ -37,8 +37,8 @@ func (i *BinariesInstaller) Run(ctx context.Context) (context.Context, error) {
 		name := command.Name
 		version := command.Version
 		location := command.Location
-		dir := utils.GetCommandShimsDir(shimsDir, name)
-		target := utils.GetCommandShimsPath(shimsDir, name, version)
+		dir := i.helper.GetCommandShimsDir(name)
+		target := i.helper.GetCommandShimsPath(name, version)
 
 		logger.Info("installing binary", map[string]interface{}{
 			"name":     name,
@@ -76,8 +76,10 @@ func (i *BinariesInstaller) Run(ctx context.Context) (context.Context, error) {
 	return ctx, errors.Wrap(errs, "install binaries failed")
 }
 
-func NewBinariesInstaller() *BinariesInstaller {
-	return &BinariesInstaller{}
+func NewBinariesInstaller(helper *utils.CmdrHelper) *BinariesInstaller {
+	return &BinariesInstaller{
+		helper: helper,
+	}
 }
 
 type BinariesUninstaller struct {
@@ -131,6 +133,7 @@ func NewBinariesUninstaller() *BinariesUninstaller {
 
 type BinariesActivator struct {
 	BaseOperator
+	helper *utils.CmdrHelper
 }
 
 func (s *BinariesActivator) String() string {
@@ -158,8 +161,8 @@ func (s *BinariesActivator) cleanUpBinary(binPath string) {
 	}
 }
 
-func (s *BinariesActivator) activateBinary(binDir, name, location string) error {
-	binPath := utils.GetCommandBinPath(binDir, name)
+func (s *BinariesActivator) activateBinary(name, location string) error {
+	binPath := s.helper.GetCommandBinPath(name)
 	s.cleanUpBinary(binPath)
 
 	linker := utils.GetSymbolLinker()
@@ -174,8 +177,7 @@ func (s *BinariesActivator) activateBinary(binDir, name, location string) error 
 func (s *BinariesActivator) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
 	fs := define.FS
-	binDir := GetBinDir(ctx)
-	shimsDir := GetShimsDir(ctx)
+	binDir := s.helper.GetBinDir()
 
 	commands, err := GetCommandsFromContext(ctx)
 	if err != nil {
@@ -195,10 +197,10 @@ func (s *BinariesActivator) Run(ctx context.Context) (context.Context, error) {
 	for _, command := range commands {
 		location := command.Location
 		if command.Managed {
-			location = utils.GetCommandShimsPath(shimsDir, command.Name, command.Version)
+			location = s.helper.GetCommandShimsPath(command.Name, command.Version)
 		}
 
-		err = s.activateBinary(binDir, command.Name, location)
+		err = s.activateBinary(command.Name, location)
 		if err != nil {
 			errs = multierror.Append(errs, errors.Wrapf(err, "activate %s(%s) binary failed", command.Name, command.Version))
 			continue
@@ -208,6 +210,8 @@ func (s *BinariesActivator) Run(ctx context.Context) (context.Context, error) {
 	return ctx, errs
 }
 
-func NewBinariesActivator() *BinariesActivator {
-	return &BinariesActivator{}
+func NewBinariesActivator(helper *utils.CmdrHelper) *BinariesActivator {
+	return &BinariesActivator{
+		helper: helper,
+	}
 }

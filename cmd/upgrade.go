@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -30,9 +29,10 @@ var upgradeCmd = &cobra.Command{
 		ctx := cmd.Context()
 		logger := define.Logger
 		cfg := config.GetGlobalConfiguration()
+		helper := utils.NewCmdrHelper(cfg.GetString(config.CfgKeyCmdrRoot))
 		runner := runner.New(
-			operator.NewDBClientMaker(),
-			operator.NewCommandDefiner(define.Name, define.Version, upgradeCmdFlag.location, true),
+			operator.NewDBClientMaker(helper),
+			operator.NewCommandDefiner(define.Name, define.Version, upgradeCmdFlag.location, true, helper),
 		)
 
 		if upgradeCmdFlag.location == "" {
@@ -43,13 +43,13 @@ var upgradeCmd = &cobra.Command{
 		}
 
 		runner.Add(
-			operator.NewBinariesInstaller(),
+			operator.NewBinariesInstaller(helper),
 		)
 
 		if !upgradeCmdFlag.keep {
 			runner.Add(
 				operator.NewCommandDeactivator(),
-				operator.NewBinariesActivator(),
+				operator.NewBinariesActivator(helper),
 				operator.NewCommandActivator(),
 				operator.NewNamedCommandsQuerier(define.Name),
 				operator.NewCommandUndefiner(),
@@ -77,7 +77,7 @@ var upgradeCmd = &cobra.Command{
 			"args": runArgs,
 		})
 
-		utils.ExitWithError(utils.WaitProcess(ctx, filepath.Join(config.GetBinDir(cfg), define.Name), runArgs), "setup failed")
+		utils.ExitWithError(utils.WaitProcess(ctx, helper.GetCommandBinPath(define.Name), runArgs), "setup failed")
 	},
 }
 

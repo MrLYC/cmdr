@@ -4,17 +4,18 @@ import (
 	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/operator"
+	"github.com/mrlyc/cmdr/utils"
 )
 
-func NewUseRunner(cfg define.Configuration) Runner {
+func NewUseRunner(cfg define.Configuration, helper *utils.CmdrHelper) Runner {
 	return New(
-		operator.NewDBClientMaker(),
+		operator.NewDBClientMaker(helper),
 		operator.NewSimpleCommandsQuerier(
 			cfg.GetString(config.CfgKeyCommandUseName),
 			cfg.GetString(config.CfgKeyCommandUseVersion),
 		).StrictMode(),
 		operator.NewCommandDeactivator(),
-		operator.NewBinariesActivator(),
+		operator.NewBinariesActivator(helper),
 		operator.NewCommandActivator(),
 	)
 }

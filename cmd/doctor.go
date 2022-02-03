@@ -21,22 +21,22 @@ var doctorCmd = &cobra.Command{
 	Short: "Check and fix cmdr environment",
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.GetGlobalConfiguration()
-		binDir := config.GetBinDir(cfg)
-
+		helper := utils.NewCmdrHelper(cfg.GetString(config.CfgKeyCmdrRoot))
+		binDir := helper.GetBinDir()
 		runner := runner.New(
-			operator.NewDBClientMaker(),
+			operator.NewDBClientMaker(helper),
 			operator.NewDBMigrator(new(model.Command)),
 			operator.NewCommandsQuerier([]q.Matcher{q.Eq("Activated", true)}),
-			operator.NewBrokenCommandsFixer(),
+			operator.NewBrokenCommandsFixer(helper),
 			operator.NewDirectoryRemover(map[string]string{
 				"bin": binDir,
 			}),
 			operator.NewDirectoryMaker(map[string]string{
-				"shims": config.GetShimsDir(cfg),
+				"shims": helper.GetShimsDir(),
 				"bin":   binDir,
 			}),
-			operator.NewBinariesInstaller(),
-			operator.NewBinariesActivator(),
+			operator.NewBinariesInstaller(helper),
+			operator.NewBinariesActivator(helper),
 		)
 
 		utils.ExitWithError(runner.Run(cmd.Context()), "doctor failed")

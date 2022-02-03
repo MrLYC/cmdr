@@ -12,6 +12,7 @@ import (
 
 type BrokenCommandsFixer struct {
 	BaseOperator
+	helper *utils.CmdrHelper
 }
 
 func (s *BrokenCommandsFixer) String() string {
@@ -21,7 +22,6 @@ func (s *BrokenCommandsFixer) String() string {
 func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) {
 	fs := define.FS
 	logger := define.Logger
-	shimsDir := GetShimsDir(ctx)
 
 	var errs error
 	client := GetDBClientFromContext(ctx)
@@ -33,7 +33,7 @@ func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) 
 	for _, command := range commands {
 		location := command.Location
 		if command.Managed {
-			location = utils.GetCommandShimsPath(shimsDir, command.Name, command.Version)
+			location = s.helper.GetCommandShimsPath(command.Name, command.Version)
 		}
 
 		_, err := fs.Stat(location)
@@ -63,6 +63,8 @@ func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) 
 	return ctx, errs
 }
 
-func NewBrokenCommandsFixer() *BrokenCommandsFixer {
-	return &BrokenCommandsFixer{}
+func NewBrokenCommandsFixer(helper *utils.CmdrHelper) *BrokenCommandsFixer {
+	return &BrokenCommandsFixer{
+		helper: helper,
+	}
 }

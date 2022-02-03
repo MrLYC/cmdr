@@ -12,7 +12,7 @@ import (
 	"github.com/mrlyc/cmdr/utils"
 )
 
-func executeRunner(factory func(define.Configuration) runner.Runner) func(cmd *cobra.Command, args []string) {
+func executeRunner(factory func(define.Configuration, *utils.CmdrHelper) runner.Runner) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		cfg := config.Global
 		logger := define.Logger
@@ -23,7 +23,8 @@ func executeRunner(factory func(define.Configuration) runner.Runner) func(cmd *c
 		})
 
 		ctx := cmd.Context()
-		runner := factory(cfg)
+		helper := utils.NewCmdrHelper(cfg.GetString(config.CfgKeyCmdrRoot))
+		runner := factory(cfg, helper)
 		utils.ExitWithError(runner.Run(context.WithValue(ctx, define.ContextKeyConfiguration, cfg)), fmt.Sprintf("command %s failed", name))
 	}
 }

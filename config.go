@@ -15,9 +15,6 @@ func init() {
 	cfg := config.Global
 
 	cfg.SetDefault(config.CfgKeyCmdrRoot, filepath.Join(homeDir, ".cmdr"))
-	cfg.SetDefault(config.CfgKeyBinDir, "bin")
-	cfg.SetDefault(config.CfgKeyShimsDir, "shims")
-	cfg.SetDefault(config.CfgKeyDatabase, "cmdr.db")
 	cfg.SetDefault(config.CfgKeyLogLevel, "info")
 	cfg.SetDefault(config.CfgKeyLogOutput, "stderr")
 }

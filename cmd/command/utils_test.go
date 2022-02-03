@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/runner"
 	"github.com/mrlyc/cmdr/runner/mock"
+	"github.com/mrlyc/cmdr/utils"
 )
 
 var _ = Describe("Utils", func() {
@@ -41,6 +43,7 @@ var _ = Describe("Utils", func() {
 
 		BeforeEach(func() {
 			ctrl = gomock.NewController(GinkgoT())
+			cmd.ExecuteContext(context.Background())
 			mockRunner = mock.NewMockRunner(ctrl)
 		})
 
@@ -48,12 +51,12 @@ var _ = Describe("Utils", func() {
 			ctrl.Finish()
 		})
 
-		mockFactory := func(define.Configuration) runner.Runner {
+		mockFactory := func(define.Configuration, *utils.CmdrHelper) runner.Runner {
 			return mockRunner
 		}
 
 		It("should call runner.Run", func() {
-			mockRunner.EXPECT().Run(cmd.Context()).Return(nil)
+			mockRunner.EXPECT().Run(gomock.Any()).Return(nil)
 
 			fn := executeRunner(mockFactory)
 			fn(&cmd, []string{})
@@ -66,7 +69,7 @@ var _ = Describe("Utils", func() {
 			})
 			defer patches.Reset()
 
-			mockRunner.EXPECT().Run(cmd.Context()).Return(fmt.Errorf("testing"))
+			mockRunner.EXPECT().Run(gomock.Any()).Return(fmt.Errorf("testing"))
 
 			fn := executeRunner(mockFactory)
 			fn(&cmd, []string{})

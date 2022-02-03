@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/define"
+	"github.com/mrlyc/cmdr/utils"
 )
 
 //go:generate mockgen -destination=mock/storm.go -package=mock github.com/asdine/storm/v3 Query
@@ -34,6 +35,7 @@ func NewDBClient(path string) (DBClient, error) {
 
 type DBClientMaker struct {
 	client DBClient
+	helper *utils.CmdrHelper
 }
 
 func (m *DBClientMaker) String() string {
@@ -41,7 +43,7 @@ func (m *DBClientMaker) String() string {
 }
 
 func (m *DBClientMaker) Run(ctx context.Context) (context.Context, error) {
-	path := GetDatabasePath(ctx)
+	path := m.helper.GetDatabasePath()
 	client, err := NewDBClient(path)
 	if err != nil {
 		return ctx, errors.Wrapf(err, "create database client failed")
@@ -60,8 +62,10 @@ func (m *DBClientMaker) Rollback(ctx context.Context) {
 	_ = m.client.Close()
 }
 
-func NewDBClientMaker() *DBClientMaker {
-	return &DBClientMaker{}
+func NewDBClientMaker(helper *utils.CmdrHelper) *DBClientMaker {
+	return &DBClientMaker{
+		helper: helper,
+	}
 }
 
 type DBMigrator struct {

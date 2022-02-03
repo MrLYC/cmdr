@@ -92,8 +92,8 @@ func (s *ShellProfiler) Run(ctx context.Context) (context.Context, error) {
 	return ctx, nil
 }
 
-func NewShellProfiler(binDir string) *ShellProfiler {
+func NewShellProfiler(helper *utils.CmdrHelper) *ShellProfiler {
 	return &ShellProfiler{
-		script: fmt.Sprintf(`eval "$(%s init)"`, utils.GetCommandBinPath(binDir, define.Name)),
+		script: fmt.Sprintf(`eval "$(%s init)"`, helper.GetCommandBinPath(define.Name)),
 	}
 }
