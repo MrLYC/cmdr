@@ -7,7 +7,6 @@ import (
 
 	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/runner"
 	"github.com/mrlyc/cmdr/utils"
@@ -26,15 +25,7 @@ var setupCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.GetGlobalConfiguration()
 		helper := utils.NewCmdrHelper(cfg.GetString(config.CfgKeyCmdrRoot))
-		shimsDir := helper.GetShimsDir()
-		runner := runner.New(
-			operator.NewDirectoryMaker(map[string]string{
-				"shims": shimsDir,
-				"bin":   helper.GetBinDir(),
-			}),
-			operator.NewDBClientMaker(helper),
-			operator.NewDBMigrator(new(model.Command)),
-		)
+		runner := runner.NewMigrateRunner(cfg, helper)
 
 		cmdrLocation, err := os.Executable()
 		utils.CheckError(err)

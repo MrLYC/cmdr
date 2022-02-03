@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/runner"
 	"github.com/mrlyc/cmdr/utils"
@@ -38,12 +37,8 @@ func (s *commandTestSuite) Setup() {
 	s.version = s.faker.App().Version()
 	s.location = filepath.Join(tempDir, s.faker.File().FilenameWithExtension())
 
-	s.WithDB(func(db define.DBClient) {
-		ctx := context.WithValue(s.ctx, define.ContextKeyDBClient, db)
-
-		r := runner.New(operator.NewDBMigrator(new(model.Command)))
-		Expect(r.Run(ctx)).To(Succeed())
-	})
+	r := runner.NewMigrateRunner(s.cfg, s.helper)
+	Expect(r.Run(s.ctx)).To(Succeed())
 }
 
 func (s *commandTestSuite) TearDown() {
