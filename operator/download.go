@@ -2,8 +2,8 @@ package operator
 
 import (
 	"context"
+	"net/url"
 	"path/filepath"
-	"regexp"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -15,8 +15,7 @@ import (
 
 type Downloader struct {
 	BaseOperator
-	schemaRegexp *regexp.Regexp
-	tempDir      string
+	tempDir string
 }
 
 func (d *Downloader) String() string {
@@ -33,8 +32,9 @@ func (d *Downloader) Run(ctx context.Context) (context.Context, error) {
 	var errs error
 	for _, command := range commands {
 		name := command.Name
-		url := command.Location
-		if !d.schemaRegexp.MatchString(url) {
+		locationUrl := command.Location
+		urlInfo, err := url.Parse(locationUrl)
+		if err != nil || urlInfo.Scheme == "" {
 			continue
 		}
 
@@ -45,17 +45,17 @@ func (d *Downloader) Run(ctx context.Context) (context.Context, error) {
 		command.Location = location
 
 		logger.Info("downloading", map[string]interface{}{
-			"url":  url,
+			"url":  locationUrl,
 			"name": name,
 		})
-		err = utils.DownloadToFile(ctx, url, location)
+		err = utils.DownloadToFile(ctx, locationUrl, location)
 		if err != nil {
-			errs = multierror.Append(errs, errors.Wrapf(err, "download %s failed", url))
+			errs = multierror.Append(errs, errors.Wrapf(err, "download %s failed", locationUrl))
 			continue
 		}
 
 		logger.Info("command downloaded", map[string]interface{}{
-			"url": url,
+			"url": locationUrl,
 		})
 	}
 
@@ -71,7 +71,5 @@ func (d *Downloader) Commit(ctx context.Context) error {
 }
 
 func NewDownloader() *Downloader {
-	return &Downloader{
-		schemaRegexp: regexp.MustCompile(`^https?://`),
-	}
+	return &Downloader{}
 }

@@ -10,4 +10,5 @@ var (
 	ErrContextValueNotFound = fmt.Errorf("context value not found")
 	ErrAssetNotFound        = fmt.Errorf("asset not found")
 	ErrNotSupported         = fmt.Errorf("not supported")
+	ErrLocationNotExists    = fmt.Errorf("location not exists")
 )

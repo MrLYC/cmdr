@@ -17,5 +17,6 @@ func NewDefineRunner(cfg define.Configuration, helper *utils.CmdrHelper) define.
 			false,
 			helper,
 		),
+		operator.NewBinariesChecker(),
 	)
 }

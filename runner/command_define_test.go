@@ -7,61 +7,64 @@ import (
 
 	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/runner"
 )
 
 var _ = Describe("CommandDefine", func() {
 	var (
-		suite   commandTestSuite
-		definer define.Runner
+		suite commandTestSuite
 	)
 
-	BeforeEach(func() {
-		suite.Setup()
-		suite.cfg.Set(config.CfgKeyCommandDefineName, suite.name)
-		suite.cfg.Set(config.CfgKeyCommandDefineVersion, suite.version)
-		suite.cfg.Set(config.CfgKeyCommandDefineLocation, suite.location)
+	suite.Bootstrap()
 
-		definer = runner.NewDefineRunner(suite.cfg, suite.helper)
-	})
-
-	AfterEach(func() {
-		suite.TearDown()
-	})
-
-	checkResult := func() {
-		suite.WithDB(func(db define.DBClient) {
-			var command model.Command
-			cnt, err := db.Select(
-				q.Eq("Name", suite.name),
-				q.Eq("Version", suite.version),
-				q.Eq("Location", suite.location),
-			).Count(&command)
-			Expect(err).To(BeNil())
-
-			Expect(cnt).To(Equal(1))
-		})
+	runDefiner := func() {
+		definer := runner.NewDefineRunner(suite.cfg, suite.helper)
+		Expect(definer.Run(suite.ctx)).To(Succeed())
 	}
 
-	It("should define a command", func() {
-		Expect(definer.Run(suite.ctx)).To(Succeed())
-
-		checkResult()
-	})
-
-	It("should update the command location", func() {
-		suite.WithDB(func(db define.DBClient) {
-			command := model.Command{
-				Name:     suite.name,
-				Version:  suite.version,
-				Location: "not_exists",
-			}
-
-			Expect(db.Save(&command)).To(Succeed())
+	Context("Default config", func() {
+		BeforeEach(func() {
+			suite.cfg.Set(config.CfgKeyCommandDefineName, suite.command.Name)
+			suite.cfg.Set(config.CfgKeyCommandDefineVersion, suite.command.Version)
+			suite.cfg.Set(config.CfgKeyCommandDefineLocation, suite.command.Location)
 		})
 
-		Expect(definer.Run(suite.ctx)).To(Succeed())
-		checkResult()
+		It("should define a command", func() {
+			runDefiner()
+
+			command := suite.MustGetCommand()
+			Expect(command.Location).To(Equal(suite.command.Location))
+			Expect(command.Managed).To(BeFalse())
+		})
+
+		It("should define a command with different version", func() {
+			definer := runner.NewDefineRunner(suite.cfg, suite.helper)
+			Expect(definer.Run(suite.ctx)).To(Succeed())
+
+			suite.cfg.Set(config.CfgKeyCommandDefineVersion, suite.UpdateCommandVersion())
+			definer = runner.NewDefineRunner(suite.cfg, suite.helper)
+			Expect(definer.Run(suite.ctx)).To(Succeed())
+
+			commands := suite.MustGetCommandsBy(q.Eq("Name", suite.command.Name))
+			Expect(commands).To(HaveLen(2))
+		})
+
+		It("should update the command location", func() {
+			runDefiner()
+			suite.cfg.Set(config.CfgKeyCommandDefineLocation, suite.UpdateCommandLocation())
+
+			runDefiner()
+			command := suite.MustGetCommand()
+			Expect(command.Location).To(Equal(suite.command.Location))
+		})
+
+		It("should raise error", func() {
+			Expect(define.FS.Remove(suite.command.Location)).To(Succeed())
+			definer := runner.NewDefineRunner(suite.cfg, suite.helper)
+			Expect(definer.Run(suite.ctx)).NotTo(BeNil())
+
+			suite.CommandMustNotExists()
+		})
+
 	})
 })

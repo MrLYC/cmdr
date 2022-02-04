@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestCore(t *testing.T) {
+func TestOperator(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Core Suite")
+	RunSpecs(t, "Operator Suite")
 }

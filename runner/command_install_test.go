@@ -1,6 +1,8 @@
 package runner_test
 
 import (
+	"path/filepath"
+
 	"github.com/asdine/storm/v3/q"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -8,46 +10,128 @@ import (
 
 	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/runner"
 )
 
 var _ = Describe("CommandInstall", func() {
 	var (
-		suite     commandTestSuite
-		installer define.Runner
+		suite commandTestSuite
 	)
 
-	BeforeEach(func() {
-		suite.Setup()
-		suite.cfg.Set(config.CfgKeyCommandInstallName, suite.name)
-		suite.cfg.Set(config.CfgKeyCommandInstallVersion, suite.version)
-		suite.cfg.Set(config.CfgKeyCommandInstallLocation, suite.location)
+	suite.Bootstrap()
 
-		Expect(afero.WriteFile(define.FS, suite.location, []byte(`#!/bin/sh\necho $@`), 0755)).To(Succeed())
-		installer = runner.NewInstallRunner(suite.cfg, suite.helper)
-	})
-
-	AfterEach(func() {
-		suite.TearDown()
-	})
-
-	It("should install a command", func() {
+	runInstaller := func() {
+		installer := runner.NewInstallRunner(suite.cfg, suite.helper)
 		Expect(installer.Run(suite.ctx)).To(Succeed())
+	}
 
-		suite.WithDB(func(db define.DBClient) {
-			var command model.Command
-			Expect(db.Select(
-				q.Eq("Name", suite.name),
-				q.Eq("Version", suite.version),
-			).First(&command)).To(BeNil())
+	Context("Default config", func() {
+		BeforeEach(func() {
+			suite.cfg.Set(config.CfgKeyCommandInstallName, suite.command.Name)
+			suite.cfg.Set(config.CfgKeyCommandInstallVersion, suite.command.Version)
+			suite.cfg.Set(config.CfgKeyCommandInstallLocation, suite.command.Location)
+		})
 
-			exists, err := afero.Exists(define.FS, command.Location)
-			Expect(err).To(BeNil())
-			Expect(exists).To(BeTrue())
-			Expect(command.Location).To(Equal(suite.helper.GetCommandShimsPath(suite.name, suite.version)))
+		It("should install a command", func() {
+			runInstaller()
+
+			command := suite.MustGetCommand()
+			Expect(command.Location).To(Equal(suite.helper.GetCommandShimsPath(suite.command.Name, suite.command.Version)))
 			Expect(command.Activated).To(BeFalse())
 			Expect(command.Managed).To(BeTrue())
+
+			suite.CheckCommandShims(command)
+		})
+
+		It("should install a command with different version", func() {
+			runInstaller()
+
+			suite.cfg.Set(config.CfgKeyCommandInstallVersion, suite.UpdateCommandVersion())
+			suite.cfg.Set(config.CfgKeyCommandInstallLocation, suite.UpdateCommandLocation())
+			runInstaller()
+
+			commands := suite.MustGetCommandsBy(q.Eq("Name", suite.command.Name))
+			Expect(commands).To(HaveLen(2))
+
+			suite.CheckCommandShims(commands[0])
+			suite.CheckCommandShims(commands[1])
+		})
+
+		It("should update the command location", func() {
+			runInstaller()
+
+			suite.cfg.Set(config.CfgKeyCommandInstallLocation, suite.UpdateCommandLocation())
+
+			runInstaller()
+			command := suite.MustGetCommand()
+			suite.CheckCommandShims(command)
+		})
+
+		It("should overwrite exists shims", func() {
+			shimsPath := suite.helper.GetCommandShimsPath(suite.command.Name, suite.command.Version)
+			Expect(define.FS.MkdirAll(filepath.Dir(shimsPath), 0755)).To(Succeed())
+			Expect(afero.WriteFile(define.FS, shimsPath, []byte{}, 0755)).To(Succeed())
+
+			runInstaller()
+			suite.CheckCommandShims(&suite.command)
+		})
+
+		It("should fail because binary not exists", func() {
+			suite.RemoveCommandBinary()
+			installer := runner.NewInstallRunner(suite.cfg, suite.helper)
+			Expect(installer.Run(suite.ctx)).NotTo(Succeed())
+
+			suite.CommandMustNotExists()
+		})
+
+		It("should fail because location not exists", func() {
+			Expect(define.FS.Remove(suite.command.Location)).To(Succeed())
+			installer := runner.NewInstallRunner(suite.cfg, suite.helper)
+			Expect(installer.Run(suite.ctx)).NotTo(Succeed())
+
+			suite.CommandMustNotExists()
+		})
+	})
+
+	Context("Activate mode", func() {
+		BeforeEach(func() {
+			suite.cfg.Set(config.CfgKeyCommandInstallName, suite.command.Name)
+			suite.cfg.Set(config.CfgKeyCommandInstallVersion, suite.command.Version)
+			suite.cfg.Set(config.CfgKeyCommandInstallLocation, suite.command.Location)
+			suite.cfg.Set(config.CfgKeyCommandInstallActivate, true)
+		})
+
+		It("should activate a command", func() {
+			runInstaller()
+
+			command := suite.MustGetCommand()
+			Expect(command.Activated).To(BeTrue())
+			suite.CheckCommandBin(command)
+		})
+
+		It("should activate a command with different version", func() {
+			runInstaller()
+
+			suite.cfg.Set(config.CfgKeyCommandInstallVersion, suite.UpdateCommandVersion())
+			suite.cfg.Set(config.CfgKeyCommandInstallLocation, suite.UpdateCommandLocation())
+			runInstaller()
+
+			command := suite.MustGetCommand()
+			Expect(command.Activated).To(BeTrue())
+			suite.CheckCommandBin(command)
+		})
+
+		It("should activate a command even the bin does not exist", func() {
+			runInstaller()
+			Expect(define.FS.Remove(suite.helper.GetCommandBinPath(suite.command.Name))).To(Succeed())
+
+			suite.cfg.Set(config.CfgKeyCommandInstallVersion, suite.UpdateCommandVersion())
+			suite.cfg.Set(config.CfgKeyCommandInstallLocation, suite.UpdateCommandLocation())
+			runInstaller()
+
+			command := suite.MustGetCommand()
+			Expect(command.Activated).To(BeTrue())
+			suite.CheckCommandBin(command)
 		})
 	})
 })
