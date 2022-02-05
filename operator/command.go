@@ -170,36 +170,19 @@ func (s *CommandsDeactivator) String() string {
 func (s *CommandsDeactivator) deactivateCommand(ctx context.Context, command *model.Command) error {
 	logger := define.Logger
 	client := GetDBClientFromContext(ctx)
-	var queriedCommands []*model.Command
 
-	err := client.Select(q.Eq("Name", command.Name), q.Eq("Activated", true)).Find(&queriedCommands)
-	switch err {
-	case nil:
-	case storm.ErrNotFound:
-		return nil
-	default:
-		return errors.Wrapf(err, "query command %s failed", command.Name)
+	logger.Info("deactivating command", map[string]interface{}{
+		"name":    command.Name,
+		"version": command.Version,
+	})
+
+	command.Activated = false
+	err := client.Save(command)
+	if err != nil {
+		return errors.Wrapf(err, "deactivate command %s failed", command.Name)
 	}
 
-	var errs error
-	for _, queried := range queriedCommands {
-		if queried.Name == command.Name && queried.Version == command.Version {
-			continue
-		}
-
-		logger.Info("deactivating command", map[string]interface{}{
-			"name":    queried.Name,
-			"version": queried.Version,
-		})
-
-		queried.Activated = false
-		err = client.Save(queried)
-		if err != nil {
-			errs = multierror.Append(errs, errors.Wrapf(err, "deactivate command failed"))
-		}
-	}
-
-	return errs
+	return nil
 }
 
 func (s *CommandsDeactivator) Run(ctx context.Context) (context.Context, error) {

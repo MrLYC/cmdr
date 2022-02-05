@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 
+	"github.com/mrlyc/cmdr/config"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/operator"
@@ -136,4 +137,25 @@ func (s *commandTestSuite) CheckCommandBin(command *model.Command) {
 	Expect(err).To(BeNil())
 
 	Expect(shims).To(Equal(bin))
+}
+
+func (s *commandTestSuite) InstallCommand() {
+	cfg := viper.New()
+	cfg.Set(config.CfgKeyCommandInstallName, s.command.Name)
+	cfg.Set(config.CfgKeyCommandInstallVersion, s.command.Version)
+	cfg.Set(config.CfgKeyCommandInstallLocation, s.command.Location)
+
+	installer := runner.NewInstallRunner(cfg, s.helper)
+	Expect(installer.Run(s.ctx)).To(Succeed())
+}
+
+func (s *commandTestSuite) InstallActivatedCommand() {
+	cfg := viper.New()
+	cfg.Set(config.CfgKeyCommandInstallName, s.command.Name)
+	cfg.Set(config.CfgKeyCommandInstallVersion, s.command.Version)
+	cfg.Set(config.CfgKeyCommandInstallLocation, s.command.Location)
+	cfg.Set(config.CfgKeyCommandInstallActivate, true)
+
+	installer := runner.NewInstallRunner(cfg, s.helper)
+	Expect(installer.Run(s.ctx)).To(Succeed())
 }

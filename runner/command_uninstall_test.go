@@ -21,11 +21,6 @@ var _ = Describe("CommandUninstall", func() {
 		suite.cfg.Set(config.CfgKeyCommandUninstallVersion, suite.command.Version)
 	})
 
-	installCommand := func() {
-		installer := runner.NewInstallRunner(suite.cfg, suite.helper)
-		Expect(installer.Run(suite.ctx)).To(Succeed())
-	}
-
 	Context("Success", func() {
 		BeforeEach(func() {
 			suite.cfg.Set(config.CfgKeyCommandInstallName, suite.command.Name)
@@ -40,7 +35,7 @@ var _ = Describe("CommandUninstall", func() {
 		}
 
 		It("should success to uninstall not activated command", func() {
-			installCommand()
+			suite.InstallCommand()
 
 			command := suite.MustGetCommand()
 			Expect(command.Activated).To(BeFalse())
@@ -52,7 +47,7 @@ var _ = Describe("CommandUninstall", func() {
 		})
 
 		It("should success to uninstall even shims not exists", func() {
-			installCommand()
+			suite.InstallCommand()
 
 			Expect(define.FS.Remove(suite.helper.GetCommandShimsPath(suite.command.Name, suite.command.Version))).To(Succeed())
 
@@ -63,8 +58,7 @@ var _ = Describe("CommandUninstall", func() {
 		})
 
 		It("should success to uninstall activated command", func() {
-			suite.cfg.Set(config.CfgKeyCommandInstallActivate, true)
-			installCommand()
+			suite.InstallActivatedCommand()
 
 			command := suite.MustGetCommand()
 			Expect(command.Activated).To(BeTrue())
@@ -76,8 +70,7 @@ var _ = Describe("CommandUninstall", func() {
 		})
 
 		It("should success to uninstall even bin not exists", func() {
-			suite.cfg.Set(config.CfgKeyCommandInstallActivate, true)
-			installCommand()
+			suite.InstallActivatedCommand()
 
 			Expect(define.FS.Remove(suite.helper.GetCommandBinPath(suite.command.Name))).To(Succeed())
 
