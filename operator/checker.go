@@ -45,3 +45,28 @@ func (c *BinariesChecker) Run(ctx context.Context) (context.Context, error) {
 func NewBinariesChecker() *BinariesChecker {
 	return &BinariesChecker{}
 }
+
+type CommandsChecker struct {
+	BaseOperator
+}
+
+func (c *CommandsChecker) String() string {
+	return "commands-checker"
+}
+
+func (c *CommandsChecker) Run(ctx context.Context) (context.Context, error) {
+	commands, err := GetCommandsFromContext(ctx)
+	if err != nil {
+		return ctx, errors.Wrapf(err, "get commands from context failed")
+	}
+
+	if len(commands) == 0 {
+		return ctx, errors.New("no commands found")
+	}
+
+	return ctx, nil
+}
+
+func NewCommandsChecker() *CommandsChecker {
+	return &CommandsChecker{}
+}

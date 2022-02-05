@@ -13,43 +13,94 @@ import (
 )
 
 var _ = Describe("Checker", func() {
-	var (
-		ctx      context.Context
-		location string
-		command  *model.Command
-	)
-
-	BeforeEach(func() {
-		binary, err := afero.TempFile(define.FS, "", "")
-		Expect(err).To(BeNil())
-
-		location = binary.Name()
-		command = &model.Command{
-			Location: location,
-		}
-		ctx = context.WithValue(
-			context.Background(),
-			define.ContextKeyCommands,
-			[]*model.Command{command},
+	Context("BinariesChecker", func() {
+		var (
+			ctx      context.Context
+			location string
+			command  *model.Command
 		)
+
+		BeforeEach(func() {
+			binary, err := afero.TempFile(define.FS, "", "")
+			Expect(err).To(BeNil())
+
+			location = binary.Name()
+			command = &model.Command{
+				Location: location,
+			}
+			ctx = context.WithValue(
+				context.Background(),
+				define.ContextKeyCommands,
+				[]*model.Command{command},
+			)
+		})
+
+		AfterEach(func() {
+			Expect(define.FS.Remove(location)).To(Succeed())
+		})
+
+		It("should success", func() {
+			checker := operator.NewBinariesChecker()
+
+			_, err := checker.Run(ctx)
+			Expect(err).To(BeNil())
+		})
+
+		It("should fail because binary not exists", func() {
+			command.Location = "not_exists"
+			checker := operator.NewBinariesChecker()
+
+			_, err := checker.Run(ctx)
+			Expect(err).NotTo(BeNil())
+		})
+
+		It("should fail because context not found", func() {
+			checker := operator.NewBinariesChecker()
+
+			_, err := checker.Run(context.Background())
+			Expect(err).NotTo(BeNil())
+		})
 	})
 
-	AfterEach(func() {
-		Expect(define.FS.Remove(location)).To(Succeed())
-	})
+	Context("CommandsChecker", func() {
+		It("should fail because context not found", func() {
+			checker := operator.NewCommandsChecker()
 
-	It("should success", func() {
-		checker := operator.NewBinariesChecker()
+			_, err := checker.Run(context.Background())
+			Expect(err).NotTo(BeNil())
+		})
 
-		_, err := checker.Run(ctx)
-		Expect(err).To(BeNil())
-	})
+		It("should fail because commands is nil", func() {
+			checker := operator.NewCommandsChecker()
 
-	It("should fail when binary not exists", func() {
-		command.Location = "not_exists"
-		checker := operator.NewBinariesChecker()
+			_, err := checker.Run(context.WithValue(
+				context.Background(),
+				define.ContextKeyCommands,
+				nil,
+			))
+			Expect(err).NotTo(BeNil())
+		})
 
-		_, err := checker.Run(ctx)
-		Expect(err).NotTo(BeNil())
+		It("should fail because commands is empty", func() {
+			checker := operator.NewCommandsChecker()
+
+			_, err := checker.Run(context.WithValue(
+				context.Background(),
+				define.ContextKeyCommands,
+				[]*model.Command{},
+			))
+			Expect(err).NotTo(BeNil())
+		})
+
+		It("should success", func() {
+			checker := operator.NewCommandsChecker()
+
+			_, err := checker.Run(context.WithValue(
+				context.Background(),
+				define.ContextKeyCommands,
+				[]*model.Command{{}},
+			))
+			Expect(err).To(BeNil())
+		})
 	})
 })

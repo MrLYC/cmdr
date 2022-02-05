@@ -13,13 +13,7 @@ import (
 
 type CommandsQuerier struct {
 	BaseOperator
-	matchers   []q.Matcher
-	strictMode bool
-}
-
-func (c *CommandsQuerier) StrictMode() *CommandsQuerier {
-	c.strictMode = true
-	return c
+	matchers []q.Matcher
 }
 
 func (c *CommandsQuerier) String() string {
@@ -33,11 +27,7 @@ func (c *CommandsQuerier) Run(ctx context.Context) (context.Context, error) {
 
 	err := client.Select(c.matchers...).Find(&commands)
 	switch errors.Cause(err) {
-	case nil:
-	case storm.ErrNotFound:
-		if c.strictMode {
-			return ctx, errors.Wrapf(err, "commands not found")
-		}
+	case nil, storm.ErrNotFound:
 	default:
 		return ctx, errors.Wrapf(err, "query commands failed")
 	}
@@ -51,8 +41,7 @@ func (c *CommandsQuerier) Run(ctx context.Context) (context.Context, error) {
 
 func NewCommandsQuerier(matchers []q.Matcher) *CommandsQuerier {
 	return &CommandsQuerier{
-		matchers:   matchers,
-		strictMode: false,
+		matchers: matchers,
 	}
 }
 

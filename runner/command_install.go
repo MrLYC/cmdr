@@ -18,6 +18,7 @@ func NewInstallRunner(cfg define.Configuration, helper *utils.CmdrHelper) define
 			helper,
 		),
 		operator.NewDownloader(),
+		operator.NewBinariesChecker(),
 		operator.NewBinariesInstaller(helper),
 	)
 

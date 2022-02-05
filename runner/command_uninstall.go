@@ -13,7 +13,8 @@ func NewUninstallRunner(cfg define.Configuration, helper *utils.CmdrHelper) defi
 		operator.NewSimpleCommandsQuerier(
 			cfg.GetString(config.CfgKeyCommandUninstallName),
 			cfg.GetString(config.CfgKeyCommandUninstallVersion),
-		).StrictMode(),
+		),
+		operator.NewCommandsChecker(),
 		operator.NewCommandUndefiner(),
 		operator.NewBinariesUninstaller(),
 	)

@@ -13,7 +13,8 @@ func NewUseRunner(cfg define.Configuration, helper *utils.CmdrHelper) define.Run
 		operator.NewSimpleCommandsQuerier(
 			cfg.GetString(config.CfgKeyCommandUseName),
 			cfg.GetString(config.CfgKeyCommandUseVersion),
-		).StrictMode(),
+		),
+		operator.NewCommandsChecker(),
 		operator.NewCommandDeactivator(),
 		operator.NewBinariesActivator(helper),
 		operator.NewCommandActivator(),
