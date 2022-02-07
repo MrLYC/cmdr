@@ -2,10 +2,10 @@ package operator
 
 import (
 	"context"
+	"os"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
-	"github.com/spf13/afero"
 
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
@@ -21,7 +21,6 @@ func (i *BinariesInstaller) String() string {
 }
 
 func (i *BinariesInstaller) Run(ctx context.Context) (context.Context, error) {
-	fs := define.FS
 	logger := define.Logger
 	commands, err := GetCommandsFromContext(ctx)
 	if err != nil {
@@ -49,7 +48,7 @@ func (i *BinariesInstaller) Run(ctx context.Context) (context.Context, error) {
 		logger.Debug("creating binary dir", map[string]interface{}{
 			"dir": dir,
 		})
-		err := fs.MkdirAll(dir, 0755)
+		err := os.MkdirAll(dir, 0755)
 		if err != nil {
 			errs = multierror.Append(errs, errors.WithMessagef(err, "create dir %s failed", dir))
 			continue
@@ -66,7 +65,7 @@ func (i *BinariesInstaller) Run(ctx context.Context) (context.Context, error) {
 			continue
 		}
 
-		err = fs.Chmod(target, 0755)
+		err = os.Chmod(target, 0755)
 		if err != nil {
 			errs = multierror.Append(errs, errors.WithMessagef(err, "change command mode %s failed", target))
 			continue
@@ -92,7 +91,6 @@ func (s *BinariesUninstaller) String() string {
 
 func (s *BinariesUninstaller) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
-	fs := define.FS
 
 	commands, err := GetCommandsFromContext(ctx)
 	if err != nil {
@@ -105,8 +103,8 @@ func (s *BinariesUninstaller) Run(ctx context.Context) (context.Context, error) 
 			continue
 		}
 
-		exists, err := afero.Exists(fs, command.Location)
-		if !exists || err != nil {
+		_, err := os.Stat(command.Location)
+		if err != nil {
 			logger.Debug("binary not found", map[string]interface{}{
 				"location": command.Location,
 			})
@@ -117,10 +115,9 @@ func (s *BinariesUninstaller) Run(ctx context.Context) (context.Context, error) 
 			"location": command.Location,
 		})
 
-		err = fs.Remove(command.Location)
+		err = os.Remove(command.Location)
 		if err != nil {
-			multierror.Append(errs, errors.WithMessagef(err, command.Location))
-			continue
+			errs = multierror.Append(errs, errors.WithMessagef(err, command.Location))
 		}
 	}
 
@@ -141,11 +138,9 @@ func (s *BinariesActivator) String() string {
 }
 
 func (s *BinariesActivator) cleanUpBinary(binPath string) {
-	fs := define.FS
-	lstater := utils.GetFsLstater()
 	logger := define.Logger
 
-	info, _, err := lstater.LstatIfPossible(binPath)
+	info, err := os.Lstat(binPath)
 	if err != nil {
 		return
 	}
@@ -155,9 +150,9 @@ func (s *BinariesActivator) cleanUpBinary(binPath string) {
 	})
 
 	if info.IsDir() {
-		_ = fs.RemoveAll(binPath)
+		_ = os.RemoveAll(binPath)
 	} else {
-		_ = fs.Remove(binPath)
+		_ = os.Remove(binPath)
 	}
 }
 
@@ -165,8 +160,7 @@ func (s *BinariesActivator) activateBinary(name, location string) error {
 	binPath := s.helper.GetCommandBinPath(name)
 	s.cleanUpBinary(binPath)
 
-	linker := utils.GetSymbolLinker()
-	err := linker.SymlinkIfPossible(location, binPath)
+	err := os.Symlink(location, binPath)
 	if err != nil {
 		return errors.Wrapf(err, "create symbol link failed")
 	}
@@ -176,7 +170,6 @@ func (s *BinariesActivator) activateBinary(name, location string) error {
 
 func (s *BinariesActivator) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
-	fs := define.FS
 	binDir := s.helper.GetBinDir()
 
 	commands, err := GetCommandsFromContext(ctx)
@@ -188,7 +181,7 @@ func (s *BinariesActivator) Run(ctx context.Context) (context.Context, error) {
 		"count": len(commands),
 	})
 
-	err = fs.MkdirAll(binDir, 0755)
+	err = os.MkdirAll(binDir, 0755)
 	if err != nil {
 		return ctx, errors.Wrapf(err, "create bin dir %s failed", binDir)
 	}
@@ -227,7 +220,6 @@ func (s *BinariesDeactivator) String() string {
 
 func (s *BinariesDeactivator) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
-	fs := define.FS
 
 	commands, err := GetCommandsFromContext(ctx)
 	if err != nil {
@@ -241,8 +233,8 @@ func (s *BinariesDeactivator) Run(ctx context.Context) (context.Context, error) 
 	var errs error
 	for _, command := range commands {
 		binPath := s.helper.GetCommandBinPath(command.Name)
-		exists, err := afero.Exists(fs, binPath)
-		if !exists || err != nil {
+		_, err := os.Stat(binPath)
+		if err != nil {
 			logger.Debug("binary not found", map[string]interface{}{
 				"path": binPath,
 			})
@@ -253,7 +245,7 @@ func (s *BinariesDeactivator) Run(ctx context.Context) (context.Context, error) 
 			"path": binPath,
 		})
 
-		err = fs.Remove(binPath)
+		err = os.Remove(binPath)
 		if err != nil {
 			errs = multierror.Append(errs, errors.WithMessagef(err, "remove %s failed", binPath))
 			continue

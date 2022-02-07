@@ -60,7 +60,7 @@ func init() {
 func initConfig() {
 	cfg := config.Global
 
-	_, err := define.FS.Stat(cfgFile)
+	_, err := os.Stat(cfgFile)
 
 	if err == nil {
 		// Use config file from the flag.

@@ -7,8 +7,8 @@ import (
 	"github.com/asdine/storm/v3/q"
 	"github.com/pkg/errors"
 
+	"github.com/mrlyc/cmdr/core/model"
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
 )
 
 type CommandsQuerier struct {

@@ -3,19 +3,19 @@ package runner_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/asdine/storm/v3/q"
 	"github.com/jaswdr/faker"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 
 	"github.com/mrlyc/cmdr/config"
+	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/model"
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
-	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/runner"
 	"github.com/mrlyc/cmdr/utils"
 )
@@ -29,7 +29,7 @@ type commandTestSuite struct {
 }
 
 func (s *commandTestSuite) Setup() {
-	tempDir, err := afero.TempDir(define.FS, "", "")
+	tempDir, err := os.MkdirTemp("", "")
 	Expect(err).To(BeNil())
 
 	s.ctx = context.Background()
@@ -49,7 +49,7 @@ func (s *commandTestSuite) Setup() {
 }
 
 func (s *commandTestSuite) TearDown() {
-	Expect(define.FS.RemoveAll(s.helper.GetRootDir())).To(Succeed())
+	Expect(os.RemoveAll(s.helper.GetRootDir())).To(Succeed())
 }
 
 func (s *commandTestSuite) Bootstrap() {
@@ -59,7 +59,7 @@ func (s *commandTestSuite) Bootstrap() {
 }
 
 func (s *commandTestSuite) WithDB(fn func(db define.DBClient)) {
-	db, err := operator.NewDBClient(s.helper.GetDatabasePath())
+	db, err := core.NewDBClient(s.helper.GetDatabasePath())
 	Expect(err).To(BeNil())
 	defer db.Close()
 
@@ -97,11 +97,11 @@ func (s *commandTestSuite) GetBinaryContent(command *model.Command) []byte {
 }
 
 func (s *commandTestSuite) MakeCommandBinary() {
-	Expect(afero.WriteFile(define.FS, s.command.Location, s.GetBinaryContent(&s.command), 0755)).To(Succeed())
+	Expect(os.WriteFile(s.command.Location, s.GetBinaryContent(&s.command), 0755)).To(Succeed())
 }
 
 func (s *commandTestSuite) RemoveCommandBinary() {
-	Expect(define.FS.Remove(s.command.Location)).To(Succeed())
+	Expect(os.Remove(s.command.Location)).To(Succeed())
 }
 
 func (s *commandTestSuite) UpdateCommandVersion() string {
@@ -124,16 +124,16 @@ func (s *commandTestSuite) UpdateCommandLocation() string {
 }
 
 func (s *commandTestSuite) CheckCommandShims(command *model.Command) {
-	content, err := afero.ReadFile(define.FS, command.Location)
+	content, err := os.ReadFile(command.Location)
 	Expect(err).To(BeNil())
 	Expect(content).To(Equal(s.GetBinaryContent(command)))
 }
 
 func (s *commandTestSuite) CheckCommandBin(command *model.Command) {
-	shims, err := afero.ReadFile(define.FS, command.Location)
+	shims, err := os.ReadFile(command.Location)
 	Expect(err).To(BeNil())
 
-	bin, err := afero.ReadFile(define.FS, s.helper.GetCommandBinPath(s.command.Name))
+	bin, err := os.ReadFile(s.helper.GetCommandBinPath(s.command.Name))
 	Expect(err).To(BeNil())
 
 	Expect(shims).To(Equal(bin))

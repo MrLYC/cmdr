@@ -1,15 +1,14 @@
 package runner_test
 
 import (
+	"os"
 	"path/filepath"
 
 	"github.com/asdine/storm/v3/q"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/spf13/afero"
 
 	"github.com/mrlyc/cmdr/config"
-	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/runner"
 )
 
@@ -69,8 +68,8 @@ var _ = Describe("CommandInstall", func() {
 
 		It("should overwrite exists shims", func() {
 			shimsPath := suite.helper.GetCommandShimsPath(suite.command.Name, suite.command.Version)
-			Expect(define.FS.MkdirAll(filepath.Dir(shimsPath), 0755)).To(Succeed())
-			Expect(afero.WriteFile(define.FS, shimsPath, []byte{}, 0755)).To(Succeed())
+			Expect(os.MkdirAll(filepath.Dir(shimsPath), 0755)).To(Succeed())
+			Expect(os.WriteFile(shimsPath, []byte{}, 0755)).To(Succeed())
 
 			runInstaller()
 			suite.CheckCommandShims(&suite.command)
@@ -85,7 +84,7 @@ var _ = Describe("CommandInstall", func() {
 		})
 
 		It("should fail because location not exists", func() {
-			Expect(define.FS.Remove(suite.command.Location)).To(Succeed())
+			Expect(os.Remove(suite.command.Location)).To(Succeed())
 			installer := runner.NewInstallRunner(suite.cfg, suite.helper)
 			Expect(installer.Run(suite.ctx)).NotTo(Succeed())
 
@@ -123,7 +122,7 @@ var _ = Describe("CommandInstall", func() {
 
 		It("should activate a command even the bin does not exist", func() {
 			runInstaller()
-			Expect(define.FS.Remove(suite.helper.GetCommandBinPath(suite.command.Name))).To(Succeed())
+			Expect(os.Remove(suite.helper.GetCommandBinPath(suite.command.Name))).To(Succeed())
 
 			suite.cfg.Set(config.CfgKeyCommandInstallVersion, suite.UpdateCommandVersion())
 			suite.cfg.Set(config.CfgKeyCommandInstallLocation, suite.UpdateCommandLocation())

@@ -1,12 +1,13 @@
 package runner_test
 
 import (
+	"os"
+
 	"github.com/asdine/storm/v3/q"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"github.com/mrlyc/cmdr/config"
-	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/runner"
 )
 
@@ -59,7 +60,7 @@ var _ = Describe("CommandDefine", func() {
 		})
 
 		It("should raise error", func() {
-			Expect(define.FS.Remove(suite.command.Location)).To(Succeed())
+			Expect(os.Remove(suite.command.Location)).To(Succeed())
 			definer := runner.NewDefineRunner(suite.cfg, suite.helper)
 			Expect(definer.Run(suite.ctx)).NotTo(BeNil())
 

@@ -24,9 +24,7 @@ func (s *ShellProfiler) String() string {
 }
 
 func (s *ShellProfiler) isContainsProfile(path string) bool {
-	fs := define.FS
-
-	file, err := fs.Open(path)
+	file, err := os.Open(path)
 	if err != nil {
 		return false
 	}
@@ -66,8 +64,6 @@ func (s *ShellProfiler) getProfilePath() (string, error) {
 }
 
 func (s *ShellProfiler) Run(ctx context.Context) (context.Context, error) {
-	fs := define.FS
-
 	script := s.script
 	profile, err := s.getProfilePath()
 	if err != nil {
@@ -78,7 +74,7 @@ func (s *ShellProfiler) Run(ctx context.Context) (context.Context, error) {
 		return ctx, nil
 	}
 
-	file, err := fs.OpenFile(profile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(profile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return ctx, errors.Wrapf(err, "failed to open profile file")
 	}

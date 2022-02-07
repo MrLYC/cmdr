@@ -3,11 +3,11 @@ package operator
 import (
 	"context"
 	"net/url"
+	"os"
 	"path/filepath"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
-	"github.com/spf13/afero"
 
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
@@ -38,7 +38,7 @@ func (d *Downloader) Run(ctx context.Context) (context.Context, error) {
 			continue
 		}
 
-		d.tempDir, err = afero.TempDir(define.FS, "", "")
+		d.tempDir, err = os.MkdirTemp("", "")
 		utils.ExitWithError(err, "create temporary dir failed")
 
 		location := filepath.Join(d.tempDir, name)
@@ -67,7 +67,7 @@ func (d *Downloader) Commit(ctx context.Context) error {
 		return nil
 	}
 
-	return define.FS.RemoveAll(d.tempDir)
+	return os.RemoveAll(d.tempDir)
 }
 
 func NewDownloader() *Downloader {

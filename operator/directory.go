@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"os"
 
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
@@ -24,7 +25,7 @@ func (m *DirectoryMaker) Run(ctx context.Context) (context.Context, error) {
 			"dir":  p,
 		})
 		utils.ExitWithError(
-			define.FS.MkdirAll(p, 0755),
+			os.MkdirAll(p, 0755),
 			"making dir %s failed", n,
 		)
 	}
@@ -55,7 +56,7 @@ func (r *DirectoryRemover) Run(ctx context.Context) (context.Context, error) {
 			"dir":  p,
 		})
 		utils.ExitWithError(
-			define.FS.RemoveAll(p),
+			os.RemoveAll(p),
 			"removing dir %s failed", n,
 		)
 	}

@@ -8,13 +8,10 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-
-	"github.com/mrlyc/cmdr/define"
 )
 
 func ExtraTGZ(target, dir string) error {
-	fs := define.FS
-	src, err := fs.Open(target)
+	src, err := os.Open(target)
 	if err != nil {
 		return errors.Wrapf(err, "open %s failed", target)
 	}
@@ -41,7 +38,7 @@ func ExtraTGZ(target, dir string) error {
 		}
 
 		filename := filepath.Join(dir, header.Name)
-		file, err := fs.OpenFile(filename, os.O_CREATE|os.O_WRONLY, header.FileInfo().Mode().Perm())
+		file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, header.FileInfo().Mode().Perm())
 		if err != nil {
 			return errors.Wrapf(err, "create file %s failed", filename)
 		}

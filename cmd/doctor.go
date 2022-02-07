@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/config"
-	"github.com/mrlyc/cmdr/model"
+	"github.com/mrlyc/cmdr/core/model"
 	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/runner"
 	"github.com/mrlyc/cmdr/utils"

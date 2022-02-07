@@ -1,11 +1,12 @@
 package runner_test
 
 import (
+	"os"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"github.com/mrlyc/cmdr/config"
-	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/runner"
 )
 
@@ -49,7 +50,7 @@ var _ = Describe("CommandUninstall", func() {
 		It("should success to uninstall even shims not exists", func() {
 			suite.InstallCommand()
 
-			Expect(define.FS.Remove(suite.helper.GetCommandShimsPath(suite.command.Name, suite.command.Version))).To(Succeed())
+			Expect(os.Remove(suite.helper.GetCommandShimsPath(suite.command.Name, suite.command.Version))).To(Succeed())
 
 			uninstaller := runner.NewUninstallRunner(suite.cfg, suite.helper)
 			Expect(uninstaller.Run(suite.ctx)).To(Succeed())
@@ -72,7 +73,7 @@ var _ = Describe("CommandUninstall", func() {
 		It("should success to uninstall even bin not exists", func() {
 			suite.InstallActivatedCommand()
 
-			Expect(define.FS.Remove(suite.helper.GetCommandBinPath(suite.command.Name))).To(Succeed())
+			Expect(os.Remove(suite.helper.GetCommandBinPath(suite.command.Name))).To(Succeed())
 
 			uninstaller := runner.NewUninstallRunner(suite.cfg, suite.helper)
 			Expect(uninstaller.Run(suite.ctx)).To(Succeed())

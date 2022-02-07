@@ -6,8 +6,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/mrlyc/cmdr/core/model"
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
 	. "github.com/mrlyc/cmdr/operator"
 )
 

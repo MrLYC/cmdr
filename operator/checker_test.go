@@ -2,13 +2,13 @@ package operator_test
 
 import (
 	"context"
+	"os"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/spf13/afero"
 
+	"github.com/mrlyc/cmdr/core/model"
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/operator"
 )
 
@@ -21,7 +21,7 @@ var _ = Describe("Checker", func() {
 		)
 
 		BeforeEach(func() {
-			binary, err := afero.TempFile(define.FS, "", "")
+			binary, err := os.CreateTemp("", "")
 			Expect(err).To(BeNil())
 
 			location = binary.Name()
@@ -36,7 +36,7 @@ var _ = Describe("Checker", func() {
 		})
 
 		AfterEach(func() {
-			Expect(define.FS.Remove(location)).To(Succeed())
+			Expect(os.Remove(location)).To(Succeed())
 		})
 
 		It("should success", func() {

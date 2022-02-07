@@ -3,27 +3,12 @@ package operator
 import (
 	"context"
 
-	"github.com/asdine/storm/v3"
 	"github.com/pkg/errors"
 
+	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
 )
-
-type StormClient struct {
-	*storm.DB
-}
-
-func NewDBClient(path string) (define.DBClient, error) {
-	db, err := storm.Open(path)
-	if err != nil {
-		return nil, errors.Wrapf(err, "open database failed")
-	}
-
-	return &StormClient{
-		DB: db,
-	}, nil
-}
 
 type DBClientMaker struct {
 	client define.DBClient
@@ -36,7 +21,7 @@ func (m *DBClientMaker) String() string {
 
 func (m *DBClientMaker) Run(ctx context.Context) (context.Context, error) {
 	path := m.helper.GetDatabasePath()
-	client, err := NewDBClient(path)
+	client, err := core.NewDBClient(path)
 	if err != nil {
 		return ctx, errors.Wrapf(err, "create database client failed")
 	}

@@ -10,7 +10,7 @@ require (
 	github.com/google/go-github/v39 v39.1.1-0.20211008144426-6b0f37fa430d
 	github.com/gookit/color v1.4.2
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/jaswdr/faker v1.10.2 // indirect
+	github.com/jaswdr/faker v1.10.2
 	github.com/mattn/go-sqlite3 v1.14.8
 	github.com/muesli/termenv v0.9.0
 	github.com/onsi/ginkgo v1.16.5

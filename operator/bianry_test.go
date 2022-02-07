@@ -3,15 +3,15 @@ package operator_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-	"github.com/spf13/afero"
 
+	"github.com/mrlyc/cmdr/core/model"
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/utils"
 )
@@ -24,12 +24,12 @@ var _ = Describe("Bianry", func() {
 	)
 
 	BeforeEach(func() {
-		tempDir, err := afero.TempDir(define.FS, "", "")
+		tempDir, err := os.MkdirTemp("", "")
 		Expect(err).To(BeNil())
 		helper = utils.NewCmdrHelper(tempDir)
 
 		location1 := filepath.Join(tempDir, "test1.sh")
-		err = afero.WriteFile(define.FS, location1, []byte(`#!/bin/sh\necho $@`), 0755)
+		err = os.WriteFile(location1, []byte(`#!/bin/sh\necho $@`), 0755)
 		Expect(err).To(BeNil())
 
 		command1 = &model.Command{
@@ -40,7 +40,7 @@ var _ = Describe("Bianry", func() {
 		}
 
 		location2 := filepath.Join(tempDir, "test2.sh")
-		err = afero.WriteFile(define.FS, location2, []byte(`#!/bin/sh\necho $@`), 0755)
+		err = os.WriteFile(location2, []byte(`#!/bin/sh\necho $@`), 0755)
 		Expect(err).To(BeNil())
 
 		command2 = &model.Command{
@@ -54,7 +54,7 @@ var _ = Describe("Bianry", func() {
 	})
 
 	AfterEach(func() {
-		Expect(define.FS.RemoveAll(helper.GetRootDir())).To(Succeed())
+		Expect(os.RemoveAll(helper.GetRootDir())).To(Succeed())
 	})
 
 	Context("BinariesInstaller", func() {
@@ -73,12 +73,8 @@ var _ = Describe("Bianry", func() {
 			_, err := installer.Run(ctx)
 			Expect(err).To(BeNil())
 
-			Expect(
-				afero.Exists(define.FS, helper.GetCommandShimsPath(command1.Name, command1.Version)),
-			).To(BeTrue())
-			Expect(
-				afero.Exists(define.FS, helper.GetCommandShimsPath(command2.Name, command2.Version)),
-			).To(BeTrue())
+			Expect(helper.GetCommandShimsPath(command1.Name, command1.Version)).To(BeAnExistingFile())
+			Expect(helper.GetCommandShimsPath(command2.Name, command2.Version)).To(BeAnExistingFile())
 		})
 
 		It("install binaries partital success", func() {
@@ -87,12 +83,8 @@ var _ = Describe("Bianry", func() {
 			_, err := installer.Run(ctx)
 			Expect(err).NotTo(BeNil())
 
-			Expect(afero.Exists(
-				define.FS, helper.GetCommandShimsPath(command1.Name, command1.Version),
-			)).To(BeFalse())
-			Expect(afero.Exists(
-				define.FS, helper.GetCommandShimsPath(command2.Name, command2.Version),
-			)).To(BeTrue())
+			Expect(helper.GetCommandShimsPath(command1.Name, command1.Version)).NotTo(BeAnExistingFile())
+			Expect(helper.GetCommandShimsPath(command2.Name, command2.Version)).To(BeAnExistingFile())
 		})
 
 		It("install binaries with not managed", func() {
@@ -101,12 +93,8 @@ var _ = Describe("Bianry", func() {
 			_, err := installer.Run(ctx)
 			Expect(err).To(BeNil())
 
-			Expect(afero.Exists(
-				define.FS, helper.GetCommandShimsPath(command1.Name, command1.Version),
-			)).To(BeTrue())
-			Expect(afero.Exists(
-				define.FS, helper.GetCommandShimsPath(command2.Name, command2.Version),
-			)).To(BeFalse())
+			Expect(helper.GetCommandShimsPath(command1.Name, command1.Version)).To(BeAnExistingFile())
+			Expect(helper.GetCommandShimsPath(command2.Name, command2.Version)).NotTo(BeAnExistingFile())
 		})
 	})
 
@@ -121,12 +109,8 @@ var _ = Describe("Bianry", func() {
 			_, err := uninstaller.Run(ctx)
 			Expect(err).To(BeNil())
 
-			Expect(
-				afero.Exists(define.FS, command1.Location),
-			).To(BeFalse())
-			Expect(
-				afero.Exists(define.FS, command2.Location),
-			).To(BeFalse())
+			Expect(command1.Location).NotTo(BeAnExistingFile())
+			Expect(command2.Location).NotTo(BeAnExistingFile())
 		})
 
 		It("context not found", func() {
@@ -140,26 +124,18 @@ var _ = Describe("Bianry", func() {
 			_, err := uninstaller.Run(ctx)
 			Expect(err).To(BeNil())
 
-			Expect(
-				afero.Exists(define.FS, command1.Location),
-			).To(BeTrue())
-			Expect(
-				afero.Exists(define.FS, command2.Location),
-			).To(BeFalse())
+			Expect(command1.Location).To(BeAnExistingFile())
+			Expect(command2.Location).NotTo(BeAnExistingFile())
 		})
 
 		It("uninstall binaries that not exists", func() {
-			define.FS.Remove(command1.Location)
+			os.Remove(command1.Location)
 
 			_, err := uninstaller.Run(ctx)
 			Expect(err).To(BeNil())
 
-			Expect(
-				afero.Exists(define.FS, command1.Location),
-			).To(BeFalse())
-			Expect(
-				afero.Exists(define.FS, command2.Location),
-			).To(BeFalse())
+			Expect(command1.Location).NotTo(BeAnExistingFile())
+			Expect(command2.Location).NotTo(BeAnExistingFile())
 		})
 	})
 
@@ -170,8 +146,8 @@ var _ = Describe("Bianry", func() {
 			command1.Managed = true
 			command2.Managed = false
 
-			Expect(define.FS.MkdirAll(helper.GetCommandShimsDir(command1.Name), 0755)).To(Succeed())
-			Expect(define.FS.Rename(command1.Location, helper.GetCommandShimsPath(command1.Name, command1.Version))).To(Succeed())
+			Expect(os.MkdirAll(helper.GetCommandShimsDir(command1.Name), 0755)).To(Succeed())
+			Expect(os.Rename(command1.Location, helper.GetCommandShimsPath(command1.Name, command1.Version))).To(Succeed())
 			activator = operator.NewBinariesActivator(helper)
 		})
 
@@ -184,28 +160,20 @@ var _ = Describe("Bianry", func() {
 			_, err := activator.Run(ctx)
 			Expect(err).To(BeNil())
 
-			Expect(
-				afero.Exists(define.FS, helper.GetCommandBinPath(command1.Name)),
-			).To(BeTrue())
-			Expect(
-				afero.Exists(define.FS, helper.GetCommandBinPath(command2.Name)),
-			).To(BeTrue())
+			Expect(helper.GetCommandBinPath(command1.Name)).To(BeAnExistingFile())
+			Expect(helper.GetCommandBinPath(command2.Name)).To(BeAnExistingFile())
 		})
 
 		It("activate binaries that already exists", func() {
-			Expect(define.FS.MkdirAll(helper.GetBinDir(), 0755)).To(BeNil())
-			Expect(afero.WriteFile(define.FS, helper.GetCommandBinPath(command1.Name), []byte(""), 0755)).To(BeNil())
-			Expect(define.FS.MkdirAll(helper.GetCommandBinPath(command2.Name), 0755)).To(BeNil())
+			Expect(os.MkdirAll(helper.GetBinDir(), 0755)).To(BeNil())
+			Expect(os.WriteFile(helper.GetCommandBinPath(command1.Name), []byte(""), 0755)).To(BeNil())
+			Expect(os.MkdirAll(helper.GetCommandBinPath(command2.Name), 0755)).To(BeNil())
 
 			_, err := activator.Run(ctx)
 			Expect(err).To(BeNil())
 
-			Expect(
-				afero.Exists(define.FS, helper.GetCommandBinPath(command1.Name)),
-			).To(BeTrue())
-			Expect(
-				afero.Exists(define.FS, helper.GetCommandBinPath(command2.Name)),
-			).To(BeTrue())
+			Expect(helper.GetCommandBinPath(command1.Name)).To(BeAnExistingFile())
+			Expect(helper.GetCommandBinPath(command2.Name)).To(BeAnExistingFile())
 		})
 
 	})

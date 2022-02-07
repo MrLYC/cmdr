@@ -3,6 +3,7 @@ package operator_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/asdine/storm/v3"
@@ -10,11 +11,10 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-	"github.com/spf13/afero"
 
+	"github.com/mrlyc/cmdr/core/model"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/define/mock"
-	"github.com/mrlyc/cmdr/model"
 	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/utils"
 )
@@ -39,7 +39,7 @@ var _ = Describe("Command", func() {
 		dbQuery = mock.NewMockQuery(ctrl)
 		db.EXPECT().Select(gomock.Any()).Return(dbQuery).AnyTimes()
 
-		tempDir, err := afero.TempDir(define.FS, "", "")
+		tempDir, err := os.MkdirTemp("", "")
 		Expect(err).To(BeNil())
 		helper = utils.NewCmdrHelper(tempDir)
 
@@ -51,7 +51,7 @@ var _ = Describe("Command", func() {
 		version = "1.0.0"
 
 		location1 := filepath.Join(tempDir, "test1.sh")
-		err = afero.WriteFile(define.FS, location1, []byte(`#!/bin/sh\necho $@`), 0755)
+		err = os.WriteFile(location1, []byte(`#!/bin/sh\necho $@`), 0755)
 		Expect(err).To(BeNil())
 
 		command1 = &model.Command{
@@ -63,7 +63,7 @@ var _ = Describe("Command", func() {
 		}
 
 		location2 := filepath.Join(tempDir, "test2.sh")
-		err = afero.WriteFile(define.FS, location2, []byte(`#!/bin/sh\necho $@`), 0755)
+		err = os.WriteFile(location2, []byte(`#!/bin/sh\necho $@`), 0755)
 		Expect(err).To(BeNil())
 
 		command2 = &model.Command{
@@ -78,7 +78,7 @@ var _ = Describe("Command", func() {
 	})
 
 	AfterEach(func() {
-		Expect(define.FS.RemoveAll(helper.GetRootDir())).To(Succeed())
+		Expect(os.RemoveAll(helper.GetRootDir())).To(Succeed())
 		ctrl.Finish()
 	})
 

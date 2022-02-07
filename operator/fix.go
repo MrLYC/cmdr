@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"os"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -20,7 +21,6 @@ func (s *BrokenCommandsFixer) String() string {
 }
 
 func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) {
-	fs := define.FS
 	logger := define.Logger
 
 	var errs error
@@ -36,7 +36,7 @@ func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) 
 			location = s.helper.GetCommandShimsPath(command.Name, command.Version)
 		}
 
-		_, err := fs.Stat(location)
+		_, err := os.Stat(location)
 		if err == nil {
 			continue
 		}

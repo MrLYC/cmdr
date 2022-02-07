@@ -8,8 +8,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/schollz/progressbar/v3"
-
-	"github.com/mrlyc/cmdr/define"
 )
 
 func DownloadToFile(ctx context.Context, url, output string) error {
@@ -18,7 +16,7 @@ func DownloadToFile(ctx context.Context, url, output string) error {
 		return errors.Wrapf(err, "create request failed")
 	}
 
-	f, err := define.FS.OpenFile(output, os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return errors.Wrapf(err, "create output file failed")
 	}

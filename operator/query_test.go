@@ -2,6 +2,7 @@ package operator_test
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 
 	"github.com/asdine/storm/v3/q"
@@ -9,8 +10,9 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/spf13/afero"
 
+	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/model"
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/model"
 	. "github.com/mrlyc/cmdr/operator"
 )
 
@@ -25,13 +27,13 @@ var _ = Describe("Query", func() {
 		Expect(err).To(BeNil())
 
 		dbPath = filepath.Join(tempDir, "cmdr.db")
-		db, err = NewDBClient(dbPath)
+		db, err = core.NewDBClient(dbPath)
 		Expect(err).To(BeNil())
 	})
 
 	AfterEach(func() {
 		db.Close()
-		Expect(define.FS.RemoveAll(dbPath)).To(BeNil())
+		Expect(os.RemoveAll(dbPath)).To(BeNil())
 	})
 
 	Context("Run", func() {
