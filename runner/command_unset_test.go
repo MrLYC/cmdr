@@ -21,41 +21,44 @@ var _ = Describe("CommandUnset", func() {
 	})
 
 	Context("Success", func() {
-		It("should success to uninstall not activated command", func() {
+		It("should success to unset not activated command", func() {
 			suite.InstallCommand()
 
-			uninstaller := runner.NewUnsetRunner(suite.cfg, suite.helper)
-			Expect(uninstaller.Run(suite.ctx)).To(Succeed())
+			unsetter := runner.NewUnsetRunner(suite.cfg, suite.helper)
+			Expect(unsetter.Run(suite.ctx)).To(Succeed())
 
 			command := suite.MustGetCommand()
 			Expect(command.Activated).To(BeFalse())
+			Expect(suite.helper.GetCommandBinPath(command.Name)).NotTo(BeAnExistingFile())
 		})
-		It("should success to uninstall activated command", func() {
+
+		It("should success to unset activated command", func() {
 			suite.InstallActivatedCommand()
 
-			uninstaller := runner.NewUnsetRunner(suite.cfg, suite.helper)
-			Expect(uninstaller.Run(suite.ctx)).To(Succeed())
+			unsetter := runner.NewUnsetRunner(suite.cfg, suite.helper)
+			Expect(unsetter.Run(suite.ctx)).To(Succeed())
 
 			command := suite.MustGetCommand()
 			Expect(command.Activated).To(BeFalse())
+			Expect(suite.helper.GetCommandBinPath(command.Name)).NotTo(BeAnExistingFile())
 		})
 
-		It("should success to uninstall even shims not exists", func() {
+		It("should success to unset even shims not exists", func() {
 			suite.InstallActivatedCommand()
 
 			Expect(define.FS.Remove(suite.helper.GetCommandShimsPath(suite.command.Name, suite.command.Version))).To(Succeed())
 
-			uninstaller := runner.NewUnsetRunner(suite.cfg, suite.helper)
-			Expect(uninstaller.Run(suite.ctx)).To(Succeed())
+			unsetter := runner.NewUnsetRunner(suite.cfg, suite.helper)
+			Expect(unsetter.Run(suite.ctx)).To(Succeed())
 		})
 
-		It("should success to uninstall even shims not exists", func() {
+		It("should success to unset even shims not exists", func() {
 			suite.InstallActivatedCommand()
 
 			Expect(define.FS.Remove(suite.helper.GetCommandBinPath(suite.command.Name))).To(Succeed())
 
-			uninstaller := runner.NewUnsetRunner(suite.cfg, suite.helper)
-			Expect(uninstaller.Run(suite.ctx)).To(Succeed())
+			unsetter := runner.NewUnsetRunner(suite.cfg, suite.helper)
+			Expect(unsetter.Run(suite.ctx)).To(Succeed())
 		})
 	})
 })

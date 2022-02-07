@@ -235,20 +235,6 @@ var _ = Describe("Command", func() {
 			Expect(errors.Cause(err)).To(Equal(operator.ErrContextValueNotFound))
 		})
 
-		It("query not found", func() {
-			dbQuery.EXPECT().Find(gomock.Any()).Return(storm.ErrNotFound).AnyTimes()
-
-			_, err := deactivator.Run(ctx)
-			Expect(err).To(BeNil())
-		})
-
-		It("query failed", func() {
-			dbQuery.EXPECT().Find(gomock.Any()).Return(fmt.Errorf("test")).AnyTimes()
-
-			_, err := deactivator.Run(ctx)
-			Expect(err).NotTo(BeNil())
-		})
-
 		It("deactivated", func() {
 			count := 0
 

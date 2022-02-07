@@ -12,6 +12,7 @@ func NewUnsetRunner(cfg define.Configuration, helper *utils.CmdrHelper) define.R
 		operator.NewDBClientMaker(helper),
 		operator.NewNamedCommandsQuerier(cfg.GetString(config.CfgKeyCommandUnsetName)),
 		operator.NewCommandsChecker(),
+		operator.NewBinariesDeactivator(helper),
 		operator.NewCommandDeactivator(),
 	)
 }

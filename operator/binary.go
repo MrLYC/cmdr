@@ -215,3 +215,56 @@ func NewBinariesActivator(helper *utils.CmdrHelper) *BinariesActivator {
 		helper: helper,
 	}
 }
+
+type BinariesDeactivator struct {
+	BaseOperator
+	helper *utils.CmdrHelper
+}
+
+func (s *BinariesDeactivator) String() string {
+	return "binaries-deactivator"
+}
+
+func (s *BinariesDeactivator) Run(ctx context.Context) (context.Context, error) {
+	logger := define.Logger
+	fs := define.FS
+
+	commands, err := GetCommandsFromContext(ctx)
+	if err != nil {
+		return ctx, errors.Wrapf(ErrContextValueNotFound, "get commands from context failed")
+	}
+
+	logger.Info("deactivating binaries", map[string]interface{}{
+		"count": len(commands),
+	})
+
+	var errs error
+	for _, command := range commands {
+		binPath := s.helper.GetCommandBinPath(command.Name)
+		exists, err := afero.Exists(fs, binPath)
+		if !exists || err != nil {
+			logger.Debug("binary not found", map[string]interface{}{
+				"path": binPath,
+			})
+			continue
+		}
+
+		logger.Info("deactivating binary", map[string]interface{}{
+			"path": binPath,
+		})
+
+		err = fs.Remove(binPath)
+		if err != nil {
+			errs = multierror.Append(errs, errors.WithMessagef(err, "remove %s failed", binPath))
+			continue
+		}
+	}
+
+	return ctx, errs
+}
+
+func NewBinariesDeactivator(helper *utils.CmdrHelper) *BinariesDeactivator {
+	return &BinariesDeactivator{
+		helper: helper,
+	}
+}
