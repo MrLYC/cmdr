@@ -1,6 +1,10 @@
 package operator
 
-import "context"
+import (
+	"context"
+
+	"github.com/mrlyc/cmdr/core"
+)
 
 type BaseOperator struct{}
 
@@ -17,4 +21,15 @@ func (s *BaseOperator) Commit(ctx context.Context) error {
 }
 
 func (s *BaseOperator) Rollback(ctx context.Context) {
+}
+
+type CmdrOperator struct {
+	BaseOperator
+	cmdr *core.Cmdr
+}
+
+func NewCmdrOperator(cmdr *core.Cmdr) *CmdrOperator {
+	return &CmdrOperator{
+		cmdr: cmdr,
+	}
 }

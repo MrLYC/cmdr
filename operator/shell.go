@@ -10,12 +10,13 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/utils"
 )
 
 type ShellProfiler struct {
-	BaseOperator
+	*CmdrOperator
 	script string
 }
 
@@ -88,8 +89,14 @@ func (s *ShellProfiler) Run(ctx context.Context) (context.Context, error) {
 	return ctx, nil
 }
 
-func NewShellProfiler(helper *utils.CmdrHelper) *ShellProfiler {
+func NewShellProfiler(cmdr *core.Cmdr) *ShellProfiler {
+	binPath, err := cmdr.BinaryManager.BinManager.RealPath(define.Name)
+	if err != nil {
+		panic(err)
+	}
+
 	return &ShellProfiler{
-		script: fmt.Sprintf(`eval "$(%s init)"`, helper.GetCommandBinPath(define.Name)),
+		CmdrOperator: NewCmdrOperator(cmdr),
+		script:       fmt.Sprintf(`eval "$(%s init)"`, binPath),
 	}
 }

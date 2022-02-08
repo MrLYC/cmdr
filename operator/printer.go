@@ -32,10 +32,6 @@ func (p *CommandPrinter) Run(ctx context.Context) (context.Context, error) {
 
 		parts = append(parts, command.Name, command.Version)
 
-		if !command.Managed {
-			parts = append(parts, fmt.Sprintf("@%s", command.Location))
-		}
-
 		fmt.Fprintf(p.writer, "%s\n", strings.Join(parts, " "))
 	}
 

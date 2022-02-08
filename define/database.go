@@ -9,3 +9,5 @@ type DBClient interface {
 	storm.TypeStore
 	Close() error
 }
+
+type DBQuery = storm.Query

@@ -6,48 +6,10 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
-	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/utils"
 )
 
-type DBClientMaker struct {
-	client define.DBClient
-	helper *utils.CmdrHelper
-}
-
-func (m *DBClientMaker) String() string {
-	return "db-client"
-}
-
-func (m *DBClientMaker) Run(ctx context.Context) (context.Context, error) {
-	path := m.helper.GetDatabasePath()
-	client, err := core.NewDBClient(path)
-	if err != nil {
-		return ctx, errors.Wrapf(err, "create database client failed")
-	}
-
-	m.client = client
-
-	return context.WithValue(ctx, define.ContextKeyDBClient, m.client), nil
-}
-
-func (m *DBClientMaker) Commit(ctx context.Context) error {
-	return m.client.Close()
-}
-
-func (m *DBClientMaker) Rollback(ctx context.Context) {
-	_ = m.client.Close()
-}
-
-func NewDBClientMaker(helper *utils.CmdrHelper) *DBClientMaker {
-	return &DBClientMaker{
-		helper: helper,
-	}
-}
-
 type DBMigrator struct {
-	BaseOperator
-	models []interface{}
+	*CmdrOperator
 }
 
 func (m *DBMigrator) String() string {
@@ -55,30 +17,16 @@ func (m *DBMigrator) String() string {
 }
 
 func (m *DBMigrator) Run(ctx context.Context) (context.Context, error) {
-	client := GetDBClientFromContext(ctx)
-	logger := define.Logger
-
-	logger.Debug("database migrating")
-	for _, model := range m.models {
-		logger.Debug("migrating model", map[string]interface{}{
-			"model": model,
-		})
-		err := client.Init(model)
-		if err != nil {
-			return ctx, errors.Wrapf(err, "migrate model %T failed", model)
-		}
-
-		err = client.ReIndex(model)
-		if err != nil {
-			return ctx, errors.Wrapf(err, "indexing model %T failed", model)
-		}
+	err := m.cmdr.Init()
+	if err != nil {
+		return ctx, errors.Wrapf(err, "initialize cmdr failed")
 	}
 
 	return ctx, nil
 }
 
-func NewDBMigrator(models ...interface{}) *DBMigrator {
+func NewDBMigrator(cmdr *core.Cmdr) *DBMigrator {
 	return &DBMigrator{
-		models: models,
+		CmdrOperator: NewCmdrOperator(cmdr),
 	}
 }

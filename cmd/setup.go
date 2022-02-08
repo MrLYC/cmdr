@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/config"
+	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/runner"
@@ -24,23 +25,27 @@ var setupCmd = &cobra.Command{
 	Short: "Setup cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.GetGlobalConfiguration()
-		helper := utils.NewCmdrHelper(cfg.GetString(config.CfgKeyCmdrRoot))
-		runner := runner.NewMigrateRunner(cfg, helper)
+		cmdr, err := core.NewCmdr(cfg.GetString(config.CfgKeyCmdrRoot))
+		if err != nil {
+			utils.ExitWithError(err, "create cmdr failed")
+		}
+
+		runner := runner.NewMigrateRunner(cfg, cmdr)
 
 		cmdrLocation, err := os.Executable()
 		utils.CheckError(err)
 
 		if !setupCmdFlag.skipInstall && !setupCmdFlag.upgrade {
 			runner.Add(
-				operator.NewCommandDefiner(define.Name, define.Version, cmdrLocation, true, helper),
-				operator.NewBinariesInstaller(helper),
+				operator.NewCommandDefiner(cmdr, define.Name, define.Version, cmdrLocation),
+				operator.NewBinariesInstaller(cmdr, true),
 			)
 		}
 
 		if !setupCmdFlag.skipProfile {
 			runner.Add(
 				operator.NewOperatorLoggerWithFields("writing profile"),
-				operator.NewShellProfiler(helper),
+				operator.NewShellProfiler(cmdr),
 			)
 		}
 

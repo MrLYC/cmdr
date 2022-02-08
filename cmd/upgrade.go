@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/mrlyc/cmdr/config"
+	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/runner"
@@ -29,10 +30,13 @@ var upgradeCmd = &cobra.Command{
 		ctx := cmd.Context()
 		logger := define.Logger
 		cfg := config.GetGlobalConfiguration()
-		helper := utils.NewCmdrHelper(cfg.GetString(config.CfgKeyCmdrRoot))
+		cmdr, err := core.NewCmdr(cfg.GetString(config.CfgKeyCmdrRoot))
+		if err != nil {
+			utils.ExitWithError(err, "create cmdr failed")
+		}
+
 		runner := runner.New(
-			operator.NewDBClientMaker(helper),
-			operator.NewCommandDefiner(define.Name, define.Version, upgradeCmdFlag.location, true, helper),
+			operator.NewCommandDefiner(cmdr, define.Name, define.Version, upgradeCmdFlag.location),
 		)
 
 		if upgradeCmdFlag.location == "" {
@@ -43,17 +47,17 @@ var upgradeCmd = &cobra.Command{
 		}
 
 		runner.Add(
-			operator.NewBinariesInstaller(helper),
+			operator.NewBinariesInstaller(cmdr, true),
 		)
 
 		if !upgradeCmdFlag.keep {
 			runner.Add(
-				operator.NewCommandDeactivator(),
-				operator.NewBinariesActivator(helper),
-				operator.NewCommandActivator(),
+				operator.NewCommandDeactivator(cmdr),
+				operator.NewBinariesActivator(cmdr),
+				operator.NewCommandActivator(cmdr),
 				operator.NewNamedCommandsQuerier(define.Name),
-				operator.NewCommandUndefiner(),
-				operator.NewBinariesUninstaller(),
+				operator.NewCommandUndefiner(cmdr),
+				operator.NewBinariesUninstaller(cmdr),
 			)
 		}
 
@@ -77,7 +81,11 @@ var upgradeCmd = &cobra.Command{
 			"args": runArgs,
 		})
 
-		utils.ExitWithError(utils.WaitProcess(ctx, helper.GetCommandBinPath(define.Name), runArgs), "setup failed")
+		binPath, err := cmdr.BinaryManager.BinManager.RealPath(define.Name)
+		if err != nil {
+			utils.ExitWithError(err, "get binary path failed")
+		}
+		utils.ExitWithError(utils.WaitProcess(ctx, binPath, runArgs), "setup failed")
 	},
 }
 

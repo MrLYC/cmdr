@@ -36,7 +36,6 @@ var _ = Describe("Bianry", func() {
 			Name:     "test1",
 			Version:  "1.0.0",
 			Location: location1,
-			Managed:  true,
 		}
 
 		location2 := filepath.Join(tempDir, "test2.sh")
@@ -47,7 +46,6 @@ var _ = Describe("Bianry", func() {
 			Name:     "test2",
 			Version:  "1.0.0",
 			Location: location2,
-			Managed:  true,
 		}
 
 		ctx = context.WithValue(context.Background(), define.ContextKeyCommands, []*model.Command{command1, command2})

@@ -4,19 +4,17 @@ import (
 	"context"
 
 	"github.com/asdine/storm/v3"
-	"github.com/asdine/storm/v3/q"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 
+	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/model"
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/utils"
 )
 
 type CommandDefiner struct {
-	BaseOperator
+	*CmdrOperator
 	command model.Command
-	helper  *utils.CmdrHelper
 }
 
 func (i *CommandDefiner) String() string {
@@ -25,17 +23,20 @@ func (i *CommandDefiner) String() string {
 
 func (i *CommandDefiner) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
-	client := GetDBClientFromContext(ctx)
-
 	logger.Info("define command", map[string]interface{}{
 		"name":     i.command.Name,
 		"version":  i.command.Version,
 		"location": i.command.Location,
-		"managed":  i.command.Managed,
 	})
 
 	var command model.Command
-	err := client.Select(q.Eq("Name", i.command.Name), q.Eq("Version", i.command.Version)).First(&command)
+	err := i.cmdr.CommandManager.
+		Query().
+		WithName(i.command.Name).
+		WithVersion(i.command.Version).
+		Done().
+		First(&command)
+
 	switch errors.Cause(err) {
 	case nil:
 		i.command.ID = command.ID
@@ -49,20 +50,14 @@ func (i *CommandDefiner) Run(ctx context.Context) (context.Context, error) {
 
 func (i *CommandDefiner) Commit(ctx context.Context) error {
 	logger := define.Logger
-	client := GetDBClientFromContext(ctx)
-
-	if i.command.Managed {
-		i.command.Location = i.helper.GetCommandShimsPath(i.command.Name, i.command.Version)
-	}
 
 	logger.Debug("saving command", map[string]interface{}{
 		"name":     i.command.Name,
 		"version":  i.command.Version,
 		"location": i.command.Location,
-		"managed":  i.command.Managed,
 	})
 
-	err := client.Save(&i.command)
+	err := i.cmdr.CommandManager.Client.Update(&i.command)
 	if err != nil {
 		return errors.Wrapf(err, "save command failed")
 	}
@@ -70,29 +65,27 @@ func (i *CommandDefiner) Commit(ctx context.Context) error {
 	return nil
 }
 
-func NewCommandDefiner(name, version, location string, managed bool, helper *utils.CmdrHelper) *CommandDefiner {
+func NewCommandDefiner(cmdr *core.Cmdr, name, version, location string) *CommandDefiner {
 	return &CommandDefiner{
-		helper: helper,
+		CmdrOperator: NewCmdrOperator(cmdr),
 		command: model.Command{
 			Name:     name,
 			Version:  version,
 			Location: location,
-			Managed:  managed,
 		},
 	}
 }
 
 type CommandUndefiner struct {
-	BaseOperator
+	*CmdrOperator
 }
 
-func (s *CommandUndefiner) String() string {
+func (i *CommandUndefiner) String() string {
 	return "command-undefiner"
 }
 
-func (s *CommandUndefiner) Run(ctx context.Context) (context.Context, error) {
+func (i *CommandUndefiner) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
-	client := GetDBClientFromContext(ctx)
 
 	commands, err := GetCommandsFromContext(ctx)
 	if err != nil {
@@ -106,7 +99,7 @@ func (s *CommandUndefiner) Run(ctx context.Context) (context.Context, error) {
 			"version": command.Version,
 		})
 
-		err = client.DeleteStruct(command)
+		err = i.cmdr.CommandManager.Client.DeleteStruct(command)
 		switch err {
 		case nil, storm.ErrNotFound:
 		default:
@@ -117,19 +110,21 @@ func (s *CommandUndefiner) Run(ctx context.Context) (context.Context, error) {
 	return ctx, errs
 }
 
-func NewCommandUndefiner() *CommandUndefiner {
-	return &CommandUndefiner{}
+func NewCommandUndefiner(cmdr *core.Cmdr) *CommandUndefiner {
+	return &CommandUndefiner{
+		CmdrOperator: NewCmdrOperator(cmdr),
+	}
 }
 
 type CommandActivator struct {
-	BaseOperator
+	*CmdrOperator
 }
 
-func (s *CommandActivator) String() string {
+func (i *CommandActivator) String() string {
 	return "command-activator"
 }
 
-func (s *CommandActivator) Run(ctx context.Context) (context.Context, error) {
+func (i *CommandActivator) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
 
 	commands, err := GetCommandsFromContext(ctx)
@@ -144,9 +139,7 @@ func (s *CommandActivator) Run(ctx context.Context) (context.Context, error) {
 			"version": command.Version,
 		})
 
-		client := GetDBClientFromContext(ctx)
-		command.Activated = true
-		err = client.Save(command)
+		err = i.cmdr.CommandManager.Activate(command)
 		if err != nil {
 			errs = multierror.Append(errs, errors.Wrapf(err, "activate command failed"))
 		}
@@ -155,37 +148,21 @@ func (s *CommandActivator) Run(ctx context.Context) (context.Context, error) {
 	return ctx, errs
 }
 
-func NewCommandActivator() *CommandActivator {
-	return &CommandActivator{}
+func NewCommandActivator(cmdr *core.Cmdr) *CommandActivator {
+	return &CommandActivator{
+		CmdrOperator: NewCmdrOperator(cmdr),
+	}
 }
 
 type CommandsDeactivator struct {
-	BaseOperator
+	*CmdrOperator
 }
 
-func (s *CommandsDeactivator) String() string {
+func (i *CommandsDeactivator) String() string {
 	return "command-deactivator"
 }
 
-func (s *CommandsDeactivator) deactivateCommand(ctx context.Context, command *model.Command) error {
-	logger := define.Logger
-	client := GetDBClientFromContext(ctx)
-
-	logger.Info("deactivating command", map[string]interface{}{
-		"name":    command.Name,
-		"version": command.Version,
-	})
-
-	command.Activated = false
-	err := client.Save(command)
-	if err != nil {
-		return errors.Wrapf(err, "deactivate command %s failed", command.Name)
-	}
-
-	return nil
-}
-
-func (s *CommandsDeactivator) Run(ctx context.Context) (context.Context, error) {
+func (i *CommandsDeactivator) Run(ctx context.Context) (context.Context, error) {
 	var errs error
 
 	commands, err := GetCommandsFromContext(ctx)
@@ -194,7 +171,7 @@ func (s *CommandsDeactivator) Run(ctx context.Context) (context.Context, error) 
 	}
 
 	for _, command := range commands {
-		err := s.deactivateCommand(ctx, command)
+		err := i.cmdr.CommandManager.DeactivateAll(command.Name)
 		if err != nil {
 			errs = multierror.Append(errs, err)
 		}
@@ -203,8 +180,10 @@ func (s *CommandsDeactivator) Run(ctx context.Context) (context.Context, error) 
 	return ctx, errs
 }
 
-func NewCommandDeactivator() *CommandsDeactivator {
-	return &CommandsDeactivator{}
+func NewCommandDeactivator(cmdr *core.Cmdr) *CommandsDeactivator {
+	return &CommandsDeactivator{
+		CmdrOperator: NewCmdrOperator(cmdr),
+	}
 }
 
 type CommandHandler struct {

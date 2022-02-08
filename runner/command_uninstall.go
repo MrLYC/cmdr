@@ -2,20 +2,19 @@ package runner
 
 import (
 	"github.com/mrlyc/cmdr/config"
+	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/operator"
-	"github.com/mrlyc/cmdr/utils"
 )
 
-func NewUninstallRunner(cfg define.Configuration, helper *utils.CmdrHelper) define.Runner {
+func NewUninstallRunner(cfg define.Configuration, cmdr *core.Cmdr) define.Runner {
 	return New(
-		operator.NewDBClientMaker(helper),
 		operator.NewSimpleCommandsQuerier(
 			cfg.GetString(config.CfgKeyCommandUninstallName),
 			cfg.GetString(config.CfgKeyCommandUninstallVersion),
 		),
 		operator.NewCommandsChecker(),
-		operator.NewCommandUndefiner(),
-		operator.NewBinariesUninstaller(),
+		operator.NewCommandUndefiner(cmdr),
+		operator.NewBinariesUninstaller(cmdr),
 	)
 }

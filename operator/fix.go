@@ -2,42 +2,34 @@ package operator
 
 import (
 	"context"
-	"os"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 
+	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/utils"
 )
 
 type BrokenCommandsFixer struct {
-	BaseOperator
-	helper *utils.CmdrHelper
+	*CmdrOperator
 }
 
-func (s *BrokenCommandsFixer) String() string {
+func (i *BrokenCommandsFixer) String() string {
 	return "broken-commands-fixer"
 }
 
-func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) {
+func (i *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) {
 	logger := define.Logger
 
 	var errs error
-	client := GetDBClientFromContext(ctx)
 	commands, err := GetCommandsFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
 
 	for _, command := range commands {
-		location := command.Location
-		if command.Managed {
-			location = s.helper.GetCommandShimsPath(command.Name, command.Version)
-		}
-
-		_, err := os.Stat(location)
-		if err == nil {
+		shimsName := i.cmdr.BinaryManager.ShimsName(command.Name, command.Version)
+		if i.cmdr.BinaryManager.ShimsManager.Exists(shimsName) == nil {
 			continue
 		}
 
@@ -48,7 +40,7 @@ func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) 
 			"err":      err,
 		})
 
-		err = client.DeleteStruct(command)
+		err = i.cmdr.CommandManager.Delete(command)
 		if err != nil {
 			errs = multierror.Append(errs, errors.Wrapf(err, "remove command %s(%s) failed", command.Name, command.Version))
 			continue
@@ -63,8 +55,8 @@ func (s *BrokenCommandsFixer) Run(ctx context.Context) (context.Context, error) 
 	return ctx, errs
 }
 
-func NewBrokenCommandsFixer(helper *utils.CmdrHelper) *BrokenCommandsFixer {
+func NewBrokenCommandsFixer(cmdr *core.Cmdr) *BrokenCommandsFixer {
 	return &BrokenCommandsFixer{
-		helper: helper,
+		CmdrOperator: NewCmdrOperator(cmdr),
 	}
 }

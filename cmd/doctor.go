@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/config"
-	"github.com/mrlyc/cmdr/core/model"
+	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/operator"
 	"github.com/mrlyc/cmdr/runner"
 	"github.com/mrlyc/cmdr/utils"
@@ -21,22 +21,26 @@ var doctorCmd = &cobra.Command{
 	Short: "Check and fix cmdr environment",
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.GetGlobalConfiguration()
-		helper := utils.NewCmdrHelper(cfg.GetString(config.CfgKeyCmdrRoot))
-		binDir := helper.GetBinDir()
+
+		cmdr, err := core.NewCmdr(cfg.GetString(config.CfgKeyCmdrRoot))
+		if err != nil {
+			utils.ExitWithError(err, "create cmdr failed")
+		}
+		shimsDir := cmdr.BinaryManager.ShimsManager.Path()
+		binDir := cmdr.BinaryManager.BinManager.Path()
+
 		runner := runner.New(
-			operator.NewDBClientMaker(helper),
-			operator.NewDBMigrator(new(model.Command)),
+			operator.NewDBMigrator(cmdr),
 			operator.NewCommandsQuerier([]q.Matcher{q.Eq("Activated", true)}),
-			operator.NewBrokenCommandsFixer(helper),
+			operator.NewBrokenCommandsFixer(cmdr),
 			operator.NewDirectoryRemover(map[string]string{
 				"bin": binDir,
 			}),
 			operator.NewDirectoryMaker(map[string]string{
-				"shims": helper.GetShimsDir(),
+				"shims": shimsDir,
 				"bin":   binDir,
 			}),
-			operator.NewBinariesInstaller(helper),
-			operator.NewBinariesActivator(helper),
+			operator.NewBinariesActivator(cmdr),
 		)
 
 		utils.ExitWithError(runner.Run(cmd.Context()), "doctor failed")
