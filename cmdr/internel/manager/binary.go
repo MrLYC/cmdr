@@ -1,0 +1,278 @@
+package manager
+
+import (
+	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"strings"
+
+	. "github.com/ahmetb/go-linq/v3"
+	"github.com/homedepot/flop"
+	"github.com/pkg/errors"
+
+	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/cmdr/utils"
+)
+
+var ErrBinariesNotFound = fmt.Errorf("binaries not found")
+
+type Binary struct {
+	binDir    string
+	shimsDir  string
+	name      string
+	version   string
+	shimsName string
+}
+
+func (b *Binary) Name() string {
+	return b.name
+}
+
+func (b *Binary) Version() string {
+	return b.version
+}
+
+func (b *Binary) Activated() bool {
+	binHelper := utils.NewPathHelper(b.binDir)
+	binPath, err := binHelper.RealPath(b.name)
+	if err != nil {
+		return false
+	}
+
+	return binPath == b.Location()
+}
+
+func (b *Binary) Location() string {
+	shimsHelper := utils.NewPathHelper(b.shimsDir).Child(b.shimsName)
+	path, err := shimsHelper.AbsPath(b.shimsName)
+	if err != nil {
+		return ""
+	}
+
+	return path
+}
+
+func (b *Binary) Provider() cmdr.CommandProvider {
+	return cmdr.CommandProviderBinary
+}
+
+func NewBinary(binDir, shimsDir, name, version, shimsName string) *Binary {
+	return &Binary{
+		binDir:    binDir,
+		shimsDir:  shimsDir,
+		name:      name,
+		version:   version,
+		shimsName: shimsName,
+	}
+}
+
+type BinariesFilter struct {
+	binaries []*Binary
+}
+
+func (f *BinariesFilter) Filter(fn func(b interface{}) bool) *BinariesFilter {
+	From(f.binaries).Where(fn).ToSlice(&f.binaries)
+	return f
+}
+
+func (f *BinariesFilter) WithName(name string) cmdr.CommandQuery {
+	return f.Filter(func(b interface{}) bool {
+		return b.(*Binary).Name() == name
+	})
+}
+
+func (f *BinariesFilter) WithVersion(version string) cmdr.CommandQuery {
+	return f.Filter(func(b interface{}) bool {
+		return b.(*Binary).Version() == version
+	})
+}
+
+func (f *BinariesFilter) WithActivated(activated bool) cmdr.CommandQuery {
+	return f.Filter(func(b interface{}) bool {
+		return b.(*Binary).Activated() == activated
+	})
+}
+
+func (f *BinariesFilter) WithLocation(location string) cmdr.CommandQuery {
+	return f.Filter(func(b interface{}) bool {
+		return b.(*Binary).Location() == location
+	})
+}
+
+func (f *BinariesFilter) All() ([]cmdr.Command, error) {
+	var commands []cmdr.Command
+	for _, b := range f.binaries {
+		commands = append(commands, b)
+	}
+
+	return commands, nil
+}
+
+func (f *BinariesFilter) One() (cmdr.Command, error) {
+	if len(f.binaries) == 0 {
+		return nil, errors.Wrapf(ErrBinariesNotFound, "binaries not found")
+	}
+
+	return f.binaries[0], nil
+}
+
+func (f *BinariesFilter) Count() (int, error) {
+	return len(f.binaries), nil
+}
+
+func NewBinariesFilter(binaries []*Binary) *BinariesFilter {
+	return &BinariesFilter{binaries}
+}
+
+type BinaryManager struct {
+	binDir   string
+	shimsDir string
+	dirMode  os.FileMode
+	linkFn   func(src, dst string) error
+}
+
+func (m *BinaryManager) Init() error {
+	for _, path := range []string{m.binDir, m.shimsDir} {
+		helper := utils.NewPathHelper(path)
+		err := helper.MkdirAll(m.dirMode)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *BinaryManager) Provider() cmdr.CommandProvider {
+	return cmdr.CommandProviderBinary
+}
+
+func (m *BinaryManager) ShimsName(name, version string) string {
+	return fmt.Sprintf("%s_%s", name, version)
+}
+
+func (m *BinaryManager) Query() (cmdr.CommandQuery, error) {
+	var binaries []*Binary
+
+	err := filepath.Walk(m.shimsDir, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return errors.Wrapf(err, "failed to walk %s", path)
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		dir, filename := filepath.Split(path)
+		_, name := filepath.Split(dir)
+		if !strings.HasPrefix(filename, name) {
+			return nil
+		}
+
+		version := strings.TrimPrefix(filename, name+"_")
+
+		bin := NewBinary(m.binDir, m.shimsDir, name, version, filename)
+		binaries = append(binaries, bin)
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to query binaries")
+	}
+
+	return NewBinariesFilter(binaries), nil
+}
+
+func (m *BinaryManager) Define(name string, version string, location string) error {
+	helper := utils.NewPathHelper(m.shimsDir).Child(name)
+
+	err := helper.MkdirAll(m.dirMode)
+	if err != nil {
+		return errors.WithMessagef(err, "create dir %s failed", helper.Path())
+	}
+
+	shimsName := m.ShimsName(name, version)
+	dstLocation := helper.Child(shimsName).Path()
+	err = m.linkFn(location, dstLocation)
+	if err != nil {
+		return errors.WithMessagef(err, "link %s to %s failed", location, dstLocation)
+	}
+
+	return helper.Chmod(shimsName, 0755)
+}
+
+func (m *BinaryManager) Undefine(name string, version string) error {
+	helper := utils.NewPathHelper(m.shimsDir).Child(name)
+	shimsName := m.ShimsName(name, version)
+
+	err := helper.EnsureNotExists(shimsName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *BinaryManager) Activate(name, version string) error {
+	shimsHelper := utils.NewPathHelper(m.shimsDir).Child(name)
+	shimsName := m.ShimsName(name, version)
+
+	path, err := shimsHelper.AbsPath(shimsName)
+	if err != nil {
+		return errors.WithMessagef(err, "get shims %s failed", shimsName)
+	}
+
+	binHelper := utils.NewPathHelper(m.binDir)
+	err = binHelper.SymbolLink(name, path, 0755)
+	if err != nil {
+		return errors.WithMessagef(err, "symlink %s failed", path)
+	}
+
+	return nil
+}
+
+func (m *BinaryManager) Deactivate(name string) error {
+	binHelper := utils.NewPathHelper(m.binDir)
+	err := binHelper.EnsureNotExists(name)
+	if err != nil {
+		return errors.Wrapf(err, "remove %s failed", name)
+	}
+
+	return nil
+}
+
+func NewBinaryManager(
+	binDir, shimsDir string,
+	dirMode os.FileMode,
+	linkFn func(src, dst string) error,
+) *BinaryManager {
+	return &BinaryManager{binDir, shimsDir, dirMode, linkFn}
+}
+
+func NewSimpleBinaryManager(binDir, shimsDir string, dirMode os.FileMode) *BinaryManager {
+	return NewBinaryManager(binDir, shimsDir, dirMode, func(src, dst string) error {
+		err := flop.Copy(src, dst, flop.Options{
+			MkdirAll:  true,
+			Recursive: true,
+		})
+		if err != nil {
+			return errors.Wrapf(err, "copy %s to %s failed", src, dst)
+		}
+
+		return nil
+	})
+}
+
+func NewLinkedBinaryManager(binDir, shimsDir string, dirMode os.FileMode) *BinaryManager {
+	return NewBinaryManager(binDir, shimsDir, dirMode, os.Symlink)
+}
+
+func init() {
+	var (
+		_ cmdr.Command        = (*Binary)(nil)
+		_ cmdr.CommandQuery   = (*BinariesFilter)(nil)
+		_ cmdr.CommandManager = (*BinaryManager)(nil)
+	)
+}

@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/agiledragon/gomonkey v2.0.2+incompatible
+	github.com/ahmetb/go-linq/v3 v3.2.0 // indirect
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/golang/mock v1.6.0
