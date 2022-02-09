@@ -220,6 +220,10 @@ var _ = Describe("Binary", func() {
 			Expect(shimsDir).To(BeADirectory())
 		})
 
+		It("should close a manager", func() {
+			Expect(mgr.Close()).To(Succeed())
+		})
+
 		It("should return provider", func() {
 			Expect(mgr.Provider()).To(Equal(cmdr.CommandProviderBinary))
 		})

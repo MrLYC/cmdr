@@ -10,9 +10,8 @@ import (
 	"github.com/spf13/cobra"
 	"logur.dev/logur"
 
-	"github.com/mrlyc/cmdr/config"
-	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/utils"
+	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/cmdr/utils"
 )
 
 var (
@@ -58,7 +57,7 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	cfg := config.Global
+	cfg := cmdr.GetConfiguration()
 
 	_, err := os.Stat(cfgFile)
 
@@ -72,18 +71,18 @@ func initConfig() {
 }
 
 func initLogger() {
-	cfg := config.Global
-	level, ok := logur.ParseLevel(cfg.GetString(config.CfgKeyLogLevel))
+	cfg := cmdr.GetConfiguration()
+	level, ok := logur.ParseLevel(cfg.GetString(cmdr.CfgKeyLogLevel))
 	if !ok {
 		level = logur.Info
 	}
 
-	switch cfg.GetString(config.CfgKeyLogOutput) {
+	switch cfg.GetString(cmdr.CfgKeyLogOutput) {
 	case "stdout":
 		color.SetOutput(os.Stdout)
 	default:
 		color.SetOutput(os.Stderr)
 	}
 
-	define.InitTerminalLogger(level, level < logur.Info, "error")
+	cmdr.InitTerminalLogger(level, level < logur.Info, "error")
 }

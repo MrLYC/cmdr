@@ -12,10 +12,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/mrlyc/cmdr/config"
+	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/cmdr/utils"
 	"github.com/mrlyc/cmdr/define"
 	"github.com/mrlyc/cmdr/define/mock"
-	"github.com/mrlyc/cmdr/utils"
 )
 
 var _ = Describe("Utils", func() {
@@ -24,13 +24,13 @@ var _ = Describe("Utils", func() {
 	)
 
 	BeforeEach(func() {
-		rawConfig = config.Global
+		rawConfig = cmdr.GetConfiguration()
 		cfg = viper.New()
-		config.Global = cfg
+		cmdr.GetConfiguration() = cfg
 	})
 
 	AfterEach(func() {
-		config.Global = rawConfig
+		cmdr.GetConfiguration() = rawConfig
 	})
 
 	Describe("executeRunner", func() {

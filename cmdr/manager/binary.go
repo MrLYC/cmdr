@@ -137,6 +137,10 @@ func (m *BinaryManager) Init() error {
 	return nil
 }
 
+func (m *BinaryManager) Close() error {
+	return nil
+}
+
 func (m *BinaryManager) Provider() cmdr.CommandProvider {
 	return cmdr.CommandProviderBinary
 }
@@ -259,4 +263,12 @@ func init() {
 		_ cmdr.CommandQuery   = (*BinariesFilter)(nil)
 		_ cmdr.CommandManager = (*BinaryManager)(nil)
 	)
+
+	cmdr.RegisterCommandManagerFactory(cmdr.CommandProviderBinary, func(cfg cmdr.Configuration, opts ...cmdr.Option) (cmdr.CommandManager, error) {
+		return NewBinaryManager(
+			cfg.GetString(cmdr.CfgKeyCmdrBinDir),
+			cfg.GetString(cmdr.CfgKeyCmdrShimsDir),
+			0755,
+		), nil
+	})
 }

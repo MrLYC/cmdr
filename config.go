@@ -4,17 +4,20 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mrlyc/cmdr/config"
-	"github.com/mrlyc/cmdr/utils"
+	"github.com/mrlyc/cmdr/cmdr"
 )
 
 func init() {
 	homeDir, err := os.UserHomeDir()
-	utils.CheckError(err)
+	if err != nil {
+		panic(err)
+	}
 
-	cfg := config.Global
+	cfg := cmdr.GetConfiguration()
 
-	cfg.SetDefault(config.CfgKeyCmdrRoot, filepath.Join(homeDir, ".cmdr"))
-	cfg.SetDefault(config.CfgKeyLogLevel, "info")
-	cfg.SetDefault(config.CfgKeyLogOutput, "stderr")
+	cfg.SetDefault(cmdr.CfgKeyCmdrRoot, filepath.Join(homeDir, ".cmdr"))
+	cfg.SetDefault(cmdr.CfgKeyCmdrBinDir, filepath.Join(homeDir, "bin"))
+	cfg.SetDefault(cmdr.CfgKeyCmdrShimsDir, filepath.Join(homeDir, "shims"))
+	cfg.SetDefault(cmdr.CfgKeyLogLevel, "info")
+	cfg.SetDefault(cmdr.CfgKeyLogOutput, "stderr")
 }

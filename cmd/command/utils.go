@@ -1,34 +1,21 @@
 package command
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/config"
-	"github.com/mrlyc/cmdr/core"
-	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/utils"
+	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/cmdr/utils"
 )
 
-func executeRunner(factory func(define.Configuration, *core.Cmdr) define.Runner) func(cmd *cobra.Command, args []string) {
+func runCommand(fn func(cfg cmdr.Configuration, manager cmdr.CommandManager) error) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
-		cfg := config.Global
-		logger := define.Logger
-		name := cmd.Name()
+		cfg := cmdr.GetConfiguration()
 
-		logger.Info("running", map[string]interface{}{
-			"command": name,
-		})
-
-		ctx := context.WithValue(cmd.Context(), define.ContextKeyConfiguration, cfg)
-		cmdr, err := core.NewCmdr(cfg.GetString(config.CfgKeyCmdrRoot))
+		manager, err := cmdr.NewCommandManager(cmdr.CommandProviderSimple, cfg)
 		if err != nil {
-			utils.ExitWithError(err, "create cmdr failed")
+			utils.ExitWithError(err, "Failed to create command manager")
 		}
 
-		runner := factory(cfg, cmdr)
-		utils.ExitWithError(runner.Run(ctx), fmt.Sprintf("command %s failed", name))
+		utils.ExitWithError(fn(cfg, manager), "Failed to run command %s", cmd.Name())
 	}
 }

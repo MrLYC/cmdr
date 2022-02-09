@@ -66,6 +66,38 @@ var _ = Describe("Simple", func() {
 		})
 	})
 
+	Context("Close", func() {
+		It("should close main and recorder manager", func() {
+			mainMgr.EXPECT().Close()
+			recoderMgr.EXPECT().Close()
+
+			Expect(mgr.Close()).To(Succeed())
+		})
+
+		It("should continue close even if fail", func() {
+			mainMgr.EXPECT().Close().Return(fmt.Errorf("testing"))
+			recoderMgr.EXPECT().Close().Return(fmt.Errorf("testing"))
+
+			Expect(mgr.Close()).NotTo(Succeed())
+		})
+
+		It("should call in a specific order", func() {
+			var ordering []string
+
+			mainMgr.EXPECT().Close().DoAndReturn(func() error {
+				ordering = append(ordering, "main")
+				return nil
+			})
+			recoderMgr.EXPECT().Close().DoAndReturn(func() error {
+				ordering = append(ordering, "recoder")
+				return nil
+			})
+
+			Expect(mgr.Close()).To(Succeed())
+			Expect(ordering).To(Equal([]string{"main", "recoder"}))
+		})
+	})
+
 	It("should return provider", func() {
 		Expect(mgr.Provider()).To(Equal(cmdr.CommandProviderSimple))
 	})

@@ -10,7 +10,13 @@ import (
 	"github.com/mrlyc/cmdr/cmdr"
 )
 
-//go:generate mockgen -destination=mock/storm.go -package=mock github.com/asdine/storm/v3 TypeStore,Query
+//go:generate mockgen -destination=mock/storm.go -package=mock github.com/asdine/storm/v3 Query
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock DBClient
+
+type DBClient interface {
+	storm.TypeStore
+	Close() error
+}
 
 var ErrCommandAlreadyActivated = fmt.Errorf("command already activated")
 
@@ -106,7 +112,7 @@ func NewCommandQuery(db storm.TypeStore) *CommandQuery {
 }
 
 type DatabaseManager struct {
-	Client storm.TypeStore
+	Client DBClient
 }
 
 func (m *DatabaseManager) Init() error {
@@ -120,6 +126,15 @@ func (m *DatabaseManager) Init() error {
 	err = m.Client.ReIndex(&command)
 	if err != nil {
 		return errors.Wrapf(err, "reindex command failed")
+	}
+
+	return nil
+}
+
+func (m *DatabaseManager) Close() error {
+	err := m.Client.Close()
+	if err != nil {
+		return errors.Wrapf(err, "close database failed")
 	}
 
 	return nil
@@ -240,7 +255,7 @@ func (m *DatabaseManager) Deactivate(name string) error {
 	return nil
 }
 
-func NewDatabaseManager(db storm.TypeStore) *DatabaseManager {
+func NewDatabaseManager(db DBClient) *DatabaseManager {
 	return &DatabaseManager{
 		Client: db,
 	}
@@ -252,4 +267,15 @@ func init() {
 		_ cmdr.CommandQuery   = (*CommandQuery)(nil)
 		_ cmdr.CommandManager = (*DatabaseManager)(nil)
 	)
+
+	cmdr.RegisterCommandManagerFactory(cmdr.CommandProviderDatabase, func(cfg cmdr.Configuration, opts ...cmdr.Option) (cmdr.CommandManager, error) {
+		dbPath := cfg.GetString(cmdr.CfgKeyCmdrDatabasePath)
+
+		db, err := storm.Open(dbPath)
+		if err != nil {
+			return nil, errors.Wrapf(err, "open database failed")
+		}
+
+		return NewDatabaseManager(db), nil
+	})
 }

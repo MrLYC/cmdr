@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/define"
+	"github.com/mrlyc/cmdr/cmdr"
 )
 
 var versionCmdFlag struct {
@@ -20,15 +20,15 @@ var versionCmd = &cobra.Command{
 		if versionCmdFlag.all {
 			fmt.Printf(
 				"Author: %s\nVersion: %s\nCommit: %s\nDate: %s\nAsset: %s\n",
-				define.Author,
-				define.Version,
-				define.Commit,
-				define.BuildDate,
-				define.Asset,
+				cmdr.Author,
+				cmdr.Version,
+				cmdr.Commit,
+				cmdr.BuildDate,
+				cmdr.Asset,
 			)
 
 		} else {
-			fmt.Println(define.Version)
+			fmt.Println(cmdr.Version)
 		}
 	},
 }

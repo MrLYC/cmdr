@@ -2,6 +2,7 @@ package manager
 
 import (
 	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/cmdr"
 )
@@ -33,16 +34,28 @@ func (m *SimpleManager) reverseEach(fn func(mgr cmdr.CommandManager) error) erro
 	return nil
 }
 
-func (m *SimpleManager) Init() error {
+func (m *SimpleManager) all(fn func(mgr cmdr.CommandManager) error) error {
 	var errs error
 	for _, mgr := range []cmdr.CommandManager{m.main, m.recoder} {
-		err := mgr.Init()
+		err := fn(mgr)
 		if err != nil {
 			errs = multierror.Append(errs, err)
 		}
 	}
 
 	return errs
+}
+
+func (m *SimpleManager) Init() error {
+	return m.all(func(mgr cmdr.CommandManager) error {
+		return mgr.Init()
+	})
+}
+
+func (m *SimpleManager) Close() error {
+	return m.all(func(mgr cmdr.CommandManager) error {
+		return mgr.Close()
+	})
 }
 
 func (m *SimpleManager) Provider() cmdr.CommandProvider {
@@ -83,4 +96,18 @@ func NewSimpleManager(main cmdr.CommandManager, recoder cmdr.CommandManager) *Si
 
 func init() {
 	var _ cmdr.CommandManager = (*SimpleManager)(nil)
+
+	cmdr.RegisterCommandManagerFactory(cmdr.CommandProviderSimple, func(cfg cmdr.Configuration, opts ...cmdr.Option) (cmdr.CommandManager, error) {
+		mainMgr, err := cmdr.NewCommandManager(cmdr.CommandProviderBinary, cfg, opts...)
+		if err != nil {
+			return nil, errors.Wrapf(err, "new main command manager failed")
+		}
+
+		recorderMgr, err := cmdr.NewCommandManager(cmdr.CommandProviderDatabase, cfg, opts...)
+		if err != nil {
+			return nil, errors.Wrapf(err, "new recorder command manager failed")
+		}
+
+		return NewSimpleManager(mainMgr, recorderMgr), nil
+	})
 }

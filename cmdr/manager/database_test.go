@@ -178,6 +178,12 @@ var _ = Describe("Database", func() {
 			Expect(mgr.Init()).To(Succeed())
 		})
 
+		It("should close database", func() {
+			db.EXPECT().Close()
+
+			Expect(mgr.Close()).To(Succeed())
+		})
+
 		It("should return provider", func() {
 			Expect(mgr.Provider()).To(Equal(cmdr.CommandProviderDatabase))
 		})

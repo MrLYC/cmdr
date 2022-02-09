@@ -3,15 +3,16 @@ package command
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/config"
-	"github.com/mrlyc/cmdr/runner"
+	"github.com/mrlyc/cmdr/cmdr"
 )
 
 // unsetCmd represents the unset command
 var unsetCmd = &cobra.Command{
 	Use:   "unset",
 	Short: "Deactivate a command",
-	Run:   executeRunner(runner.NewUnsetRunner),
+	Run: runCommand(func(cfg cmdr.Configuration, manager cmdr.CommandManager) error {
+		return manager.Deactivate(cfg.GetString(cmdr.CfgKeyCommandUnsetName))
+	}),
 }
 
 func init() {
@@ -19,8 +20,8 @@ func init() {
 	flags := unsetCmd.Flags()
 	flags.StringP("name", "n", "", "command name")
 
-	cfg := config.Global
-	cfg.BindPFlag(config.CfgKeyCommandUnsetName, flags.Lookup("name"))
+	cfg := cmdr.GetConfiguration()
+	cfg.BindPFlag(cmdr.CfgKeyCommandUnsetName, flags.Lookup("name"))
 
 	unsetCmd.MarkFlagRequired("name")
 }

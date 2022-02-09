@@ -4,8 +4,9 @@ go 1.16
 
 require (
 	github.com/agiledragon/gomonkey v2.0.2+incompatible
-	github.com/ahmetb/go-linq/v3 v3.2.0 // indirect
+	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/asdine/storm/v3 v3.2.1
+	github.com/cheekybits/genny v1.0.0
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/golang/mock v1.6.0
 	github.com/google/go-github/v39 v39.1.1-0.20211008144426-6b0f37fa430d
@@ -27,9 +28,10 @@ require (
 	go.etcd.io/bbolt v1.3.6 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9 // indirect
-	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881 // indirect
+	golang.org/x/sys v0.0.0-20220207234003-57398862261d // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/tools v0.1.9 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	logur.dev/adapter/template v0.0.0-20200428192559-245bae87f59a
 	logur.dev/logur v0.17.0

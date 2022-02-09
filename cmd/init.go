@@ -10,10 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/config"
-	"github.com/mrlyc/cmdr/core"
-	"github.com/mrlyc/cmdr/define"
-	"github.com/mrlyc/cmdr/utils"
+	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/cmdr/utils"
 )
 
 // initCmd represents the init command
@@ -21,17 +19,14 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initial cmdr environment",
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg := config.GetGlobalConfiguration()
-		cmdr, err := core.NewCmdr(cfg.GetString(config.CfgKeyCmdrRoot))
-		if err != nil {
-			utils.ExitWithError(err, "create cmdr failed")
-		}
-		tmpl, err := template.New("init.sh").ParseFS(define.EmbedFS, "scripts/init.sh")
+		cfg := cmdr.GetConfiguration()
+
+		tmpl, err := template.New("init.sh").ParseFS(cmdr.EmbedFS, "scripts/init.sh")
 		utils.CheckError(err)
 
 		var buffer bytes.Buffer
 		utils.CheckError(tmpl.Execute(&buffer, map[string]interface{}{
-			"BinDir": cmdr.BinaryManager.BinManager.Path(),
+			"BinDir": cfg.GetString(cmdr.CfgKeyCmdrDatabasePath),
 		}))
 
 		fmt.Println(buffer.String())

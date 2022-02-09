@@ -27,6 +27,12 @@ func (p *PathHelper) Child(name string) *PathHelper {
 	}
 }
 
+func (p *PathHelper) Parent() *PathHelper {
+	return &PathHelper{
+		path: filepath.Dir(p.path),
+	}
+}
+
 func (p *PathHelper) EnsureNotExists(name string) error {
 	path := filepath.Join(p.path, name)
 
