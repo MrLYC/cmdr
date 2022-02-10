@@ -34,38 +34,6 @@ var _ = Describe("Simple", func() {
 		ctrl.Finish()
 	})
 
-	Context("Init", func() {
-		It("should init main and recorder manager", func() {
-			mainMgr.EXPECT().Init()
-			recoderMgr.EXPECT().Init()
-
-			Expect(mgr.Init()).To(Succeed())
-		})
-
-		It("should continue init even if fail", func() {
-			mainMgr.EXPECT().Init().Return(fmt.Errorf("testing"))
-			recoderMgr.EXPECT().Init().Return(fmt.Errorf("testing"))
-
-			Expect(mgr.Init()).NotTo(Succeed())
-		})
-
-		It("should call in a specific order", func() {
-			var ordering []string
-
-			mainMgr.EXPECT().Init().DoAndReturn(func() error {
-				ordering = append(ordering, "main")
-				return nil
-			})
-			recoderMgr.EXPECT().Init().DoAndReturn(func() error {
-				ordering = append(ordering, "recoder")
-				return nil
-			})
-
-			Expect(mgr.Init()).To(Succeed())
-			Expect(ordering).To(Equal([]string{"main", "recoder"}))
-		})
-	})
-
 	Context("Close", func() {
 		It("should close main and recorder manager", func() {
 			mainMgr.EXPECT().Close()

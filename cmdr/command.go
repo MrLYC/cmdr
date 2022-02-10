@@ -30,7 +30,6 @@ type CommandQuery interface {
 }
 
 type CommandManager interface {
-	Init() error
 	Close() error
 
 	Provider() CommandProvider

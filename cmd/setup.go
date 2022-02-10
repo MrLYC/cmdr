@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/cmdr/initializer"
 	"github.com/mrlyc/cmdr/cmdr/utils"
 )
 
@@ -18,11 +19,19 @@ var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Setup cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg := cmdr.GetConfiguration()
-		manager, err := cmdr.NewCommandManager(cmdr.CommandProviderSimple, cfg)
-		utils.ExitWithError(err, "Failed to create command manager")
+		chaining := initializer.NewChaining()
 
-		utils.ExitWithError(manager.Init(), "Failed to init command manager")
+		cfg := cmdr.GetConfiguration()
+		for _, provider := range []cmdr.CommandProvider{
+			cmdr.CommandProviderBinary,
+			cmdr.CommandProviderDatabase,
+		} {
+			manager, err := cmdr.NewCommandManager(provider, cfg)
+			utils.ExitWithError(err, "Failed to create %s manager", provider)
+			chaining.Add(manager)
+		}
+
+		utils.ExitWithError(chaining.Init(), "Failed to init cmdr")
 	},
 }
 

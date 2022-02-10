@@ -46,12 +46,6 @@ func (m *SimpleManager) all(fn func(mgr cmdr.CommandManager) error) error {
 	return errs
 }
 
-func (m *SimpleManager) Init() error {
-	return m.all(func(mgr cmdr.CommandManager) error {
-		return mgr.Init()
-	})
-}
-
 func (m *SimpleManager) Close() error {
 	return m.all(func(mgr cmdr.CommandManager) error {
 		return mgr.Close()

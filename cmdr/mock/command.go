@@ -293,20 +293,6 @@ func (mr *MockCommandManagerMockRecorder) Define(name, version, location interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Define", reflect.TypeOf((*MockCommandManager)(nil).Define), name, version, location)
 }
 
-// Init mocks base method.
-func (m *MockCommandManager) Init() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Init")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Init indicates an expected call of Init.
-func (mr *MockCommandManagerMockRecorder) Init() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockCommandManager)(nil).Init))
-}
-
 // Provider mocks base method.
 func (m *MockCommandManager) Provider() cmdr.CommandProvider {
 	m.ctrl.T.Helper()

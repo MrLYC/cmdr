@@ -9,7 +9,7 @@ import (
 
 	"github.com/mrlyc/cmdr/cmdr"
 	"github.com/mrlyc/cmdr/cmdr/manager"
-	"github.com/mrlyc/cmdr/define/mock"
+	"github.com/mrlyc/cmdr/cmdr/manager/mock"
 )
 
 var _ = Describe("Database", func() {
