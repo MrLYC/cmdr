@@ -7,9 +7,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/mrlyc/cmdr/cmdr"
-	"github.com/mrlyc/cmdr/cmdr/manager"
-	"github.com/mrlyc/cmdr/cmdr/manager/mock"
+	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/manager"
+	"github.com/mrlyc/cmdr/core/manager/mock"
 )
 
 var _ = Describe("Database", func() {
@@ -185,7 +185,7 @@ var _ = Describe("Database", func() {
 		})
 
 		It("should return provider", func() {
-			Expect(mgr.Provider()).To(Equal(cmdr.CommandProviderDatabase))
+			Expect(mgr.Provider()).To(Equal(core.CommandProviderDatabase))
 		})
 
 		Context("Define", func() {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/core"
 )
 
 func CheckError(err error) {
@@ -24,7 +24,7 @@ func ExitWithError(err error, message string, args ...interface{}) {
 		return
 	}
 
-	cmdr.Logger.Error(fmt.Sprintf(message, args...), map[string]interface{}{
+	core.Logger.Error(fmt.Sprintf(message, args...), map[string]interface{}{
 		"error": err,
 	})
 	os.Exit(-1)

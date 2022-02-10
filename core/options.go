@@ -1,4 +1,4 @@
-package cmdr
+package core
 
 type Option interface {
 	Apply(target Optional) error

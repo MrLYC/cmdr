@@ -7,7 +7,7 @@ import (
 	"github.com/asdine/storm/v3/q"
 	"github.com/pkg/errors"
 
-	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/core"
 )
 
 //go:generate mockgen -destination=mock/storm.go -package=mock github.com/asdine/storm/v3 Query
@@ -50,22 +50,22 @@ type CommandQuery struct {
 	query    storm.Query
 }
 
-func (c *CommandQuery) WithName(name string) cmdr.CommandQuery {
+func (c *CommandQuery) WithName(name string) core.CommandQuery {
 	c.matchers = append(c.matchers, q.Eq("NameField", name))
 	return c
 }
 
-func (c *CommandQuery) WithVersion(version string) cmdr.CommandQuery {
+func (c *CommandQuery) WithVersion(version string) core.CommandQuery {
 	c.matchers = append(c.matchers, q.Eq("VersionField", version))
 	return c
 }
 
-func (c *CommandQuery) WithActivated(activated bool) cmdr.CommandQuery {
+func (c *CommandQuery) WithActivated(activated bool) core.CommandQuery {
 	c.matchers = append(c.matchers, q.Eq("ActivatedField", activated))
 	return c
 }
 
-func (c *CommandQuery) WithLocation(location string) cmdr.CommandQuery {
+func (c *CommandQuery) WithLocation(location string) core.CommandQuery {
 	c.matchers = append(c.matchers, q.Eq("LocationField", location))
 	return c
 }
@@ -77,21 +77,21 @@ func (c *CommandQuery) Done() storm.Query {
 	return c.query
 }
 
-func (c *CommandQuery) All() ([]cmdr.Command, error) {
+func (c *CommandQuery) All() ([]core.Command, error) {
 	var commands []*Command
 	err := c.Done().Find(&commands)
 	if err != nil {
 		return nil, err
 	}
 
-	result := make([]cmdr.Command, 0, len(commands))
+	result := make([]core.Command, 0, len(commands))
 	for _, cmd := range commands {
 		result = append(result, cmd)
 	}
 	return result, nil
 }
 
-func (c *CommandQuery) One() (cmdr.Command, error) {
+func (c *CommandQuery) One() (core.Command, error) {
 	var cmd Command
 	err := c.Done().First(&cmd)
 	if err != nil {
@@ -140,11 +140,11 @@ func (m *DatabaseManager) Close() error {
 	return nil
 }
 
-func (m *DatabaseManager) Provider() cmdr.CommandProvider {
-	return cmdr.CommandProviderDatabase
+func (m *DatabaseManager) Provider() core.CommandProvider {
+	return core.CommandProviderDatabase
 }
 
-func (m *DatabaseManager) Query() (cmdr.CommandQuery, error) {
+func (m *DatabaseManager) Query() (core.CommandQuery, error) {
 	return NewCommandQuery(m.Client), nil
 }
 
@@ -263,13 +263,13 @@ func NewDatabaseManager(db DBClient) *DatabaseManager {
 
 func init() {
 	var (
-		_ cmdr.Command        = (*Command)(nil)
-		_ cmdr.CommandQuery   = (*CommandQuery)(nil)
-		_ cmdr.CommandManager = (*DatabaseManager)(nil)
+		_ core.Command        = (*Command)(nil)
+		_ core.CommandQuery   = (*CommandQuery)(nil)
+		_ core.CommandManager = (*DatabaseManager)(nil)
 	)
 
-	cmdr.RegisterCommandManagerFactory(cmdr.CommandProviderDatabase, func(cfg cmdr.Configuration, opts ...cmdr.Option) (cmdr.CommandManager, error) {
-		dbPath := cfg.GetString(cmdr.CfgKeyCmdrDatabasePath)
+	core.RegisterCommandManagerFactory(core.CommandProviderDatabase, func(cfg core.Configuration, opts ...core.Option) (core.CommandManager, error) {
+		dbPath := cfg.GetString(core.CfgKeyCmdrDatabasePath)
 
 		db, err := storm.Open(dbPath)
 		if err != nil {

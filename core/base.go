@@ -1,4 +1,4 @@
-package cmdr
+package core
 
 var (
 	Author    = "MrLYC"

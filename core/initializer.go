@@ -1,4 +1,4 @@
-package cmdr
+package core
 
 type Initializer interface {
 	Init() error

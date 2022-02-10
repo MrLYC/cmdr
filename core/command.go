@@ -1,4 +1,4 @@
-package cmdr
+package core
 
 //go:generate stringer -type=CommandProvider
 

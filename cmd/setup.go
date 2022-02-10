@@ -3,9 +3,9 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/cmdr"
-	"github.com/mrlyc/cmdr/cmdr/initializer"
-	"github.com/mrlyc/cmdr/cmdr/utils"
+	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/initializer"
+	"github.com/mrlyc/cmdr/core/utils"
 )
 
 var setupCmdFlag struct {
@@ -21,12 +21,12 @@ var setupCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		chaining := initializer.NewChaining()
 
-		cfg := cmdr.GetConfiguration()
-		for _, provider := range []cmdr.CommandProvider{
-			cmdr.CommandProviderBinary,
-			cmdr.CommandProviderDatabase,
+		cfg := core.GetConfiguration()
+		for _, provider := range []core.CommandProvider{
+			core.CommandProviderBinary,
+			core.CommandProviderDatabase,
 		} {
-			manager, err := cmdr.NewCommandManager(provider, cfg)
+			manager, err := core.NewCommandManager(provider, cfg)
 			utils.ExitWithError(err, "Failed to create %s manager", provider)
 			chaining.Add(manager)
 		}

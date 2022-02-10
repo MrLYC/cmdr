@@ -3,26 +3,26 @@ package command
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/core"
 )
 
 // installCmd represents the install command
 var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install command into cmdr",
-	Run: runCommand(func(cfg cmdr.Configuration, manager cmdr.CommandManager) error {
-		name := cfg.GetString(cmdr.CfgKeyCommandInstallName)
-		version := cfg.GetString(cmdr.CfgKeyCommandInstallVersion)
+	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
+		name := cfg.GetString(core.CfgKeyCommandInstallName)
+		version := cfg.GetString(core.CfgKeyCommandInstallVersion)
 
 		err := manager.Define(
 			name, version,
-			cfg.GetString(cmdr.CfgKeyCommandInstallLocation),
+			cfg.GetString(core.CfgKeyCommandInstallLocation),
 		)
 		if err != nil {
 			return err
 		}
 
-		if cfg.GetBool(cmdr.CfgKeyCommandInstallActivate) {
+		if cfg.GetBool(core.CfgKeyCommandInstallActivate) {
 			return manager.Activate(name, version)
 		}
 
@@ -38,11 +38,11 @@ func init() {
 	flags.StringP("location", "l", "", "command location")
 	flags.BoolP("activate", "a", false, "activate command")
 
-	cfg := cmdr.GetConfiguration()
-	cfg.BindPFlag(cmdr.CfgKeyCommandInstallName, flags.Lookup("name"))
-	cfg.BindPFlag(cmdr.CfgKeyCommandInstallVersion, flags.Lookup("version"))
-	cfg.BindPFlag(cmdr.CfgKeyCommandInstallLocation, flags.Lookup("location"))
-	cfg.BindPFlag(cmdr.CfgKeyCommandInstallActivate, flags.Lookup("activate"))
+	cfg := core.GetConfiguration()
+	cfg.BindPFlag(core.CfgKeyCommandInstallName, flags.Lookup("name"))
+	cfg.BindPFlag(core.CfgKeyCommandInstallVersion, flags.Lookup("version"))
+	cfg.BindPFlag(core.CfgKeyCommandInstallLocation, flags.Lookup("location"))
+	cfg.BindPFlag(core.CfgKeyCommandInstallActivate, flags.Lookup("activate"))
 
 	installCmd.MarkFlagRequired("name")
 	installCmd.MarkFlagRequired("version")

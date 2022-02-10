@@ -3,18 +3,18 @@ package command
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/core"
 )
 
 // defineCmd represents the define command
 var defineCmd = &cobra.Command{
 	Use:   "define",
 	Short: "Define command into cmdr",
-	Run: runCommand(func(cfg cmdr.Configuration, manager cmdr.CommandManager) error {
+	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
 		return manager.Define(
-			cfg.GetString(cmdr.CfgKeyCommandDefineName),
-			cfg.GetString(cmdr.CfgKeyCommandDefineVersion),
-			cfg.GetString(cmdr.CfgKeyCommandDefineLocation),
+			cfg.GetString(core.CfgKeyCommandDefineName),
+			cfg.GetString(core.CfgKeyCommandDefineVersion),
+			cfg.GetString(core.CfgKeyCommandDefineLocation),
 		)
 	}),
 }
@@ -26,10 +26,10 @@ func init() {
 	flags.StringP("version", "v", "", "command version")
 	flags.StringP("location", "l", "", "command location")
 
-	cfg := cmdr.GetConfiguration()
-	cfg.BindPFlag(cmdr.CfgKeyCommandDefineName, flags.Lookup("name"))
-	cfg.BindPFlag(cmdr.CfgKeyCommandDefineVersion, flags.Lookup("version"))
-	cfg.BindPFlag(cmdr.CfgKeyCommandDefineLocation, flags.Lookup("location"))
+	cfg := core.GetConfiguration()
+	cfg.BindPFlag(core.CfgKeyCommandDefineName, flags.Lookup("name"))
+	cfg.BindPFlag(core.CfgKeyCommandDefineVersion, flags.Lookup("version"))
+	cfg.BindPFlag(core.CfgKeyCommandDefineLocation, flags.Lookup("location"))
 
 	defineCmd.MarkFlagRequired("name")
 	defineCmd.MarkFlagRequired("version")

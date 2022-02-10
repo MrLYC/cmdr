@@ -7,9 +7,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/mrlyc/cmdr/cmdr"
-	"github.com/mrlyc/cmdr/cmdr/manager"
-	"github.com/mrlyc/cmdr/cmdr/mock"
+	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/manager"
+	"github.com/mrlyc/cmdr/core/mock"
 )
 
 var _ = Describe("Simple", func() {
@@ -67,7 +67,7 @@ var _ = Describe("Simple", func() {
 	})
 
 	It("should return provider", func() {
-		Expect(mgr.Provider()).To(Equal(cmdr.CommandProviderSimple))
+		Expect(mgr.Provider()).To(Equal(core.CommandProviderSimple))
 	})
 
 	It("should return query by recorder manager", func() {

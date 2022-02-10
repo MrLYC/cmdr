@@ -3,16 +3,16 @@ package initializer
 import (
 	"github.com/hashicorp/go-multierror"
 
-	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/core"
 )
 
 type Chaining struct {
-	initializers []cmdr.Initializer
+	initializers []core.Initializer
 }
 
 func (c *Chaining) Add(target ...interface{}) *Chaining {
 	for _, t := range target {
-		initializer, ok := t.(cmdr.Initializer)
+		initializer, ok := t.(core.Initializer)
 		if !ok {
 			continue
 		}
@@ -23,7 +23,7 @@ func (c *Chaining) Add(target ...interface{}) *Chaining {
 	return c
 }
 
-func (c Chaining) GetInitializers() []cmdr.Initializer {
+func (c Chaining) GetInitializers() []core.Initializer {
 	return c.initializers
 }
 
@@ -39,7 +39,7 @@ func (c *Chaining) Init() error {
 	return errs
 }
 
-func NewChaining(initializers ...cmdr.Initializer) *Chaining {
+func NewChaining(initializers ...core.Initializer) *Chaining {
 	return &Chaining{
 		initializers: initializers,
 	}

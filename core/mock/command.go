@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	cmdr "github.com/mrlyc/cmdr/cmdr"
+	core "github.com/mrlyc/cmdr/core"
 )
 
 // MockCommand is a mock of Command interface.
@@ -114,10 +114,10 @@ func (m *MockCommandQuery) EXPECT() *MockCommandQueryMockRecorder {
 }
 
 // All mocks base method.
-func (m *MockCommandQuery) All() ([]cmdr.Command, error) {
+func (m *MockCommandQuery) All() ([]core.Command, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "All")
-	ret0, _ := ret[0].([]cmdr.Command)
+	ret0, _ := ret[0].([]core.Command)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -144,10 +144,10 @@ func (mr *MockCommandQueryMockRecorder) Count() *gomock.Call {
 }
 
 // One mocks base method.
-func (m *MockCommandQuery) One() (cmdr.Command, error) {
+func (m *MockCommandQuery) One() (core.Command, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "One")
-	ret0, _ := ret[0].(cmdr.Command)
+	ret0, _ := ret[0].(core.Command)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -159,10 +159,10 @@ func (mr *MockCommandQueryMockRecorder) One() *gomock.Call {
 }
 
 // WithActivated mocks base method.
-func (m *MockCommandQuery) WithActivated(activated bool) cmdr.CommandQuery {
+func (m *MockCommandQuery) WithActivated(activated bool) core.CommandQuery {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WithActivated", activated)
-	ret0, _ := ret[0].(cmdr.CommandQuery)
+	ret0, _ := ret[0].(core.CommandQuery)
 	return ret0
 }
 
@@ -173,10 +173,10 @@ func (mr *MockCommandQueryMockRecorder) WithActivated(activated interface{}) *go
 }
 
 // WithLocation mocks base method.
-func (m *MockCommandQuery) WithLocation(location string) cmdr.CommandQuery {
+func (m *MockCommandQuery) WithLocation(location string) core.CommandQuery {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WithLocation", location)
-	ret0, _ := ret[0].(cmdr.CommandQuery)
+	ret0, _ := ret[0].(core.CommandQuery)
 	return ret0
 }
 
@@ -187,10 +187,10 @@ func (mr *MockCommandQueryMockRecorder) WithLocation(location interface{}) *gomo
 }
 
 // WithName mocks base method.
-func (m *MockCommandQuery) WithName(name string) cmdr.CommandQuery {
+func (m *MockCommandQuery) WithName(name string) core.CommandQuery {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WithName", name)
-	ret0, _ := ret[0].(cmdr.CommandQuery)
+	ret0, _ := ret[0].(core.CommandQuery)
 	return ret0
 }
 
@@ -201,10 +201,10 @@ func (mr *MockCommandQueryMockRecorder) WithName(name interface{}) *gomock.Call 
 }
 
 // WithVersion mocks base method.
-func (m *MockCommandQuery) WithVersion(version string) cmdr.CommandQuery {
+func (m *MockCommandQuery) WithVersion(version string) core.CommandQuery {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WithVersion", version)
-	ret0, _ := ret[0].(cmdr.CommandQuery)
+	ret0, _ := ret[0].(core.CommandQuery)
 	return ret0
 }
 
@@ -294,10 +294,10 @@ func (mr *MockCommandManagerMockRecorder) Define(name, version, location interfa
 }
 
 // Provider mocks base method.
-func (m *MockCommandManager) Provider() cmdr.CommandProvider {
+func (m *MockCommandManager) Provider() core.CommandProvider {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Provider")
-	ret0, _ := ret[0].(cmdr.CommandProvider)
+	ret0, _ := ret[0].(core.CommandProvider)
 	return ret0
 }
 
@@ -308,10 +308,10 @@ func (mr *MockCommandManagerMockRecorder) Provider() *gomock.Call {
 }
 
 // Query mocks base method.
-func (m *MockCommandManager) Query() (cmdr.CommandQuery, error) {
+func (m *MockCommandManager) Query() (core.CommandQuery, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Query")
-	ret0, _ := ret[0].(cmdr.CommandQuery)
+	ret0, _ := ret[0].(core.CommandQuery)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

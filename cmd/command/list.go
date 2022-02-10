@@ -7,18 +7,18 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/core"
 )
 
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List commands",
-	Run: runCommand(func(cfg cmdr.Configuration, manager cmdr.CommandManager) error {
-		name := cfg.GetString(cmdr.CfgKeyCommandListName)
-		version := cfg.GetString(cmdr.CfgKeyCommandListVersion)
-		location := cfg.GetString(cmdr.CfgKeyCommandListLocation)
-		activate := cfg.GetBool(cmdr.CfgKeyCommandListActivate)
+	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
+		name := cfg.GetString(core.CfgKeyCommandListName)
+		version := cfg.GetString(core.CfgKeyCommandListVersion)
+		location := cfg.GetString(core.CfgKeyCommandListLocation)
+		activate := cfg.GetBool(core.CfgKeyCommandListActivate)
 
 		query, err := manager.Query()
 		if err != nil {
@@ -66,9 +66,9 @@ func init() {
 	flags.StringP("location", "l", "", "command location")
 	flags.BoolP("activate", "a", false, "activate command")
 
-	cfg := cmdr.GetConfiguration()
-	cfg.BindPFlag(cmdr.CfgKeyCommandListName, flags.Lookup("name"))
-	cfg.BindPFlag(cmdr.CfgKeyCommandListVersion, flags.Lookup("version"))
-	cfg.BindPFlag(cmdr.CfgKeyCommandListLocation, flags.Lookup("location"))
-	cfg.BindPFlag(cmdr.CfgKeyCommandListActivate, flags.Lookup("activate"))
+	cfg := core.GetConfiguration()
+	cfg.BindPFlag(core.CfgKeyCommandListName, flags.Lookup("name"))
+	cfg.BindPFlag(core.CfgKeyCommandListVersion, flags.Lookup("version"))
+	cfg.BindPFlag(core.CfgKeyCommandListLocation, flags.Lookup("location"))
+	cfg.BindPFlag(core.CfgKeyCommandListActivate, flags.Lookup("activate"))
 }

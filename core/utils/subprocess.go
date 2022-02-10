@@ -7,11 +7,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/core"
 )
 
 func WaitProcess(ctx context.Context, command string, args []string) error {
-	logger := cmdr.Logger
+	logger := core.Logger
 	process := exec.CommandContext(ctx, command, args...)
 	logger.Debug("running process", map[string]interface{}{
 		"process": process,

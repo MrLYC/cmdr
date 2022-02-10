@@ -1,4 +1,4 @@
-package cmdr
+package core
 
 import (
 	"github.com/spf13/viper"
@@ -18,10 +18,10 @@ func SetConfiguration(cfg Configuration) {
 
 const (
 	// cmdr
-	CfgKeyCmdrRoot         = "cmdr.root_dir"
-	CfgKeyCmdrBinDir       = "cmdr.bin_dir"
-	CfgKeyCmdrShimsDir     = "cmdr.shims_dir"
-	CfgKeyCmdrDatabasePath = "cmdr.database_path"
+	CfgKeyCmdrRoot         = "core.root_dir"
+	CfgKeyCmdrBinDir       = "core.bin_dir"
+	CfgKeyCmdrShimsDir     = "core.shims_dir"
+	CfgKeyCmdrDatabasePath = "core.database_path"
 
 	// log
 	CfgKeyLogLevel  = "log.level"

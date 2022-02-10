@@ -1,4 +1,4 @@
-package cmdr
+package core
 
 import (
 	"fmt"

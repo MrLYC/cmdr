@@ -7,8 +7,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/mrlyc/cmdr/cmdr/initializer"
-	"github.com/mrlyc/cmdr/cmdr/mock"
+	"github.com/mrlyc/cmdr/core/initializer"
+	"github.com/mrlyc/cmdr/core/mock"
 )
 
 var _ = Describe("Chaining", func() {

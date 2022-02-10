@@ -11,8 +11,8 @@ import (
 	"github.com/homedepot/flop"
 	"github.com/pkg/errors"
 
-	"github.com/mrlyc/cmdr/cmdr"
-	"github.com/mrlyc/cmdr/cmdr/utils"
+	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/utils"
 )
 
 var ErrBinariesNotFound = fmt.Errorf("binaries not found")
@@ -69,32 +69,32 @@ func (f *BinariesFilter) Filter(fn func(b interface{}) bool) *BinariesFilter {
 	return f
 }
 
-func (f *BinariesFilter) WithName(name string) cmdr.CommandQuery {
+func (f *BinariesFilter) WithName(name string) core.CommandQuery {
 	return f.Filter(func(b interface{}) bool {
 		return b.(*Binary).Name() == name
 	})
 }
 
-func (f *BinariesFilter) WithVersion(version string) cmdr.CommandQuery {
+func (f *BinariesFilter) WithVersion(version string) core.CommandQuery {
 	return f.Filter(func(b interface{}) bool {
 		return b.(*Binary).Version() == version
 	})
 }
 
-func (f *BinariesFilter) WithActivated(activated bool) cmdr.CommandQuery {
+func (f *BinariesFilter) WithActivated(activated bool) core.CommandQuery {
 	return f.Filter(func(b interface{}) bool {
 		return b.(*Binary).Activated() == activated
 	})
 }
 
-func (f *BinariesFilter) WithLocation(location string) cmdr.CommandQuery {
+func (f *BinariesFilter) WithLocation(location string) core.CommandQuery {
 	return f.Filter(func(b interface{}) bool {
 		return b.(*Binary).Location() == location
 	})
 }
 
-func (f *BinariesFilter) All() ([]cmdr.Command, error) {
-	commands := make([]cmdr.Command, 0, len(f.binaries))
+func (f *BinariesFilter) All() ([]core.Command, error) {
+	commands := make([]core.Command, 0, len(f.binaries))
 	for _, b := range f.binaries {
 		commands = append(commands, b)
 	}
@@ -102,7 +102,7 @@ func (f *BinariesFilter) All() ([]cmdr.Command, error) {
 	return commands, nil
 }
 
-func (f *BinariesFilter) One() (cmdr.Command, error) {
+func (f *BinariesFilter) One() (core.Command, error) {
 	if len(f.binaries) == 0 {
 		return nil, errors.Wrapf(ErrBinariesNotFound, "binaries not found")
 	}
@@ -141,15 +141,15 @@ func (m *BinaryManager) Close() error {
 	return nil
 }
 
-func (m *BinaryManager) Provider() cmdr.CommandProvider {
-	return cmdr.CommandProviderBinary
+func (m *BinaryManager) Provider() core.CommandProvider {
+	return core.CommandProviderBinary
 }
 
 func (m *BinaryManager) ShimsName(name, version string) string {
 	return fmt.Sprintf("%s_%s", name, version)
 }
 
-func (m *BinaryManager) Query() (cmdr.CommandQuery, error) {
+func (m *BinaryManager) Query() (core.CommandQuery, error) {
 	var binaries []*Binary
 
 	err := filepath.Walk(m.shimsDir, func(path string, info fs.FileInfo, err error) error {
@@ -259,15 +259,15 @@ func NewBinaryManager(
 
 func init() {
 	var (
-		_ cmdr.Command        = (*Binary)(nil)
-		_ cmdr.CommandQuery   = (*BinariesFilter)(nil)
-		_ cmdr.CommandManager = (*BinaryManager)(nil)
+		_ core.Command        = (*Binary)(nil)
+		_ core.CommandQuery   = (*BinariesFilter)(nil)
+		_ core.CommandManager = (*BinaryManager)(nil)
 	)
 
-	cmdr.RegisterCommandManagerFactory(cmdr.CommandProviderBinary, func(cfg cmdr.Configuration, opts ...cmdr.Option) (cmdr.CommandManager, error) {
+	core.RegisterCommandManagerFactory(core.CommandProviderBinary, func(cfg core.Configuration, opts ...core.Option) (core.CommandManager, error) {
 		return NewBinaryManager(
-			cfg.GetString(cmdr.CfgKeyCmdrBinDir),
-			cfg.GetString(cmdr.CfgKeyCmdrShimsDir),
+			cfg.GetString(core.CfgKeyCmdrBinDir),
+			cfg.GetString(core.CfgKeyCmdrShimsDir),
 			0755,
 		), nil
 	})

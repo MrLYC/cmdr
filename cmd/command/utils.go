@@ -3,15 +3,15 @@ package command
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/mrlyc/cmdr/cmdr"
-	"github.com/mrlyc/cmdr/cmdr/utils"
+	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/utils"
 )
 
-func runCommand(fn func(cfg cmdr.Configuration, manager cmdr.CommandManager) error) func(cmd *cobra.Command, args []string) {
+func runCommand(fn func(cfg core.Configuration, manager core.CommandManager) error) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
-		cfg := cmdr.GetConfiguration()
+		cfg := core.GetConfiguration()
 
-		manager, err := cmdr.NewCommandManager(cmdr.CommandProviderSimple, cfg)
+		manager, err := core.NewCommandManager(core.CommandProviderSimple, cfg)
 		if err != nil {
 			utils.ExitWithError(err, "Failed to create command manager")
 		}

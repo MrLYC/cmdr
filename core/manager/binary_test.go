@@ -10,9 +10,9 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 
-	"github.com/mrlyc/cmdr/cmdr"
-	"github.com/mrlyc/cmdr/cmdr/manager"
-	"github.com/mrlyc/cmdr/cmdr/utils"
+	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/manager"
+	"github.com/mrlyc/cmdr/core/utils"
 )
 
 var _ = Describe("Binary", func() {
@@ -225,7 +225,7 @@ var _ = Describe("Binary", func() {
 		})
 
 		It("should return provider", func() {
-			Expect(mgr.Provider()).To(Equal(cmdr.CommandProviderBinary))
+			Expect(mgr.Provider()).To(Equal(core.CommandProviderBinary))
 		})
 
 		Context("Define", func() {

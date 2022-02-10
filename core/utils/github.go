@@ -7,7 +7,7 @@ import (
 	"github.com/google/go-github/v39/github"
 	"github.com/pkg/errors"
 
-	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/core"
 )
 
 var (
@@ -17,9 +17,9 @@ var (
 func GetCMDRRelease(ctx context.Context, tag string) (release *github.RepositoryRelease, err error) {
 	client := github.NewClient(nil)
 	if tag == "latest" {
-		release, _, err = client.Repositories.GetLatestRelease(ctx, cmdr.Author, cmdr.Name)
+		release, _, err = client.Repositories.GetLatestRelease(ctx, core.Author, core.Name)
 	} else {
-		release, _, err = client.Repositories.GetReleaseByTag(ctx, cmdr.Author, cmdr.Name, tag)
+		release, _, err = client.Repositories.GetReleaseByTag(ctx, core.Author, core.Name, tag)
 	}
 
 	return

@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 	"logur.dev/logur"
 
-	"github.com/mrlyc/cmdr/cmdr"
-	"github.com/mrlyc/cmdr/cmdr/utils"
+	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/utils"
 )
 
 var (
@@ -48,7 +48,7 @@ func init() {
 
 	homeDir, err := os.UserHomeDir()
 	utils.CheckError(err)
-	pFlags.StringVar(&cfgFile, "config", filepath.Join(homeDir, ".cmdr.yaml"), "config file")
+	pFlags.StringVar(&cfgFile, "config", filepath.Join(homeDir, ".core.yaml"), "config file")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -57,7 +57,7 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	cfg := cmdr.GetConfiguration()
+	cfg := core.GetConfiguration()
 
 	_, err := os.Stat(cfgFile)
 
@@ -71,18 +71,18 @@ func initConfig() {
 }
 
 func initLogger() {
-	cfg := cmdr.GetConfiguration()
-	level, ok := logur.ParseLevel(cfg.GetString(cmdr.CfgKeyLogLevel))
+	cfg := core.GetConfiguration()
+	level, ok := logur.ParseLevel(cfg.GetString(core.CfgKeyLogLevel))
 	if !ok {
 		level = logur.Info
 	}
 
-	switch cfg.GetString(cmdr.CfgKeyLogOutput) {
+	switch cfg.GetString(core.CfgKeyLogOutput) {
 	case "stdout":
 		color.SetOutput(os.Stdout)
 	default:
 		color.SetOutput(os.Stderr)
 	}
 
-	cmdr.InitTerminalLogger(level, level < logur.Info, "error")
+	core.InitTerminalLogger(level, level < logur.Info, "error")
 }

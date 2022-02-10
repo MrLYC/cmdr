@@ -1,14 +1,14 @@
 package command
 
 import (
-	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/core"
 	. "github.com/onsi/ginkgo"
 )
 
 var _ = Describe("Define", func() {
 	It("", func() {
-		checkCommandFlag(defineCmd, "name", "n", cmdr.CfgKeyCommandDefineName, "", true)
-		checkCommandFlag(defineCmd, "version", "v", cmdr.CfgKeyCommandDefineVersion, "", true)
-		checkCommandFlag(defineCmd, "location", "l", cmdr.CfgKeyCommandDefineLocation, "", true)
+		checkCommandFlag(defineCmd, "name", "n", core.CfgKeyCommandDefineName, "", true)
+		checkCommandFlag(defineCmd, "version", "v", core.CfgKeyCommandDefineVersion, "", true)
+		checkCommandFlag(defineCmd, "location", "l", core.CfgKeyCommandDefineLocation, "", true)
 	})
 })

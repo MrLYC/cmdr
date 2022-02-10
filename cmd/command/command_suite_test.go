@@ -3,7 +3,7 @@ package command
 import (
 	"testing"
 
-	"github.com/mrlyc/cmdr/cmdr"
+	"github.com/mrlyc/cmdr/core"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/spf13/cobra"
@@ -32,6 +32,6 @@ func checkCommandFlag(cmd *cobra.Command, name, shorthand, configKey string, val
 	}
 
 	if configKey != "" {
-		Expect(cmdr.GetConfiguration().Get(configKey)).NotTo(BeNil())
+		Expect(core.GetConfiguration().Get(configKey)).NotTo(BeNil())
 	}
 }
