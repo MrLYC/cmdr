@@ -250,7 +250,7 @@ func NewBinaryManager(
 			Recursive: true,
 		})
 		if err != nil {
-			return errors.Wrapf(err, "copy %s to %s failed", src, dst)
+			return errors.WithMessagef(err, "copy %s to %s failed", src, dst)
 		}
 
 		return nil

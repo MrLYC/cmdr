@@ -12,18 +12,6 @@ import (
 )
 
 var _ = Describe("Filesystem", func() {
-	Context("DirRemover", func() {
-		It("should succeed when dir exists", func() {
-			dir, err := os.MkdirTemp("", "")
-			Expect(err).To(BeNil())
-
-			dirRemover := initializer.NewDirRemover(dir)
-			Expect(dirRemover.Init()).To(BeNil())
-
-			Expect(dir).NotTo(BeADirectory())
-		})
-	})
-
 	Context("EmbedFSExporter", func() {
 		var (
 			embedFS fs.FS
@@ -89,6 +77,49 @@ var _ = Describe("Filesystem", func() {
 				Expect(err).To(BeNil())
 				Expect(string(content)).To(Equal(perm.String()))
 			}
+		})
+	})
+
+	Context("FSBackup", func() {
+		var (
+			rootDir string
+			path    string
+		)
+
+		BeforeEach(func() {
+			var err error
+
+			rootDir, err = os.MkdirTemp("", "")
+			Expect(err).To(BeNil())
+
+			path = filepath.Join(rootDir, "dir", "a.txt")
+			Expect(os.MkdirAll(filepath.Dir(path), 0755)).To(Succeed())
+			Expect(os.WriteFile(path, []byte("hello"), 0644)).To(Succeed())
+		})
+
+		AfterEach(func() {
+			Expect(os.RemoveAll(rootDir)).To(Succeed())
+		})
+
+		It("should backup a dir", func() {
+			backup := initializer.NewFSBackup(rootDir)
+			Expect(backup.Init()).To(Succeed())
+
+			target := backup.Target()
+			Expect(filepath.Join(target, "dir", "a.txt")).To(BeAnExistingFile())
+		})
+
+		It("should backup a file", func() {
+			backup := initializer.NewFSBackup(path)
+			Expect(backup.Init()).To(Succeed())
+
+			target := backup.Target()
+			Expect(filepath.Join(target, "a.txt")).To(BeAnExistingFile())
+		})
+
+		It("should ok when path not exists", func() {
+			backup := initializer.NewFSBackup(filepath.Join(rootDir, "not_exists"))
+			Expect(backup.Init()).To(Succeed())
 		})
 	})
 })

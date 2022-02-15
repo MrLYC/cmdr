@@ -105,7 +105,7 @@ func (p *PathHelper) CopyFile(name, target string, mode os.FileMode) error {
 		Recursive: true,
 	})
 	if err != nil {
-		return errors.Wrapf(err, "copy file failed")
+		return errors.WithMessagef(err, "copy file failed")
 	}
 
 	return p.Chmod(name, mode)

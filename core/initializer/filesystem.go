@@ -1,31 +1,52 @@
 package initializer
 
 import (
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 
+	"github.com/homedepot/flop"
 	"github.com/pkg/errors"
 
+	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/utils"
 )
 
-type DirRemover struct {
-	path string
+type FSBackup struct {
+	path   string
+	target string
 }
 
-func (d *DirRemover) Init() error {
-	err := os.RemoveAll(d.path)
+func (b *FSBackup) Init() error {
+	dir, err := os.MkdirTemp("", fmt.Sprintf("%s-backup-%s-*", core.Name, filepath.Base(b.path)))
 	if err != nil {
-		return errors.Wrap(err, "failed to remove directory")
+		return errors.Wrapf(err, "failed to create backup directory for %s", b.path)
 	}
 
+	err = flop.Copy(b.path, dir, flop.Options{
+		Recursive:        true,
+		AppendNameToPath: true,
+	})
+	switch errors.Cause(err) {
+	case nil:
+	case flop.ErrFileNotExist:
+		return nil
+	default:
+		return errors.WithMessagef(err, "failed to backup %s", b.path)
+	}
+
+	b.target = dir
 	return nil
 }
 
-func NewDirRemover(path string) *DirRemover {
-	return &DirRemover{
+func (b *FSBackup) Target() string {
+	return b.target
+}
+
+func NewFSBackup(path string) *FSBackup {
+	return &FSBackup{
 		path: path,
 	}
 }
