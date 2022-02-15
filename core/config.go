@@ -22,6 +22,7 @@ const (
 	CfgKeyCmdrBinDir       = "core.bin_dir"
 	CfgKeyCmdrShimsDir     = "core.shims_dir"
 	CfgKeyCmdrDatabasePath = "core.database_path"
+	CfgKeyCmdrProfilePath  = "core.profile_path"
 
 	// log
 	CfgKeyLogLevel  = "log.level"
