@@ -12,7 +12,12 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/utils"
+)
+
+var (
+	ErrShellNotSupported = fmt.Errorf("shell not supported")
 )
 
 type ProfileInjector struct {
@@ -99,4 +104,34 @@ func NewProfileInjector(scriptPath, profilePath string) *ProfileInjector {
 		scriptPath:  scriptPath,
 		profilePath: profilePath,
 	}
+}
+
+func init() {
+	core.RegisterInitializerFactory("profile", func(cfg core.Configuration) (core.Initializer, error) {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to get user home dir")
+		}
+
+		profilePath := cfg.GetString(core.CfgKeyCmdrProfilePath)
+		if profilePath == "" {
+			shell := filepath.Base(os.Getenv("SHELL"))
+
+			switch shell {
+			case "bash":
+				profilePath = filepath.Join(homeDir, ".bashrc")
+			case "zsh":
+				profilePath = filepath.Join(homeDir, ".zshrc")
+			case "sh":
+				profilePath = filepath.Join(homeDir, ".profile")
+			default:
+				return nil, errors.Wrapf(ErrShellNotSupported, shell)
+			}
+		}
+
+		return NewProfileInjector(filepath.Join(
+			cfg.GetString(core.CfgKeyCmdrProfileDir),
+			cfg.GetString(core.CfgKeyCmdrProfileName),
+		), profilePath), nil
+	})
 }

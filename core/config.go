@@ -18,11 +18,12 @@ func SetConfiguration(cfg Configuration) {
 
 const (
 	// cmdr
-	CfgKeyCmdrRoot         = "core.root_dir"
 	CfgKeyCmdrBinDir       = "core.bin_dir"
 	CfgKeyCmdrShimsDir     = "core.shims_dir"
+	CfgKeyCmdrProfileDir   = "core.profile_dir"
 	CfgKeyCmdrDatabasePath = "core.database_path"
 	CfgKeyCmdrProfilePath  = "core.profile_path"
+	CfgKeyCmdrProfileName  = "core.profile_name"
 
 	// log
 	CfgKeyLogLevel  = "log.level"

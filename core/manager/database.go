@@ -261,21 +261,30 @@ func NewDatabaseManager(db DBClient) *DatabaseManager {
 	}
 }
 
+func newDatabaseManagerByConfiguration(cfg core.Configuration) (*DatabaseManager, error) {
+	dbPath := cfg.GetString(core.CfgKeyCmdrDatabasePath)
+
+	db, err := storm.Open(dbPath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "open database failed")
+	}
+
+	return NewDatabaseManager(db), nil
+}
+
 func init() {
 	var (
 		_ core.Command        = (*Command)(nil)
 		_ core.CommandQuery   = (*CommandQuery)(nil)
 		_ core.CommandManager = (*DatabaseManager)(nil)
+		_ core.Initializer    = (*DatabaseManager)(nil)
 	)
 
-	core.RegisterCommandManagerFactory(core.CommandProviderDatabase, func(cfg core.Configuration, opts ...core.Option) (core.CommandManager, error) {
-		dbPath := cfg.GetString(core.CfgKeyCmdrDatabasePath)
+	core.RegisterCommandManagerFactory(core.CommandProviderDatabase, func(cfg core.Configuration) (core.CommandManager, error) {
+		return newDatabaseManagerByConfiguration(cfg)
+	})
 
-		db, err := storm.Open(dbPath)
-		if err != nil {
-			return nil, errors.Wrapf(err, "open database failed")
-		}
-
-		return NewDatabaseManager(db), nil
+	core.RegisterInitializerFactory("database", func(cfg core.Configuration) (core.Initializer, error) {
+		return newDatabaseManagerByConfiguration(cfg)
 	})
 }

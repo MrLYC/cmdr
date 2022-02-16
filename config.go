@@ -15,7 +15,6 @@ func init() {
 
 	cfg := core.GetConfiguration()
 
-	cfg.SetDefault(core.CfgKeyCmdrRoot, filepath.Join(homeDir, ".cmdr"))
 	cfg.SetDefault(core.CfgKeyCmdrBinDir, filepath.Join(homeDir, "bin"))
 	cfg.SetDefault(core.CfgKeyCmdrShimsDir, filepath.Join(homeDir, "shims"))
 	cfg.SetDefault(core.CfgKeyLogLevel, "info")

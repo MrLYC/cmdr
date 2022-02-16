@@ -257,18 +257,27 @@ func NewBinaryManager(
 	}}
 }
 
+func newBinaryManagerByConfiguration(cfg core.Configuration) *BinaryManager {
+	return NewBinaryManager(
+		cfg.GetString(core.CfgKeyCmdrBinDir),
+		cfg.GetString(core.CfgKeyCmdrShimsDir),
+		0755,
+	)
+}
+
 func init() {
 	var (
 		_ core.Command        = (*Binary)(nil)
 		_ core.CommandQuery   = (*BinariesFilter)(nil)
 		_ core.CommandManager = (*BinaryManager)(nil)
+		_ core.Initializer    = (*BinaryManager)(nil)
 	)
 
-	core.RegisterCommandManagerFactory(core.CommandProviderBinary, func(cfg core.Configuration, opts ...core.Option) (core.CommandManager, error) {
-		return NewBinaryManager(
-			cfg.GetString(core.CfgKeyCmdrBinDir),
-			cfg.GetString(core.CfgKeyCmdrShimsDir),
-			0755,
-		), nil
+	core.RegisterCommandManagerFactory(core.CommandProviderBinary, func(cfg core.Configuration) (core.CommandManager, error) {
+		return newBinaryManagerByConfiguration(cfg), nil
+	})
+
+	core.RegisterInitializerFactory("binary", func(cfg core.Configuration) (core.Initializer, error) {
+		return newBinaryManagerByConfiguration(cfg), nil
 	})
 }

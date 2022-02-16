@@ -1,5 +1,7 @@
 package core
 
+import "fmt"
+
 //go:generate stringer -type=CommandProvider
 
 type CommandProvider int
@@ -43,3 +45,28 @@ type CommandManager interface {
 }
 
 //go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock Command,CommandQuery,CommandManager
+
+type factoryCommandManager func(cfg Configuration) (CommandManager, error)
+
+var (
+	ErrCommandManagerFactoryeNotFound = fmt.Errorf("factory not found")
+	factoriesCommandManager           map[CommandProvider]factoryCommandManager
+)
+
+func RegisterCommandManagerFactory(key CommandProvider, fn factoryCommandManager) {
+	factoriesCommandManager[key] = fn
+}
+
+func NewCommandManager(key CommandProvider, cfg Configuration) (CommandManager, error) {
+	fn, ok := factoriesCommandManager[key]
+
+	if !ok {
+		return nil, ErrCommandManagerFactoryeNotFound
+	}
+
+	return fn(cfg)
+}
+
+func init() {
+	factoriesCommandManager = make(map[CommandProvider]factoryCommandManager)
+}
