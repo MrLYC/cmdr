@@ -92,12 +92,12 @@ func init() {
 	var _ core.CommandManager = (*SimpleManager)(nil)
 
 	core.RegisterCommandManagerFactory(core.CommandProviderSimple, func(cfg core.Configuration) (core.CommandManager, error) {
-		mainMgr, err := core.NewCommandManager(core.CommandProviderBinary, cfg, opts...)
+		mainMgr, err := core.NewCommandManager(core.CommandProviderBinary, cfg)
 		if err != nil {
 			return nil, errors.Wrapf(err, "new main command manager failed")
 		}
 
-		recorderMgr, err := core.NewCommandManager(core.CommandProviderDatabase, cfg, opts...)
+		recorderMgr, err := core.NewCommandManager(core.CommandProviderDatabase, cfg)
 		if err != nil {
 			return nil, errors.Wrapf(err, "new recorder command manager failed")
 		}
