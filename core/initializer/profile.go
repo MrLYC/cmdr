@@ -106,27 +106,36 @@ func NewProfileInjector(scriptPath, profilePath string) *ProfileInjector {
 	}
 }
 
+func getProfilePathByShell(path string) (string, error) {
+	shell := filepath.Base(path)
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to get user home dir")
+	}
+
+	switch shell {
+	case "bash":
+		return filepath.Join(homeDir, ".bashrc"), nil
+	case "zsh":
+		return filepath.Join(homeDir, ".zshrc"), nil
+	case "sh":
+		return filepath.Join(homeDir, ".profile"), nil
+	default:
+		return "", errors.Wrapf(ErrShellNotSupported, shell)
+	}
+}
+
 func init() {
 	core.RegisterInitializerFactory("profile", func(cfg core.Configuration) (core.Initializer, error) {
-		homeDir, err := os.UserHomeDir()
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to get user home dir")
-		}
-
 		profilePath := cfg.GetString(core.CfgKeyCmdrProfilePath)
 		if profilePath == "" {
-			shell := filepath.Base(os.Getenv("SHELL"))
-
-			switch shell {
-			case "bash":
-				profilePath = filepath.Join(homeDir, ".bashrc")
-			case "zsh":
-				profilePath = filepath.Join(homeDir, ".zshrc")
-			case "sh":
-				profilePath = filepath.Join(homeDir, ".profile")
-			default:
-				return nil, errors.Wrapf(ErrShellNotSupported, shell)
+			path, err := getProfilePathByShell(os.Getenv("SHELL"))
+			if err != nil {
+				return nil, err
 			}
+
+			profilePath = path
 		}
 
 		return NewProfileInjector(filepath.Join(
