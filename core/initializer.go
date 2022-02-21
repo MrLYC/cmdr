@@ -15,7 +15,7 @@ var (
 	factoriesInitializer           map[string]factoryInitializer
 )
 
-func RegisterInitializerFactory(key string, fn factoryInitializer) {
+func RegisterInitializerFactory(key string, fn func(cfg Configuration) (Initializer, error)) {
 	factoriesInitializer[key] = fn
 }
 

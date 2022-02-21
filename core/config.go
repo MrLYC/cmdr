@@ -18,6 +18,7 @@ func SetConfiguration(cfg Configuration) {
 
 const (
 	// cmdr
+	CfgKeyCmdrRootDir      = "core.root_dir"
 	CfgKeyCmdrBinDir       = "core.bin_dir"
 	CfgKeyCmdrShimsDir     = "core.shims_dir"
 	CfgKeyCmdrProfileDir   = "core.profile_dir"

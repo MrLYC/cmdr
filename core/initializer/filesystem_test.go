@@ -2,12 +2,15 @@ package initializer_test
 
 import (
 	"io/fs"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/spf13/viper"
 
+	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/initializer"
 )
 
@@ -120,6 +123,74 @@ var _ = Describe("Filesystem", func() {
 		It("should ok when path not exists", func() {
 			backup := initializer.NewFSBackup(filepath.Join(rootDir, "not_exists"))
 			Expect(backup.Init()).To(Succeed())
+		})
+	})
+
+	Context("DirRender", func() {
+		var (
+			rootDir string
+			cfg     core.Configuration
+		)
+
+		BeforeEach(func() {
+			var err error
+
+			rootDir, err = os.MkdirTemp("", "")
+			Expect(err).To(BeNil())
+
+			cfg = viper.New()
+			cfg.Set("config.key", "hello")
+		})
+
+		AfterEach(func() {
+			Expect(os.RemoveAll(rootDir)).To(Succeed())
+		})
+
+		It("should render a file", func() {
+			Expect(os.WriteFile(filepath.Join(rootDir, `{{.GetString "config.key"}}.txt.gotmpl`), []byte(`{{.GetString "config.key"}}`), 0644)).To(Succeed())
+
+			render := initializer.NewDirRender(rootDir, ".gotmpl", cfg)
+			Expect(render.Init()).To(Succeed())
+
+			Expect(filepath.Join(rootDir, "hello.txt")).To(BeAnExistingFile())
+			Expect(filepath.Join(rootDir, `{{.GetString "config.key"}}.txt.gotmpl`)).NotTo(BeARegularFile())
+
+			content, err := ioutil.ReadFile(filepath.Join(rootDir, "hello.txt"))
+			Expect(err).To(BeNil())
+			Expect(string(content)).To(Equal("hello"))
+		})
+
+		It("should render a dir", func() {
+			Expect(os.MkdirAll(filepath.Join(rootDir, `{{.GetString "config.key"}}.gotmpl`), 0755)).To(Succeed())
+
+			render := initializer.NewDirRender(rootDir, ".gotmpl", cfg)
+			Expect(render.Init()).To(Succeed())
+
+			Expect(filepath.Join(rootDir, "hello")).To(BeADirectory())
+		})
+
+		It("should render nothing", func() {
+			Expect(os.WriteFile(filepath.Join(rootDir, "a.txt"), []byte(`{{.GetString "config.key"}}`), 0644)).To(Succeed())
+
+			render := initializer.NewDirRender(rootDir, ".gotmpl", cfg)
+			Expect(render.Init()).To(Succeed())
+
+			Expect(filepath.Join(rootDir, "a.txt")).To(BeAnExistingFile())
+			Expect(filepath.Join(rootDir, "a.txt.gotmpl")).NotTo(BeARegularFile())
+		})
+
+		It("should render deep structure", func() {
+			dir := filepath.Join(rootDir, "dir")
+			Expect(os.MkdirAll(dir, 0755)).To(Succeed())
+
+			Expect(os.WriteFile(filepath.Join(dir, `{{.GetString "config.key"}}.txt.gotmpl`), []byte(`{{.GetString "config.key"}}`), 0644)).To(Succeed())
+			Expect(os.MkdirAll(filepath.Join(dir, `{{.GetString "config.key"}}.gotmpl`), 0755)).To(Succeed())
+
+			render := initializer.NewDirRender(rootDir, ".gotmpl", cfg)
+			Expect(render.Init()).To(Succeed())
+
+			Expect(filepath.Join(dir, "hello.txt")).To(BeAnExistingFile())
+			Expect(filepath.Join(dir, "hello")).To(BeADirectory())
 		})
 	})
 })

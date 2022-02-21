@@ -2,11 +2,15 @@ package initializer
 
 import (
 	"fmt"
+	"html/template"
 	"io"
 	"io/fs"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/homedepot/flop"
 	"github.com/pkg/errors"
 
@@ -52,9 +56,9 @@ func NewFSBackup(path string) *FSBackup {
 }
 
 type EmbedFSExporter struct {
-	embedFS fs.FS
-	srcPath string
-	dstPath string
+	filesystem fs.FS
+	srcPath    string
+	dstPath    string
 }
 
 func (e *EmbedFSExporter) copyDir(dstPath string, perm os.FileMode) error {
@@ -67,7 +71,7 @@ func (e *EmbedFSExporter) copyDir(dstPath string, perm os.FileMode) error {
 }
 
 func (e *EmbedFSExporter) copyFile(srcPath, dstPath string, perm os.FileMode) error {
-	srcFile, err := e.embedFS.Open(srcPath)
+	srcFile, err := e.filesystem.Open(srcPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to open source file")
 	}
@@ -113,7 +117,7 @@ func (e *EmbedFSExporter) exportDir(srcPath string, d fs.DirEntry, err error) er
 }
 
 func (e *EmbedFSExporter) Init() error {
-	info, err := fs.Stat(e.embedFS, e.srcPath)
+	info, err := fs.Stat(e.filesystem, e.srcPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to stat source path")
 	}
@@ -123,7 +127,7 @@ func (e *EmbedFSExporter) Init() error {
 		return errors.Wrap(err, "failed to create destination directory")
 	}
 
-	err = fs.WalkDir(e.embedFS, e.srcPath, e.exportDir)
+	err = fs.WalkDir(e.filesystem, e.srcPath, e.exportDir)
 	if err != nil {
 		return errors.Wrap(err, "failed to walk source directory")
 	}
@@ -133,8 +137,131 @@ func (e *EmbedFSExporter) Init() error {
 
 func NewEmbedFSExporter(embedFS fs.FS, srcPath, dstPath string) *EmbedFSExporter {
 	return &EmbedFSExporter{
-		embedFS: embedFS,
-		srcPath: srcPath,
-		dstPath: dstPath,
+		filesystem: embedFS,
+		srcPath:    srcPath,
+		dstPath:    dstPath,
 	}
+}
+
+type DirRender struct {
+	data    interface{}
+	srcPath string
+	ext     string
+}
+
+func (r *DirRender) walkTemplates(fileHandler, dirHandler func(path string, info fs.FileInfo) error) error {
+	var errs error
+
+	err := filepath.Walk(r.srcPath, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return errors.Wrapf(err, "failed to walk directory %s", r.srcPath)
+		}
+
+		if filepath.Ext(path) != r.ext {
+			return nil
+		}
+
+		if info.IsDir() {
+			return dirHandler(path, info)
+		}
+
+		return fileHandler(path, info)
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, err)
+	}
+
+	return errs
+}
+
+func (r *DirRender) renderTemplate(name, content string, target io.Writer) error {
+	tmpl, err := template.New(name).Parse(content)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse template %s", name)
+	}
+
+	err = tmpl.Execute(target, r.data)
+	if err != nil {
+		return errors.Wrapf(err, "failed to execute template %s", name)
+	}
+
+	return nil
+}
+
+func (r *DirRender) renderPath(path string) (string, error) {
+	dirPath := filepath.Dir(path)
+	templateName := filepath.Base(path)
+
+	var builder strings.Builder
+
+	err := r.renderTemplate(path, templateName[:len(filepath.Base(path))-len(r.ext)], &builder)
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(dirPath, builder.String()), nil
+}
+
+func (r *DirRender) renderFile(path string, info os.FileInfo) error {
+	targetPath, err := r.renderPath(path)
+	if err != nil {
+		return err
+	}
+
+	dstFile, err := os.OpenFile(targetPath, os.O_WRONLY|os.O_CREATE, info.Mode().Perm())
+	if err != nil {
+		return errors.Wrapf(err, "failed to create %s", path)
+	}
+	defer utils.CallClose(dstFile)
+
+	templateContent, err := ioutil.ReadFile(path)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read %s", path)
+	}
+	defer os.Remove(path)
+
+	return r.renderTemplate(path, string(templateContent), dstFile)
+}
+
+func (r *DirRender) renderDir(path string, info os.FileInfo) error {
+	targetPath, err := r.renderPath(path)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(targetPath, info.Mode().Perm())
+	if err != nil {
+		return errors.Wrapf(err, "failed to create %s", targetPath)
+	}
+
+	return nil
+}
+
+func (r *DirRender) Init() error {
+	return r.walkTemplates(r.renderFile, r.renderDir)
+}
+
+func NewDirRender(srcPath, ext string, data interface{}) *DirRender {
+	return &DirRender{
+		data:    data,
+		srcPath: srcPath,
+		ext:     ext,
+	}
+}
+
+func init() {
+	core.RegisterInitializerFactory("profile-dir-backup", func(cfg core.Configuration) (core.Initializer, error) {
+		return NewFSBackup(cfg.GetString(core.CfgKeyCmdrProfileDir)), nil
+	})
+
+	core.RegisterInitializerFactory("profile-dir-export", func(cfg core.Configuration) (core.Initializer, error) {
+		return NewEmbedFSExporter(core.EmbedFS, "profile", cfg.GetString(core.CfgKeyCmdrProfileDir)), nil
+	})
+
+	core.RegisterInitializerFactory("profile-dir-render", func(cfg core.Configuration) (core.Initializer, error) {
+		return NewDirRender(cfg.GetString(core.CfgKeyCmdrProfileDir), ".gotmpl", struct {
+			Configuration core.Configuration
+		}{cfg}), nil
+	})
 }
