@@ -59,6 +59,7 @@ type EmbedFSExporter struct {
 	filesystem fs.FS
 	srcPath    string
 	dstPath    string
+	fileMode   os.FileMode
 }
 
 func (e *EmbedFSExporter) copyDir(dstPath string, perm os.FileMode) error {
@@ -93,7 +94,7 @@ func (e *EmbedFSExporter) copyFile(srcPath, dstPath string, perm os.FileMode) er
 
 func (e *EmbedFSExporter) exportDir(srcPath string, d fs.DirEntry, err error) error {
 	if err != nil {
-		return errors.Wrap(err, "failed to walk directory")
+		return errors.Wrap(err, "failed to export directory")
 	}
 
 	path, err := filepath.Rel(e.srcPath, srcPath)
@@ -103,26 +104,15 @@ func (e *EmbedFSExporter) exportDir(srcPath string, d fs.DirEntry, err error) er
 
 	dstPath := filepath.Join(e.dstPath, path)
 
-	fileinfo, err := d.Info()
-	if err != nil {
-		return errors.Wrap(err, "failed to get file info")
-	}
-
-	perm := fileinfo.Mode().Perm()
 	if d.IsDir() {
-		return e.copyDir(dstPath, perm)
+		return e.copyDir(dstPath, 0755)
 	}
 
-	return e.copyFile(srcPath, dstPath, perm)
+	return e.copyFile(srcPath, dstPath, e.fileMode)
 }
 
 func (e *EmbedFSExporter) Init() error {
-	info, err := fs.Stat(e.filesystem, e.srcPath)
-	if err != nil {
-		return errors.Wrap(err, "failed to stat source path")
-	}
-
-	err = os.MkdirAll(e.dstPath, info.Mode().Perm())
+	err := os.MkdirAll(e.dstPath, 0755)
 	if err != nil {
 		return errors.Wrap(err, "failed to create destination directory")
 	}
@@ -135,11 +125,12 @@ func (e *EmbedFSExporter) Init() error {
 	return nil
 }
 
-func NewEmbedFSExporter(embedFS fs.FS, srcPath, dstPath string) *EmbedFSExporter {
+func NewEmbedFSExporter(embedFS fs.FS, srcPath, dstPath string, fileMode os.FileMode) *EmbedFSExporter {
 	return &EmbedFSExporter{
 		filesystem: embedFS,
 		srcPath:    srcPath,
 		dstPath:    dstPath,
+		fileMode:   fileMode,
 	}
 }
 
@@ -256,7 +247,12 @@ func init() {
 	})
 
 	core.RegisterInitializerFactory("profile-dir-export", func(cfg core.Configuration) (core.Initializer, error) {
-		return NewEmbedFSExporter(core.EmbedFS, "profile", cfg.GetString(core.CfgKeyCmdrProfileDir)), nil
+		return NewEmbedFSExporter(
+			core.EmbedFS,
+			filepath.Join("embed", "profile"),
+			cfg.GetString(core.CfgKeyCmdrProfileDir),
+			0644,
+		), nil
 	})
 
 	core.RegisterInitializerFactory("profile-dir-render", func(cfg core.Configuration) (core.Initializer, error) {

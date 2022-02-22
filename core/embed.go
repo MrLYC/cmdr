@@ -2,5 +2,5 @@ package core
 
 import "embed"
 
-//go:embed scripts/*
+//go:embed embed
 var EmbedFS embed.FS

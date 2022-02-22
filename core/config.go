@@ -24,39 +24,40 @@ const (
 	CfgKeyCmdrProfileDir   = "core.profile_dir"
 	CfgKeyCmdrDatabasePath = "core.database_path"
 	CfgKeyCmdrProfilePath  = "core.profile_path"
-	CfgKeyCmdrProfileName  = "core.profile_name"
+	CfgKeyCmdrShell        = "core.shell"
+	CfgKeyCmdrConfigPath   = "core.config_path"
 
 	// log
 	CfgKeyLogLevel  = "log.level"
 	CfgKeyLogOutput = "log.output"
 
 	// command.define
-	CfgKeyCommandDefineName     = "command.define.name"
-	CfgKeyCommandDefineVersion  = "command.define.version"
-	CfgKeyCommandDefineLocation = "command.define.location"
+	CfgKeyCommandDefineName     = "_command.define.name"
+	CfgKeyCommandDefineVersion  = "_command.define.version"
+	CfgKeyCommandDefineLocation = "_command.define.location"
 
 	// command.install
-	CfgKeyCommandInstallName     = "command.install.name"
-	CfgKeyCommandInstallVersion  = "command.install.version"
-	CfgKeyCommandInstallLocation = "command.install.location"
-	CfgKeyCommandInstallActivate = "command.install.activate"
+	CfgKeyCommandInstallName     = "_command.install.name"
+	CfgKeyCommandInstallVersion  = "_command.install.version"
+	CfgKeyCommandInstallLocation = "_command.install.location"
+	CfgKeyCommandInstallActivate = "_command.install.activate"
 
 	// command.list
-	CfgKeyCommandListName     = "command.list.name"
-	CfgKeyCommandListVersion  = "command.list.version"
-	CfgKeyCommandListLocation = "command.list.location"
-	CfgKeyCommandListActivate = "command.list.activate"
+	CfgKeyCommandListName     = "_command.list.name"
+	CfgKeyCommandListVersion  = "_command.list.version"
+	CfgKeyCommandListLocation = "_command.list.location"
+	CfgKeyCommandListActivate = "_command.list.activate"
 
 	// command.uninstall
-	CfgKeyCommandUninstallName    = "command.uninstall.name"
-	CfgKeyCommandUninstallVersion = "command.uninstall.version"
+	CfgKeyCommandUninstallName    = "_command.uninstall.name"
+	CfgKeyCommandUninstallVersion = "_command.uninstall.version"
 
 	// command.unset
-	CfgKeyCommandUnsetName = "command.unset.name"
+	CfgKeyCommandUnsetName = "_command.unset.name"
 
 	// command.use
-	CfgKeyCommandUseName    = "command.use.name"
-	CfgKeyCommandUseVersion = "command.use.version"
+	CfgKeyCommandUseName    = "_command.use.name"
+	CfgKeyCommandUseVersion = "_command.use.version"
 )
 
 func init() {

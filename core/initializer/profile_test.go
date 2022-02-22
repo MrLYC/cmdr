@@ -29,9 +29,9 @@ var _ = Describe("Profile", func() {
 			Expect(os.RemoveAll(rootDir)).To(Succeed())
 		})
 
-		It("should failed when path not exists", func() {
+		It("should inject when path not exists", func() {
 			injector := initializer.NewProfileInjector(scriptPath, filepath.Join(rootDir, "not_exists"))
-			Expect(injector.Init()).NotTo(Succeed())
+			Expect(injector.Init()).To(Succeed())
 		})
 
 		DescribeTable("should inject profile", func(content, excepted string) {

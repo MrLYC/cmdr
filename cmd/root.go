@@ -38,7 +38,7 @@ func ExecuteContext(ctx context.Context) {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig, initLogger)
+	cobra.OnInitialize(preInitConfig, initConfig, postInitConfig, initLogger)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
@@ -48,11 +48,31 @@ func init() {
 
 	homeDir, err := os.UserHomeDir()
 	utils.CheckError(err)
-	pFlags.StringVar(&cfgFile, "config", filepath.Join(homeDir, ".core.yaml"), "config file")
+	pFlags.StringVar(&cfgFile, "config", filepath.Join(homeDir, ".cmdr.yaml"), "config file")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+func preInitConfig() {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+
+	cfg := core.GetConfiguration()
+
+	cfg.Set(core.CfgKeyCmdrConfigPath, cfgFile)
+	cfg.SetDefault(core.CfgKeyCmdrRootDir, filepath.Join(homeDir, ".cmdr"))
+	cfg.SetDefault(core.CfgKeyCmdrBinDir, "bin")
+	cfg.SetDefault(core.CfgKeyCmdrShimsDir, "shims")
+	cfg.SetDefault(core.CfgKeyCmdrProfileDir, "profile")
+	cfg.SetDefault(core.CfgKeyCmdrDatabasePath, "cmdr.db")
+	cfg.SetDefault(core.CfgKeyCmdrShell, os.Getenv("SHELL"))
+
+	cfg.SetDefault(core.CfgKeyLogLevel, "info")
+	cfg.SetDefault(core.CfgKeyLogOutput, "stderr")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -68,6 +88,23 @@ func initConfig() {
 	}
 
 	cfg.AutomaticEnv() // read in environment variables that match
+}
+
+func postInitConfig() {
+	cfg := core.GetConfiguration()
+	rootDir := cfg.GetString(core.CfgKeyCmdrRootDir)
+
+	for _, key := range []string{
+		core.CfgKeyCmdrBinDir,
+		core.CfgKeyCmdrShimsDir,
+		core.CfgKeyCmdrProfileDir,
+		core.CfgKeyCmdrDatabasePath,
+	} {
+		path := cfg.GetString(key)
+		if !filepath.IsAbs(path) {
+			cfg.Set(key, filepath.Join(rootDir, path))
+		}
+	}
 }
 
 func initLogger() {

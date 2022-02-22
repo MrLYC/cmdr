@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
-	"github.com/mrlyc/cmdr/core/initializer"
 	"github.com/mrlyc/cmdr/core/utils"
 )
 
@@ -19,19 +20,32 @@ var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Setup cmdr",
 	Run: func(cmd *cobra.Command, args []string) {
-		chaining := initializer.NewChaining()
-
+		logger := core.Logger
 		cfg := core.GetConfiguration()
-		for _, provider := range []core.CommandProvider{
-			core.CommandProviderBinary,
-			core.CommandProviderDatabase,
+		var errs error
+		for _, step := range []string{
+			"profile-dir-backup",
+			"profile-dir-export",
+			"profile-dir-render",
+			"profile-injector",
 		} {
-			manager, err := core.NewCommandManager(provider, cfg)
-			utils.ExitWithError(err, "Failed to create %s manager", provider)
-			chaining.Add(manager)
+			logger.Info("initializing", map[string]interface{}{
+				"step": step,
+			})
+			handler, err := core.NewInitializer(step, cfg)
+			if err != nil {
+				errs = multierror.Append(errs, errors.WithMessagef(err, "failed to create %s", step))
+				continue
+			}
+
+			err = handler.Init()
+			if err != nil {
+				errs = multierror.Append(errs, errors.WithMessagef(err, "failed to initialize %s", step))
+				continue
+			}
 		}
 
-		utils.ExitWithError(chaining.Init(), "Failed to init cmdr")
+		utils.ExitWithError(errs, "Failed to init cmdr")
 	},
 }
 

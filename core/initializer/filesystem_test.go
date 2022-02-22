@@ -1,6 +1,7 @@
 package initializer_test
 
 import (
+	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -44,24 +45,24 @@ var _ = Describe("Filesystem", func() {
 				filepath.Join("root", "empty_dir"),
 				filepath.Join("root", "dir"),
 			}
-			files := map[string]os.FileMode{
-				filepath.Join("root", "dir", "a.txt"): 0644,
-				filepath.Join("root", "b.txt"):        0600,
+			files := []string{
+				filepath.Join("root", "dir", "a.txt"),
+				filepath.Join("root", "b.txt"),
 			}
 
 			for _, path := range dirs {
 				Expect(os.MkdirAll(filepath.Join(rootDir, path), 0755)).To(Succeed())
 			}
 
-			for path, perm := range files {
+			for i, path := range files {
 				Expect(os.WriteFile(
 					filepath.Join(rootDir, path),
-					[]byte(perm.String()),
-					perm,
+					[]byte(fmt.Sprintf("file %d", i)),
+					0644,
 				)).To(Succeed())
 			}
 
-			exporter := initializer.NewEmbedFSExporter(embedFS, "root", filepath.Join(dstDir, "root"))
+			exporter := initializer.NewEmbedFSExporter(embedFS, "root", filepath.Join(dstDir, "root"), 0644)
 			Expect(exporter.Init()).To(Succeed())
 
 			for _, path := range dirs {
@@ -70,15 +71,14 @@ var _ = Describe("Filesystem", func() {
 				Expect(info.IsDir()).To(BeTrue())
 			}
 
-			for path, perm := range files {
+			for i, path := range files {
 				info, err := os.Stat(filepath.Join(dstDir, path))
 				Expect(err).To(BeNil())
-				Expect(info.Mode().Perm()).To(Equal(perm))
 				Expect(info.IsDir()).To(BeFalse())
 
 				content, err := os.ReadFile(filepath.Join(dstDir, path))
 				Expect(err).To(BeNil())
-				Expect(string(content)).To(Equal(perm.String()))
+				Expect(string(content)).To(Equal(fmt.Sprintf("file %d", i)))
 			}
 		})
 	})

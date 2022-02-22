@@ -25,6 +25,10 @@ type ProfileInjector struct {
 	profilePath string
 }
 
+func (p *ProfileInjector) makeProfileStatement() string {
+	return fmt.Sprintf(`source '%s'`, p.scriptPath)
+}
+
 func (p *ProfileInjector) makeProfileScript() (io.Reader, error) {
 	scriptName := filepath.Base(p.scriptPath)
 	scriptPath := fmt.Sprintf(`'%s'`, p.scriptPath)
@@ -62,8 +66,7 @@ func (p *ProfileInjector) makeProfileScript() (io.Reader, error) {
 	}
 
 	if !found {
-		statement := fmt.Sprintf(`source %s`, scriptPath)
-		_, _ = fmt.Fprintln(buffer, statement)
+		_, _ = fmt.Fprintln(buffer, p.makeProfileStatement())
 	}
 
 	err = scanner.Err()
@@ -75,17 +78,20 @@ func (p *ProfileInjector) makeProfileScript() (io.Reader, error) {
 }
 
 func (p *ProfileInjector) Init() error {
-	stat, err := os.Stat(p.profilePath)
-	if err != nil {
-		return errors.Wrapf(err, "failed to stat %s", p.profilePath)
+	var script io.Reader
+
+	_, err := os.Stat(p.profilePath)
+	if err == nil {
+		script, err = p.makeProfileScript()
+		if err != nil {
+			return errors.Wrapf(err, "failed to make profile script")
+		}
+
+	} else {
+		script = strings.NewReader(fmt.Sprintf("%s\n", p.makeProfileStatement()))
 	}
 
-	script, err := p.makeProfileScript()
-	if err != nil {
-		return errors.Wrapf(err, "failed to make profile script")
-	}
-
-	file, err := os.OpenFile(p.profilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, stat.Mode().Perm())
+	file, err := os.OpenFile(p.profilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open %s", p.profilePath)
 	}
@@ -127,10 +133,10 @@ func getProfilePathByShell(path string) (string, error) {
 }
 
 func init() {
-	core.RegisterInitializerFactory("profile", func(cfg core.Configuration) (core.Initializer, error) {
+	core.RegisterInitializerFactory("profile-injector", func(cfg core.Configuration) (core.Initializer, error) {
 		profilePath := cfg.GetString(core.CfgKeyCmdrProfilePath)
 		if profilePath == "" {
-			path, err := getProfilePathByShell(os.Getenv("SHELL"))
+			path, err := getProfilePathByShell(cfg.GetString(core.CfgKeyCmdrShell))
 			if err != nil {
 				return nil, err
 			}
@@ -140,7 +146,7 @@ func init() {
 
 		return NewProfileInjector(filepath.Join(
 			cfg.GetString(core.CfgKeyCmdrProfileDir),
-			cfg.GetString(core.CfgKeyCmdrProfileName),
+			"cmdr_initializer.sh",
 		), profilePath), nil
 	})
 }
