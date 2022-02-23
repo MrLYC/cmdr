@@ -7,8 +7,8 @@ import (
 
 var _ = Describe("Define", func() {
 	It("", func() {
-		checkCommandFlag(defineCmd, "name", "n", core.CfgKeyCommandDefineName, "", true)
-		checkCommandFlag(defineCmd, "version", "v", core.CfgKeyCommandDefineVersion, "", true)
-		checkCommandFlag(defineCmd, "location", "l", core.CfgKeyCommandDefineLocation, "", true)
+		checkCommandFlag(defineCmd, "name", "n", core.CfgKeyXCommandDefineName, "", true)
+		checkCommandFlag(defineCmd, "version", "v", core.CfgKeyXCommandDefineVersion, "", true)
+		checkCommandFlag(defineCmd, "location", "l", core.CfgKeyXCommandDefineLocation, "", true)
 	})
 })

@@ -8,7 +8,7 @@ import (
 
 var _ = Describe("Use", func() {
 	It("", func() {
-		checkCommandFlag(useCmd, "name", "n", core.CfgKeyCommandUseName, "", true)
-		checkCommandFlag(useCmd, "version", "v", core.CfgKeyCommandUseVersion, "", true)
+		checkCommandFlag(useCmd, "name", "n", core.CfgKeyXCommandUseName, "", true)
+		checkCommandFlag(useCmd, "version", "v", core.CfgKeyXCommandUseVersion, "", true)
 	})
 })

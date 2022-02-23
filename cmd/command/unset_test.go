@@ -8,6 +8,6 @@ import (
 
 var _ = Describe("Unset", func() {
 	It("", func() {
-		checkCommandFlag(unsetCmd, "name", "n", core.CfgKeyCommandUnsetName, "", true)
+		checkCommandFlag(unsetCmd, "name", "n", core.CfgKeyXCommandUnsetName, "", true)
 	})
 })

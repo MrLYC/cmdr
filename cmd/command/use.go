@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/utils"
 )
 
 // useCmd represents the use command
@@ -12,8 +13,8 @@ var useCmd = &cobra.Command{
 	Short: "Activate a command",
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
 		return manager.Activate(
-			cfg.GetString(core.CfgKeyCommandUseName),
-			cfg.GetString(core.CfgKeyCommandUseVersion),
+			cfg.GetString(core.CfgKeyXCommandUseName),
+			cfg.GetString(core.CfgKeyXCommandUseVersion),
 		)
 	}),
 }
@@ -25,9 +26,11 @@ func init() {
 	flags.StringP("version", "v", "", "command version")
 
 	cfg := core.GetConfiguration()
-	cfg.BindPFlag(core.CfgKeyCommandUseName, flags.Lookup("name"))
-	cfg.BindPFlag(core.CfgKeyCommandUseVersion, flags.Lookup("version"))
 
-	useCmd.MarkFlagRequired("name")
-	useCmd.MarkFlagRequired("version")
+	utils.PanicOnError("binding flags",
+		cfg.BindPFlag(core.CfgKeyXCommandUseName, flags.Lookup("name")),
+		cfg.BindPFlag(core.CfgKeyXCommandUseVersion, flags.Lookup("version")),
+		useCmd.MarkFlagRequired("name"),
+		useCmd.MarkFlagRequired("version"),
+	)
 }

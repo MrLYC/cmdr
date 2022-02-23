@@ -115,3 +115,4 @@ $RECYCLE.BIN/
 /bin/
 /.vscode/
 dist/
+.envrc

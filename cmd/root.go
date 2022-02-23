@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gookit/color"
 	"github.com/spf13/cobra"
@@ -15,7 +16,6 @@ import (
 )
 
 var (
-	cfgFile  string
 	exitCode int
 )
 
@@ -46,7 +46,7 @@ func init() {
 
 	pFlags := rootCmd.PersistentFlags()
 
-	pFlags.StringVar(&cfgFile, "config", "config.yaml", "config file")
+	pFlags.StringP("config", "c", "config.yaml", "config file")
 
 	cfg := core.GetConfiguration()
 	utils.PanicOnError("binding flags", cfg.BindPFlag(core.CfgKeyCmdrConfigPath, pFlags.Lookup("config")))
@@ -78,6 +78,8 @@ func preInitConfig() {
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	cfg := core.GetConfiguration()
+	rootDir := cfg.GetString(core.CfgKeyCmdrRootDir)
+	cfgFile := filepath.Join(rootDir, cfg.GetString(core.CfgKeyCmdrConfigPath))
 
 	_, err := os.Stat(cfgFile)
 
@@ -87,6 +89,8 @@ func initConfig() {
 		utils.CheckError(cfg.ReadInConfig())
 	}
 
+	cfg.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	cfg.SetEnvPrefix("cmdr")
 	cfg.AutomaticEnv() // read in environment variables that match
 }
 
@@ -102,8 +106,16 @@ func postInitConfig() {
 		core.CfgKeyCmdrConfigPath,
 	} {
 		path := cfg.GetString(key)
-		if !filepath.IsAbs(path) {
-			cfg.Set(key, filepath.Join(rootDir, path))
+		if filepath.IsAbs(path) {
+			continue
+		}
+
+		value := filepath.Join(rootDir, path)
+
+		if cfg.IsSet(key) {
+			cfg.SetDefault(key, value)
+		} else {
+			cfg.SetDefault(key, value)
 		}
 	}
 }

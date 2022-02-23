@@ -32,32 +32,30 @@ const (
 	CfgKeyLogOutput = "log.output"
 
 	// command.define
-	CfgKeyCommandDefineName     = "_command.define.name"
-	CfgKeyCommandDefineVersion  = "_command.define.version"
-	CfgKeyCommandDefineLocation = "_command.define.location"
-
+	CfgKeyXCommandDefineName     = "_.command.define.name"
+	CfgKeyXCommandDefineVersion  = "_.command.define.version"
+	CfgKeyXCommandDefineLocation = "_.command.define.location"
 	// command.install
-	CfgKeyCommandInstallName     = "_command.install.name"
-	CfgKeyCommandInstallVersion  = "_command.install.version"
-	CfgKeyCommandInstallLocation = "_command.install.location"
-	CfgKeyCommandInstallActivate = "_command.install.activate"
-
+	CfgKeyXCommandInstallName     = "_.command.install.name"
+	CfgKeyXCommandInstallVersion  = "_.command.install.version"
+	CfgKeyXCommandInstallLocation = "_.command.install.location"
+	CfgKeyXCommandInstallActivate = "_.command.install.activate"
 	// command.list
-	CfgKeyCommandListName     = "_command.list.name"
-	CfgKeyCommandListVersion  = "_command.list.version"
-	CfgKeyCommandListLocation = "_command.list.location"
-	CfgKeyCommandListActivate = "_command.list.activate"
-
+	CfgKeyXCommandListName     = "_.command.list.name"
+	CfgKeyXCommandListVersion  = "_.command.list.version"
+	CfgKeyXCommandListLocation = "_.command.list.location"
+	CfgKeyXCommandListActivate = "_.command.list.activate"
 	// command.uninstall
-	CfgKeyCommandUninstallName    = "_command.uninstall.name"
-	CfgKeyCommandUninstallVersion = "_command.uninstall.version"
-
+	CfgKeyXCommandUninstallName    = "_.command.uninstall.name"
+	CfgKeyXCommandUninstallVersion = "_.command.uninstall.version"
 	// command.unset
-	CfgKeyCommandUnsetName = "_command.unset.name"
-
+	CfgKeyXCommandUnsetName = "_.command.unset.name"
 	// command.use
-	CfgKeyCommandUseName    = "_command.use.name"
-	CfgKeyCommandUseVersion = "_command.use.version"
+	CfgKeyXCommandUseName    = "_.command.use.name"
+	CfgKeyXCommandUseVersion = "_.command.use.version"
+
+	// config.get
+	CfgKeyXConfigGetKey = "_.config.get.key"
 )
 
 func init() {

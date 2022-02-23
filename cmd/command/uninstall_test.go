@@ -8,7 +8,7 @@ import (
 
 var _ = Describe("Uninstall", func() {
 	It("", func() {
-		checkCommandFlag(uninstallCmd, "name", "n", core.CfgKeyCommandUninstallName, "", true)
-		checkCommandFlag(uninstallCmd, "version", "v", core.CfgKeyCommandUninstallVersion, "", true)
+		checkCommandFlag(uninstallCmd, "name", "n", core.CfgKeyXCommandUninstallName, "", true)
+		checkCommandFlag(uninstallCmd, "version", "v", core.CfgKeyXCommandUninstallVersion, "", true)
 	})
 })

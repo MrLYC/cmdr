@@ -8,9 +8,9 @@ import (
 
 var _ = Describe("List", func() {
 	It("", func() {
-		checkCommandFlag(listCmd, "name", "n", core.CfgKeyCommandListName, "", false)
-		checkCommandFlag(listCmd, "version", "v", core.CfgKeyCommandListVersion, "", false)
-		checkCommandFlag(listCmd, "location", "l", core.CfgKeyCommandListLocation, "", false)
-		checkCommandFlag(listCmd, "activate", "a", core.CfgKeyCommandListActivate, "false", false)
+		checkCommandFlag(listCmd, "name", "n", core.CfgKeyXCommandListName, "", false)
+		checkCommandFlag(listCmd, "version", "v", core.CfgKeyXCommandListVersion, "", false)
+		checkCommandFlag(listCmd, "location", "l", core.CfgKeyXCommandListLocation, "", false)
+		checkCommandFlag(listCmd, "activate", "a", core.CfgKeyXCommandListActivate, "false", false)
 	})
 })

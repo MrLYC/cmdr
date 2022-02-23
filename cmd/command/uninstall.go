@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/utils"
 )
 
 // uninstallCmd represents the uninstall command
@@ -12,8 +13,8 @@ var uninstallCmd = &cobra.Command{
 	Short: "Uninstall command from cmdr",
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
 		return manager.Undefine(
-			cfg.GetString(core.CfgKeyCommandUninstallName),
-			cfg.GetString(core.CfgKeyCommandUninstallVersion),
+			cfg.GetString(core.CfgKeyXCommandUninstallName),
+			cfg.GetString(core.CfgKeyXCommandUninstallVersion),
 		)
 	}),
 }
@@ -25,9 +26,11 @@ func init() {
 	flags.StringP("version", "v", "", "command version")
 
 	cfg := core.GetConfiguration()
-	cfg.BindPFlag(core.CfgKeyCommandUninstallName, flags.Lookup("name"))
-	cfg.BindPFlag(core.CfgKeyCommandUninstallVersion, flags.Lookup("version"))
 
-	uninstallCmd.MarkFlagRequired("name")
-	uninstallCmd.MarkFlagRequired("version")
+	utils.PanicOnError("binding flags",
+		cfg.BindPFlag(core.CfgKeyXCommandUninstallName, flags.Lookup("name")),
+		cfg.BindPFlag(core.CfgKeyXCommandUninstallVersion, flags.Lookup("version")),
+		uninstallCmd.MarkFlagRequired("name"),
+		uninstallCmd.MarkFlagRequired("version"),
+	)
 }
