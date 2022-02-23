@@ -46,9 +46,10 @@ func init() {
 
 	pFlags := rootCmd.PersistentFlags()
 
-	homeDir, err := os.UserHomeDir()
-	utils.CheckError(err)
-	pFlags.StringVar(&cfgFile, "config", filepath.Join(homeDir, ".cmdr.yaml"), "config file")
+	pFlags.StringVar(&cfgFile, "config", "config.yaml", "config file")
+
+	cfg := core.GetConfiguration()
+	cfg.BindPFlag(core.CfgKeyCmdrConfigPath, pFlags.Lookup("config"))
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -63,7 +64,6 @@ func preInitConfig() {
 
 	cfg := core.GetConfiguration()
 
-	cfg.Set(core.CfgKeyCmdrConfigPath, cfgFile)
 	cfg.SetDefault(core.CfgKeyCmdrRootDir, filepath.Join(homeDir, ".cmdr"))
 	cfg.SetDefault(core.CfgKeyCmdrBinDir, "bin")
 	cfg.SetDefault(core.CfgKeyCmdrShimsDir, "shims")
@@ -99,6 +99,7 @@ func postInitConfig() {
 		core.CfgKeyCmdrShimsDir,
 		core.CfgKeyCmdrProfileDir,
 		core.CfgKeyCmdrDatabasePath,
+		core.CfgKeyCmdrConfigPath,
 	} {
 		path := cfg.GetString(key)
 		if !filepath.IsAbs(path) {
