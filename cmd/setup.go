@@ -47,7 +47,7 @@ var setupCmd = &cobra.Command{
 			}
 		}
 
-		utils.ExitWithError(errs, "Failed to init cmdr")
+		utils.ExitOnError("Failed to init cmdr", errs)
 	},
 }
 

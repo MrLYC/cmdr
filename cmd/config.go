@@ -36,7 +36,7 @@ var configCmd = &cobra.Command{
 			}
 
 			content, err := yaml.Marshal(settings)
-			utils.ExitWithError(err, "marshaling settings")
+			utils.ExitOnError("Marshaling settings", err)
 
 			fmt.Printf("%s\n", content)
 		}

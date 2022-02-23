@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/mrlyc/cmdr/core"
@@ -19,13 +18,28 @@ func CallClose(closer interface {
 	CheckError(closer.Close())
 }
 
-func ExitWithError(err error, message string, args ...interface{}) {
-	if err == nil {
-		return
-	}
+func ExitOnError(message string, errs ...error) {
+	for _, err := range errs {
+		if err == nil {
+			continue
+		}
 
-	core.Logger.Error(fmt.Sprintf(message, args...), map[string]interface{}{
-		"error": err,
-	})
-	os.Exit(-1)
+		core.Logger.Error(message, map[string]interface{}{
+			"error": err,
+		})
+		os.Exit(-1)
+	}
+}
+
+func PanicOnError(message string, errs ...error) {
+	for _, err := range errs {
+		if err == nil {
+			continue
+		}
+
+		core.Logger.Error(message, map[string]interface{}{
+			"error": err,
+		})
+		panic(err)
+	}
 }

@@ -49,7 +49,7 @@ func init() {
 	pFlags.StringVar(&cfgFile, "config", "config.yaml", "config file")
 
 	cfg := core.GetConfiguration()
-	cfg.BindPFlag(core.CfgKeyCmdrConfigPath, pFlags.Lookup("config"))
+	utils.PanicOnError("binding flags", cfg.BindPFlag(core.CfgKeyCmdrConfigPath, pFlags.Lookup("config")))
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
