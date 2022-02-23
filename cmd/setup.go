@@ -25,6 +25,8 @@ var setupCmd = &cobra.Command{
 		var errs error
 		for _, step := range []string{
 			"profile-dir-backup",
+			"binary",
+			"database",
 			"profile-dir-export",
 			"profile-dir-render",
 			"profile-injector",

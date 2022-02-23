@@ -25,25 +25,25 @@ type Binary struct {
 	shimsName string
 }
 
-func (b *Binary) Name() string {
+func (b *Binary) GetName() string {
 	return b.name
 }
 
-func (b *Binary) Version() string {
+func (b *Binary) GetVersion() string {
 	return b.version
 }
 
-func (b *Binary) Activated() bool {
+func (b *Binary) GetActivated() bool {
 	binHelper := utils.NewPathHelper(b.binDir)
 	binPath, err := binHelper.RealPath(b.name)
 	if err != nil {
 		return false
 	}
 
-	return binPath == b.Location()
+	return binPath == b.GetLocation()
 }
 
-func (b *Binary) Location() string {
+func (b *Binary) GetLocation() string {
 	return utils.NewPathHelper(b.shimsDir).
 		Child(b.name).
 		Child(b.shimsName).
@@ -71,25 +71,25 @@ func (f *BinariesFilter) Filter(fn func(b interface{}) bool) *BinariesFilter {
 
 func (f *BinariesFilter) WithName(name string) core.CommandQuery {
 	return f.Filter(func(b interface{}) bool {
-		return b.(*Binary).Name() == name
+		return b.(*Binary).GetName() == name
 	})
 }
 
 func (f *BinariesFilter) WithVersion(version string) core.CommandQuery {
 	return f.Filter(func(b interface{}) bool {
-		return b.(*Binary).Version() == version
+		return b.(*Binary).GetVersion() == version
 	})
 }
 
 func (f *BinariesFilter) WithActivated(activated bool) core.CommandQuery {
 	return f.Filter(func(b interface{}) bool {
-		return b.(*Binary).Activated() == activated
+		return b.(*Binary).GetActivated() == activated
 	})
 }
 
 func (f *BinariesFilter) WithLocation(location string) core.CommandQuery {
 	return f.Filter(func(b interface{}) bool {
-		return b.(*Binary).Location() == location
+		return b.(*Binary).GetLocation() == location
 	})
 }
 

@@ -34,60 +34,60 @@ func (m *MockCommand) EXPECT() *MockCommandMockRecorder {
 	return m.recorder
 }
 
-// Activated mocks base method.
-func (m *MockCommand) Activated() bool {
+// GetActivated mocks base method.
+func (m *MockCommand) GetActivated() bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Activated")
+	ret := m.ctrl.Call(m, "GetActivated")
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
-// Activated indicates an expected call of Activated.
-func (mr *MockCommandMockRecorder) Activated() *gomock.Call {
+// GetActivated indicates an expected call of GetActivated.
+func (mr *MockCommandMockRecorder) GetActivated() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Activated", reflect.TypeOf((*MockCommand)(nil).Activated))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActivated", reflect.TypeOf((*MockCommand)(nil).GetActivated))
 }
 
-// Location mocks base method.
-func (m *MockCommand) Location() string {
+// GetLocation mocks base method.
+func (m *MockCommand) GetLocation() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Location")
+	ret := m.ctrl.Call(m, "GetLocation")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// Location indicates an expected call of Location.
-func (mr *MockCommandMockRecorder) Location() *gomock.Call {
+// GetLocation indicates an expected call of GetLocation.
+func (mr *MockCommandMockRecorder) GetLocation() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Location", reflect.TypeOf((*MockCommand)(nil).Location))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLocation", reflect.TypeOf((*MockCommand)(nil).GetLocation))
 }
 
-// Name mocks base method.
-func (m *MockCommand) Name() string {
+// GetName mocks base method.
+func (m *MockCommand) GetName() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Name")
+	ret := m.ctrl.Call(m, "GetName")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// Name indicates an expected call of Name.
-func (mr *MockCommandMockRecorder) Name() *gomock.Call {
+// GetName indicates an expected call of GetName.
+func (mr *MockCommandMockRecorder) GetName() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockCommand)(nil).Name))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetName", reflect.TypeOf((*MockCommand)(nil).GetName))
 }
 
-// Version mocks base method.
-func (m *MockCommand) Version() string {
+// GetVersion mocks base method.
+func (m *MockCommand) GetVersion() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Version")
+	ret := m.ctrl.Call(m, "GetVersion")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// Version indicates an expected call of Version.
-func (mr *MockCommandMockRecorder) Version() *gomock.Call {
+// GetVersion indicates an expected call of GetVersion.
+func (mr *MockCommandMockRecorder) GetVersion() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Version", reflect.TypeOf((*MockCommand)(nil).Version))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersion", reflect.TypeOf((*MockCommand)(nil).GetVersion))
 }
 
 // MockCommandQuery is a mock of CommandQuery interface.

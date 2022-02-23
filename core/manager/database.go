@@ -21,27 +21,27 @@ type DBClient interface {
 var ErrCommandAlreadyActivated = fmt.Errorf("command already activated")
 
 type Command struct {
-	IDField        int    `storm:"id,increment"`
-	NameField      string `storm:"name,index" json:"name"`
-	VersionField   string `storm:"version,index" json:"version"`
-	ActivatedField bool   `storm:"activated,index" json:"activated"`
-	LocationField  string `storm:"location" json:"location"`
+	ID        int    `storm:"increment"`
+	Name      string `storm:"index" json:"name"`
+	Version   string `storm:"index" json:"version"`
+	Activated bool   `storm:"index" json:"activated"`
+	Location  string `storm:"" json:"location"`
 }
 
-func (c *Command) Name() string {
-	return c.NameField
+func (c *Command) GetName() string {
+	return c.Name
 }
 
-func (c *Command) Version() string {
-	return c.VersionField
+func (c *Command) GetVersion() string {
+	return c.Version
 }
 
-func (c *Command) Activated() bool {
-	return c.ActivatedField
+func (c *Command) GetActivated() bool {
+	return c.Activated
 }
 
-func (c *Command) Location() string {
-	return c.LocationField
+func (c *Command) GetLocation() string {
+	return c.Location
 }
 
 type CommandQuery struct {
@@ -120,12 +120,12 @@ func (m *DatabaseManager) Init() error {
 
 	err := m.Client.Init(&command)
 	if err != nil {
-		return errors.Wrapf(err, "init command failed")
+		return errors.Wrapf(err, "init database failed")
 	}
 
 	err = m.Client.ReIndex(&command)
 	if err != nil {
-		return errors.Wrapf(err, "reindex command failed")
+		return errors.Wrapf(err, "reindex database failed")
 	}
 
 	return nil
@@ -161,8 +161,8 @@ func (m *DatabaseManager) getOrNew(name string, version string) (*Command, bool,
 		return nil, false, errors.Wrapf(err, "get command failed")
 	}
 
-	command.NameField = name
-	command.VersionField = version
+	command.Name = name
+	command.Version = version
 
 	return &command, found, nil
 }
@@ -173,7 +173,7 @@ func (m *DatabaseManager) Define(name string, version string, location string) e
 		return errors.Wrapf(err, "define command failed")
 	}
 
-	command.LocationField = location
+	command.Location = location
 
 	err = m.Client.Save(command)
 	if err != nil {
@@ -193,7 +193,7 @@ func (m *DatabaseManager) Undefine(name string, version string) error {
 		return nil
 	}
 
-	if command.ActivatedField {
+	if command.Activated {
 		return errors.Wrapf(ErrCommandAlreadyActivated, "command %s:%s is activated", name, version)
 	}
 
@@ -220,7 +220,7 @@ func (m *DatabaseManager) Activate(name string, version string) error {
 		return errors.Wrapf(err, "deactivate commands failed")
 	}
 
-	command.ActivatedField = true
+	command.Activated = true
 
 	err = m.Client.Save(command)
 	if err != nil {
@@ -245,7 +245,7 @@ func (m *DatabaseManager) Deactivate(name string) error {
 	}
 
 	for _, cmd := range commands {
-		cmd.ActivatedField = false
+		cmd.Activated = false
 		err := m.Client.Update(cmd)
 		if err != nil {
 			return errors.Wrapf(err, "deactivate command failed")

@@ -41,17 +41,17 @@ var _ = Describe("Binary", func() {
 
 		It("should return name", func() {
 			b := manager.NewBinary(binDir, shimsDir, commandName, version, shimsName)
-			Expect(b.Name()).To(Equal(commandName))
+			Expect(b.GetName()).To(Equal(commandName))
 		})
 
 		It("should return version", func() {
 			b := manager.NewBinary(binDir, shimsDir, commandName, version, shimsName)
-			Expect(b.Version()).To(Equal(version))
+			Expect(b.GetVersion()).To(Equal(version))
 		})
 
 		It("should return location", func() {
 			b := manager.NewBinary(binDir, shimsDir, commandName, version, shimsName)
-			Expect(b.Location()).To(Equal(filepath.Join(shimsDir, commandName, shimsName)))
+			Expect(b.GetLocation()).To(Equal(filepath.Join(shimsDir, commandName, shimsName)))
 		})
 
 		Context("Activate", func() {
@@ -71,14 +71,14 @@ var _ = Describe("Binary", func() {
 
 			It("should not return activated", func() {
 				b := manager.NewBinary(binDir, shimsDir, commandName, version, shimsName)
-				Expect(b.Activated()).To(BeFalse())
+				Expect(b.GetActivated()).To(BeFalse())
 			})
 
 			It("should return activated", func() {
 				Expect(binHelper.SymbolLink(commandName, shimsHelper.Child(shimsName).Path(), 0755)).To(Succeed())
 
 				b := manager.NewBinary(binDir, shimsDir, commandName, version, shimsName)
-				Expect(b.Activated()).To(BeTrue())
+				Expect(b.GetActivated()).To(BeTrue())
 			})
 		})
 	})
@@ -340,9 +340,9 @@ var _ = Describe("Binary", func() {
 				command, err := query.One()
 				Expect(err).To(BeNil())
 
-				Expect(command.Name()).To(Equal(commandName))
-				Expect(command.Version()).To(Equal(version))
-				Expect(command.Location()).To(Equal(getShimsPath(command.Name())))
+				Expect(command.GetName()).To(Equal(commandName))
+				Expect(command.GetVersion()).To(Equal(version))
+				Expect(command.GetLocation()).To(Equal(getShimsPath(command.GetName())))
 			})
 		})
 	})

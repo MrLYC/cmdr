@@ -96,7 +96,7 @@ var _ = Describe("Database", func() {
 			version       = "1.0.0"
 			location      = "location"
 			existsCommand = manager.Command{
-				IDField: 1,
+				ID: 1,
 			}
 		)
 
@@ -196,9 +196,9 @@ var _ = Describe("Database", func() {
 					command, ok := data.(*manager.Command)
 					Expect(ok).To(BeTrue())
 
-					Expect(command.NameField).To(Equal(commandName))
-					Expect(command.VersionField).To(Equal(version))
-					Expect(command.LocationField).To(Equal(location))
+					Expect(command.Name).To(Equal(commandName))
+					Expect(command.Version).To(Equal(version))
+					Expect(command.Location).To(Equal(location))
 					return nil
 				})
 
@@ -212,10 +212,10 @@ var _ = Describe("Database", func() {
 					command, ok := data.(*manager.Command)
 					Expect(ok).To(BeTrue())
 
-					Expect(command.IDField).To(Equal(existsCommand.IDField))
-					Expect(command.NameField).To(Equal(commandName))
-					Expect(command.VersionField).To(Equal(version))
-					Expect(command.LocationField).To(Equal(location))
+					Expect(command.ID).To(Equal(existsCommand.ID))
+					Expect(command.Name).To(Equal(commandName))
+					Expect(command.Version).To(Equal(version))
+					Expect(command.Location).To(Equal(location))
 					return nil
 				})
 
@@ -230,8 +230,8 @@ var _ = Describe("Database", func() {
 					command, ok := data.(*manager.Command)
 					Expect(ok).To(BeTrue())
 
-					Expect(command.NameField).To(Equal(commandName))
-					Expect(command.VersionField).To(Equal(version))
+					Expect(command.Name).To(Equal(commandName))
+					Expect(command.Version).To(Equal(version))
 					return nil
 				})
 
@@ -245,7 +245,7 @@ var _ = Describe("Database", func() {
 			})
 
 			It("should not undefine a activated command", func() {
-				existsCommand.ActivatedField = true
+				existsCommand.Activated = true
 				makeCommandFound()
 
 				Expect(mgr.Undefine(commandName, version)).NotTo(Succeed())
@@ -261,10 +261,10 @@ var _ = Describe("Database", func() {
 					command, ok := data.(*manager.Command)
 					Expect(ok).To(BeTrue())
 
-					Expect(command.IDField).To(Equal(existsCommand.IDField))
-					Expect(command.NameField).To(Equal(commandName))
-					Expect(command.VersionField).To(Equal(version))
-					Expect(command.ActivatedField).To(BeTrue())
+					Expect(command.ID).To(Equal(existsCommand.ID))
+					Expect(command.Name).To(Equal(commandName))
+					Expect(command.Version).To(Equal(version))
+					Expect(command.Activated).To(BeTrue())
 
 					return nil
 				})
@@ -282,10 +282,10 @@ var _ = Describe("Database", func() {
 					command, ok := data.(*manager.Command)
 					Expect(ok).To(BeTrue())
 
-					Expect(command.IDField).To(Equal(existsCommand.IDField))
-					Expect(command.NameField).To(Equal(commandName))
-					Expect(command.VersionField).To(Equal(version))
-					Expect(command.ActivatedField).To(BeTrue())
+					Expect(command.ID).To(Equal(existsCommand.ID))
+					Expect(command.Name).To(Equal(commandName))
+					Expect(command.Version).To(Equal(version))
+					Expect(command.Activated).To(BeTrue())
 
 					return nil
 				})
@@ -309,7 +309,7 @@ var _ = Describe("Database", func() {
 					Expect(ok).To(BeTrue())
 
 					Expect(command).To(Equal(&existsCommand))
-					Expect(command.ActivatedField).To(BeFalse())
+					Expect(command.Activated).To(BeFalse())
 
 					return nil
 				})

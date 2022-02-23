@@ -43,13 +43,13 @@ var listCmd = &cobra.Command{
 
 		for _, command := range commands {
 			var parts []string
-			if command.Activated() {
+			if command.GetActivated() {
 				parts = append(parts, "*")
 			} else {
 				parts = append(parts, " ")
 			}
 
-			parts = append(parts, command.Name(), command.Version())
+			parts = append(parts, command.GetName(), command.GetVersion())
 
 			_, _ = fmt.Fprintf(os.Stdout, "%s\n", strings.Join(parts, " "))
 		}

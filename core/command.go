@@ -14,10 +14,10 @@ const (
 )
 
 type Command interface {
-	Name() string
-	Version() string
-	Activated() bool
-	Location() string
+	GetName() string
+	GetVersion() string
+	GetActivated() bool
+	GetLocation() string
 }
 
 type CommandQuery interface {
