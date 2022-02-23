@@ -56,6 +56,10 @@ const (
 
 	// config.get
 	CfgKeyXConfigGetKey = "_.config.get.key"
+
+	// config.set
+	CfgKeyXConfigSetKey   = "_.config.set.key"
+	CfgKeyXConfigSetValue = "_.config.set.value"
 )
 
 func init() {

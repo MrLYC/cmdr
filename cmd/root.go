@@ -57,12 +57,15 @@ func init() {
 }
 
 func preInitConfig() {
+	cfg := core.GetConfiguration()
+	cfg.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	cfg.SetEnvPrefix("cmdr")
+	cfg.AutomaticEnv() // read in environment variables that match
+
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
 	}
-
-	cfg := core.GetConfiguration()
 
 	cfg.SetDefault(core.CfgKeyCmdrRootDir, filepath.Join(homeDir, ".cmdr"))
 	cfg.SetDefault(core.CfgKeyCmdrBinDir, "bin")
@@ -78,20 +81,16 @@ func preInitConfig() {
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	cfg := core.GetConfiguration()
+
 	rootDir := cfg.GetString(core.CfgKeyCmdrRootDir)
 	cfgFile := filepath.Join(rootDir, cfg.GetString(core.CfgKeyCmdrConfigPath))
 
+	cfg.SetConfigFile(cfgFile)
 	_, err := os.Stat(cfgFile)
-
 	if err == nil {
 		// Use config file from the flag.
-		cfg.SetConfigFile(cfgFile)
 		utils.CheckError(cfg.ReadInConfig())
 	}
-
-	cfg.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	cfg.SetEnvPrefix("cmdr")
-	cfg.AutomaticEnv() // read in environment variables that match
 }
 
 func postInitConfig() {
