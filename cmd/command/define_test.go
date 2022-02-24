@@ -1,8 +1,9 @@
 package command
 
 import (
-	"github.com/mrlyc/cmdr/core"
 	. "github.com/onsi/ginkgo"
+
+	"github.com/mrlyc/cmdr/core"
 )
 
 var _ = Describe("Define", func() {

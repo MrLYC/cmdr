@@ -103,7 +103,7 @@ var _ = Describe("Binary", func() {
 
 			It("should return error", func() {
 				_, err := filter.One()
-				Expect(errors.Cause(err)).To(Equal(manager.ErrBinariesNotFound))
+				Expect(errors.Cause(err)).To(Equal(core.ErrBinariesNotFound))
 			})
 
 			It("should return 0", func() {

@@ -162,22 +162,6 @@ var _ = Describe("Database", func() {
 			mgr = manager.NewDatabaseManager(db)
 		})
 
-		It("should init database", func() {
-			db.EXPECT().Init(gomock.Any()).DoAndReturn(func(data interface{}) error {
-				_, ok := data.(*manager.Command)
-				Expect(ok).To(BeTrue())
-				return nil
-			})
-
-			db.EXPECT().ReIndex(gomock.Any()).DoAndReturn(func(data interface{}) error {
-				_, ok := data.(*manager.Command)
-				Expect(ok).To(BeTrue())
-				return nil
-			})
-
-			Expect(mgr.Init()).To(Succeed())
-		})
-
 		It("should close database", func() {
 			db.EXPECT().Close()
 
