@@ -13,10 +13,12 @@ func runCommand(fn func(cfg core.Configuration, manager core.CommandManager) err
 	return func(cmd *cobra.Command, args []string) {
 		cfg := core.GetConfiguration()
 
-		manager, err := core.NewCommandManager(core.CommandProviderSimple, cfg)
+		manager, err := core.NewCommandManager(core.CommandProviderDefault, cfg)
 		if err != nil {
 			utils.ExitOnError("Failed to create command manager", err)
 		}
+
+		defer utils.CallClose(manager)
 
 		utils.ExitOnError(fmt.Sprintf("Failed to run command %s", cmd.Name()), fn(cfg, manager))
 	}

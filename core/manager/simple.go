@@ -53,7 +53,7 @@ func (m *SimpleManager) Close() error {
 }
 
 func (m *SimpleManager) Provider() core.CommandProvider {
-	return core.CommandProviderSimple
+	return core.CommandProviderDefault
 }
 
 func (m *SimpleManager) Query() (core.CommandQuery, error) {
@@ -91,7 +91,7 @@ func NewSimpleManager(main core.CommandManager, recoder core.CommandManager) *Si
 func init() {
 	var _ core.CommandManager = (*SimpleManager)(nil)
 
-	core.RegisterCommandManagerFactory(core.CommandProviderSimple, func(cfg core.Configuration) (core.CommandManager, error) {
+	core.RegisterCommandManagerFactory(core.CommandProviderDefault, func(cfg core.Configuration) (core.CommandManager, error) {
 		mainMgr, err := core.NewCommandManager(core.CommandProviderBinary, cfg)
 		if err != nil {
 			return nil, errors.Wrapf(err, "new main command manager failed")

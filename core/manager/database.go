@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/utils"
 )
 
 //go:generate mockgen -destination=mock/storm.go -package=mock github.com/asdine/storm/v3 Query
@@ -109,29 +110,6 @@ func NewCommandQuery(db storm.TypeStore) *CommandQuery {
 
 type DatabaseManager struct {
 	Client DBClient
-}
-
-func (m *DatabaseManager) Init() error {
-	var command Command
-	logger := core.Logger
-
-	logger.Debug("initializing database model", map[string]interface{}{
-		"model": "command",
-	})
-	err := m.Client.Init(&command)
-	if err != nil {
-		return errors.Wrapf(err, "init database failed")
-	}
-
-	logger.Debug("indexing database model", map[string]interface{}{
-		"model": "command",
-	})
-	err = m.Client.ReIndex(&command)
-	if err != nil {
-		return errors.Wrapf(err, "reindex database failed")
-	}
-
-	return nil
 }
 
 func (m *DatabaseManager) Close() error {
@@ -283,15 +261,46 @@ func NewDatabaseManager(db DBClient) *DatabaseManager {
 	}
 }
 
-func newDatabaseManagerByConfiguration(cfg core.Configuration) (*DatabaseManager, error) {
-	dbPath := cfg.GetString(core.CfgKeyCmdrDatabasePath)
+type DatabaseMigrator struct {
+	dbPath string
+}
 
-	db, err := storm.Open(dbPath)
+func (m *DatabaseMigrator) Init() error {
+	logger := core.Logger
+
+	db, err := storm.Open(m.dbPath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "open database failed")
+		return errors.Wrapf(err, "open database failed")
+	}
+	defer utils.CallClose(db)
+
+	for name, model := range map[string]interface{}{
+		"command": &Command{},
+	} {
+		logger.Debug("initializing database model", map[string]interface{}{
+			"model": name,
+		})
+		err := db.Init(model)
+		if err != nil {
+			return errors.Wrapf(err, "init database failed")
+		}
+
+		logger.Debug("indexing database model", map[string]interface{}{
+			"model": name,
+		})
+		err = db.ReIndex(model)
+		if err != nil {
+			return errors.Wrapf(err, "reindex database failed")
+		}
 	}
 
-	return NewDatabaseManager(db), nil
+	return nil
+}
+
+func NewDatabaseMigrator(dbPath string) *DatabaseMigrator {
+	return &DatabaseMigrator{
+		dbPath: dbPath,
+	}
 }
 
 func init() {
@@ -299,14 +308,20 @@ func init() {
 		_ core.Command        = (*Command)(nil)
 		_ core.CommandQuery   = (*CommandQuery)(nil)
 		_ core.CommandManager = (*DatabaseManager)(nil)
-		_ core.Initializer    = (*DatabaseManager)(nil)
 	)
 
 	core.RegisterCommandManagerFactory(core.CommandProviderDatabase, func(cfg core.Configuration) (core.CommandManager, error) {
-		return newDatabaseManagerByConfiguration(cfg)
+		dbPath := cfg.GetString(core.CfgKeyCmdrDatabasePath)
+
+		db, err := storm.Open(dbPath)
+		if err != nil {
+			return nil, errors.Wrapf(err, "open database failed")
+		}
+
+		return NewDatabaseManager(db), nil
 	})
 
-	core.RegisterInitializerFactory("database", func(cfg core.Configuration) (core.Initializer, error) {
-		return newDatabaseManagerByConfiguration(cfg)
+	core.RegisterInitializerFactory("database-migrator", func(cfg core.Configuration) (core.Initializer, error) {
+		return NewDatabaseMigrator(cfg.GetString(core.CfgKeyCmdrDatabasePath)), nil
 	})
 }

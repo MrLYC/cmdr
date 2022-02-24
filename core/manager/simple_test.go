@@ -67,7 +67,7 @@ var _ = Describe("Simple", func() {
 	})
 
 	It("should return provider", func() {
-		Expect(mgr.Provider()).To(Equal(core.CommandProviderSimple))
+		Expect(mgr.Provider()).To(Equal(core.CommandProviderDefault))
 	})
 
 	It("should return query by recorder manager", func() {

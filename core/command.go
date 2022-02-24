@@ -10,7 +10,7 @@ const (
 	CommandProviderUnknown CommandProvider = iota
 	CommandProviderDatabase
 	CommandProviderBinary
-	CommandProviderSimple
+	CommandProviderDefault
 )
 
 type Command interface {
