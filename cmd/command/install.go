@@ -12,22 +12,13 @@ var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install command into cmdr",
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
-		name := cfg.GetString(core.CfgKeyXCommandInstallName)
-		version := cfg.GetString(core.CfgKeyXCommandInstallVersion)
-
-		err := manager.Define(
-			name, version,
+		return defineCommand(
+			manager,
+			cfg.GetString(core.CfgKeyXCommandInstallName),
+			cfg.GetString(core.CfgKeyXCommandInstallVersion),
 			cfg.GetString(core.CfgKeyXCommandInstallLocation),
+			cfg.GetBool(core.CfgKeyXCommandInstallActivate),
 		)
-		if err != nil {
-			return err
-		}
-
-		if cfg.GetBool(core.CfgKeyXCommandInstallActivate) {
-			return manager.Activate(name, version)
-		}
-
-		return nil
 	}),
 }
 
@@ -41,12 +32,16 @@ func init() {
 
 	cfg := core.GetConfiguration()
 	utils.PanicOnError("binding flags",
+
 		cfg.BindPFlag(core.CfgKeyXCommandInstallName, flags.Lookup("name")),
-		cfg.BindPFlag(core.CfgKeyXCommandInstallVersion, flags.Lookup("version")),
-		cfg.BindPFlag(core.CfgKeyXCommandInstallLocation, flags.Lookup("location")),
-		cfg.BindPFlag(core.CfgKeyXCommandInstallActivate, flags.Lookup("activate")),
 		installCmd.MarkFlagRequired("name"),
+
+		cfg.BindPFlag(core.CfgKeyXCommandInstallVersion, flags.Lookup("version")),
 		installCmd.MarkFlagRequired("version"),
+
+		cfg.BindPFlag(core.CfgKeyXCommandInstallLocation, flags.Lookup("location")),
 		installCmd.MarkFlagRequired("location"),
+
+		cfg.BindPFlag(core.CfgKeyXCommandInstallActivate, flags.Lookup("activate")),
 	)
 }

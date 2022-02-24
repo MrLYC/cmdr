@@ -44,10 +44,10 @@ var _ = Describe("Database", func() {
 				WithLocation("location")
 
 			db.EXPECT().Select(
-				q.Eq("NameField", "name"),
-				q.Eq("VersionField", "version"),
-				q.Eq("ActivatedField", true),
-				q.Eq("LocationField", "location"),
+				q.Eq("Name", "name"),
+				q.Eq("Version", "version"),
+				q.Eq("Activated", true),
+				q.Eq("Location", "location"),
 			).Return(dbQuery)
 
 			Expect(query.Done()).To(Equal(dbQuery))
@@ -103,8 +103,8 @@ var _ = Describe("Database", func() {
 		makeCommandNotFound := func() {
 			db.EXPECT().
 				Select(
-					q.Eq("NameField", commandName),
-					q.Eq("VersionField", version),
+					q.Eq("Name", commandName),
+					q.Eq("Version", version),
 				).
 				Return(dbQuery)
 
@@ -116,8 +116,8 @@ var _ = Describe("Database", func() {
 		makeActivatedCommandNotFound := func() {
 			db.EXPECT().
 				Select(
-					q.Eq("NameField", commandName),
-					q.Eq("ActivatedField", true),
+					q.Eq("Name", commandName),
+					q.Eq("Activated", true),
 				).
 				Return(dbQuery)
 
@@ -129,8 +129,8 @@ var _ = Describe("Database", func() {
 		makeCommandFound := func() {
 			db.EXPECT().
 				Select(
-					q.Eq("NameField", commandName),
-					q.Eq("VersionField", version),
+					q.Eq("Name", commandName),
+					q.Eq("Version", version),
 				).
 				Return(dbQuery)
 
@@ -145,8 +145,8 @@ var _ = Describe("Database", func() {
 		makeActivatedCommandFound := func() {
 			db.EXPECT().
 				Select(
-					q.Eq("NameField", commandName),
-					q.Eq("ActivatedField", true),
+					q.Eq("Name", commandName),
+					q.Eq("Activated", true),
 				).
 				Return(dbQuery)
 
@@ -276,7 +276,7 @@ var _ = Describe("Database", func() {
 				makeCommandFound()
 				makeActivatedCommandFound()
 
-				db.EXPECT().Update(gomock.Any()).Return(nil).AnyTimes()
+				db.EXPECT().Save(&existsCommand).Return(nil)
 
 				db.EXPECT().Save(gomock.Any()).DoAndReturn(func(data interface{}) error {
 					command, ok := data.(*manager.Command)
@@ -304,7 +304,7 @@ var _ = Describe("Database", func() {
 			It("should deactivate a command", func() {
 				makeActivatedCommandFound()
 
-				db.EXPECT().Update(gomock.Any()).DoAndReturn(func(data interface{}) error {
+				db.EXPECT().Save(gomock.Any()).DoAndReturn(func(data interface{}) error {
 					command, ok := data.(*manager.Command)
 					Expect(ok).To(BeTrue())
 
@@ -327,7 +327,7 @@ var _ = Describe("Database", func() {
 				var command1, command2 manager.Command
 
 				db.EXPECT().
-					Select(q.Eq("NameField", commandName), q.Eq("ActivatedField", true)).
+					Select(q.Eq("Name", commandName), q.Eq("Activated", true)).
 					Return(dbQuery)
 
 				dbQuery.EXPECT().
@@ -339,8 +339,8 @@ var _ = Describe("Database", func() {
 						return nil
 					})
 
-				db.EXPECT().Update(&command1).Return(nil)
-				db.EXPECT().Update(&command2).Return(nil)
+				db.EXPECT().Save(&command1).Return(nil)
+				db.EXPECT().Save(&command2).Return(nil)
 
 				Expect(mgr.Deactivate(commandName)).To(Succeed())
 			})

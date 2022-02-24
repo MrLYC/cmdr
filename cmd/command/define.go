@@ -11,11 +11,17 @@ import (
 var defineCmd = &cobra.Command{
 	Use:   "define",
 	Short: "Define command into cmdr",
+	PreRun: func(cmd *cobra.Command, args []string) {
+		cfg := core.GetConfiguration()
+		cfg.SetDefault(core.CfgKeyCmdrLinkMode, "link")
+	},
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
-		return manager.Define(
+		return defineCommand(
+			manager,
 			cfg.GetString(core.CfgKeyXCommandDefineName),
 			cfg.GetString(core.CfgKeyXCommandDefineVersion),
 			cfg.GetString(core.CfgKeyXCommandDefineLocation),
+			cfg.GetBool(core.CfgKeyXCommandDefineActivate),
 		)
 	}),
 }
@@ -26,14 +32,20 @@ func init() {
 	flags.StringP("name", "n", "", "command name")
 	flags.StringP("version", "v", "", "command version")
 	flags.StringP("location", "l", "", "command location")
+	flags.BoolP("activate", "a", false, "activate command")
 
 	cfg := core.GetConfiguration()
 	utils.PanicOnError("binding flags",
+
 		cfg.BindPFlag(core.CfgKeyXCommandDefineName, flags.Lookup("name")),
-		cfg.BindPFlag(core.CfgKeyXCommandDefineVersion, flags.Lookup("version")),
-		cfg.BindPFlag(core.CfgKeyXCommandDefineLocation, flags.Lookup("location")),
 		defineCmd.MarkFlagRequired("name"),
+
+		cfg.BindPFlag(core.CfgKeyXCommandDefineVersion, flags.Lookup("version")),
 		defineCmd.MarkFlagRequired("version"),
+
+		cfg.BindPFlag(core.CfgKeyXCommandDefineLocation, flags.Lookup("location")),
 		defineCmd.MarkFlagRequired("location"),
+
+		cfg.BindPFlag(core.CfgKeyXCommandDefineActivate, flags.Lookup("activate")),
 	)
 }

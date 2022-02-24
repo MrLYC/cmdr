@@ -192,7 +192,7 @@ var _ = Describe("Binary", func() {
 			shimsDir, err = os.MkdirTemp("", "")
 			Expect(err).To(BeNil())
 
-			mgr = manager.NewBinaryManager(binDir, shimsDir, 0755)
+			mgr = manager.NewBinaryManagerWithCopy(binDir, shimsDir, 0755)
 		})
 
 		JustBeforeEach(func() {
@@ -214,7 +214,7 @@ var _ = Describe("Binary", func() {
 			Expect(os.RemoveAll(binDir)).To(Succeed())
 			Expect(os.RemoveAll(shimsDir)).To(Succeed())
 
-			mgr = manager.NewBinaryManager(binDir, shimsDir, 0755)
+			mgr = manager.NewBinaryManagerWithCopy(binDir, shimsDir, 0755)
 			Expect(mgr.Init()).To(Succeed())
 			Expect(binDir).To(BeADirectory())
 			Expect(shimsDir).To(BeADirectory())

@@ -16,10 +16,6 @@ import (
 	"github.com/mrlyc/cmdr/core/utils"
 )
 
-var (
-	ErrShellNotSupported = fmt.Errorf("shell not supported")
-)
-
 type ProfileInjector struct {
 	scriptPath  string
 	profilePath string
@@ -128,7 +124,7 @@ func getProfilePathByShell(path string) (string, error) {
 	case "sh":
 		return filepath.Join(homeDir, ".profile"), nil
 	default:
-		return "", errors.Wrapf(ErrShellNotSupported, shell)
+		return "", errors.Wrapf(core.ErrShellNotSupported, shell)
 	}
 }
 

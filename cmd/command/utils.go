@@ -21,3 +21,16 @@ func runCommand(fn func(cfg core.Configuration, manager core.CommandManager) err
 		utils.ExitOnError(fmt.Sprintf("Failed to run command %s", cmd.Name()), fn(cfg, manager))
 	}
 }
+
+func defineCommand(manager core.CommandManager, name string, version string, location string, activate bool) error {
+	err := manager.Define(name, version, location)
+	if err != nil {
+		return err
+	}
+
+	if activate {
+		return manager.Activate(name, version)
+	}
+
+	return nil
+}

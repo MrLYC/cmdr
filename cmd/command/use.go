@@ -28,9 +28,11 @@ func init() {
 	cfg := core.GetConfiguration()
 
 	utils.PanicOnError("binding flags",
+
 		cfg.BindPFlag(core.CfgKeyXCommandUseName, flags.Lookup("name")),
-		cfg.BindPFlag(core.CfgKeyXCommandUseVersion, flags.Lookup("version")),
 		useCmd.MarkFlagRequired("name"),
+
+		cfg.BindPFlag(core.CfgKeyXCommandUseVersion, flags.Lookup("version")),
 		useCmd.MarkFlagRequired("version"),
 	)
 }

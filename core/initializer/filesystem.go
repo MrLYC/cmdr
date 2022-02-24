@@ -29,6 +29,10 @@ func (b *FSBackup) Init() error {
 		return errors.Wrapf(err, "failed to create backup directory for %s", b.path)
 	}
 
+	core.Logger.Debug("backup directory", map[string]interface{}{
+		"path": dir,
+	})
+
 	err = flop.Copy(b.path, dir, flop.Options{
 		Recursive:        true,
 		AppendNameToPath: true,
@@ -116,6 +120,11 @@ func (e *EmbedFSExporter) Init() error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create destination directory")
 	}
+
+	core.Logger.Debug("exporting embedded filesystem", map[string]interface{}{
+		"src": e.srcPath,
+		"dst": e.dstPath,
+	})
 
 	err = fs.WalkDir(e.filesystem, e.srcPath, e.exportDir)
 	if err != nil {
@@ -212,10 +221,17 @@ func (r *DirRender) renderFile(path string, info os.FileInfo) error {
 	}
 	defer os.Remove(path)
 
+	core.Logger.Debug("rendering file", map[string]interface{}{
+		"path": path,
+	})
 	return r.renderTemplate(path, string(templateContent), dstFile)
 }
 
 func (r *DirRender) renderDir(path string, info os.FileInfo) error {
+	core.Logger.Debug("rendering dir", map[string]interface{}{
+		"path": path,
+	})
+
 	targetPath, err := r.renderPath(path)
 	if err != nil {
 		return err

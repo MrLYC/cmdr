@@ -1,8 +1,6 @@
 package manager
 
 import (
-	"fmt"
-
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
 	"github.com/pkg/errors"
@@ -17,8 +15,6 @@ type DBClient interface {
 	storm.TypeStore
 	Close() error
 }
-
-var ErrCommandAlreadyActivated = fmt.Errorf("command already activated")
 
 type Command struct {
 	ID        int    `storm:"increment"`
@@ -51,22 +47,22 @@ type CommandQuery struct {
 }
 
 func (c *CommandQuery) WithName(name string) core.CommandQuery {
-	c.matchers = append(c.matchers, q.Eq("NameField", name))
+	c.matchers = append(c.matchers, q.Eq("Name", name))
 	return c
 }
 
 func (c *CommandQuery) WithVersion(version string) core.CommandQuery {
-	c.matchers = append(c.matchers, q.Eq("VersionField", version))
+	c.matchers = append(c.matchers, q.Eq("Version", version))
 	return c
 }
 
 func (c *CommandQuery) WithActivated(activated bool) core.CommandQuery {
-	c.matchers = append(c.matchers, q.Eq("ActivatedField", activated))
+	c.matchers = append(c.matchers, q.Eq("Activated", activated))
 	return c
 }
 
 func (c *CommandQuery) WithLocation(location string) core.CommandQuery {
-	c.matchers = append(c.matchers, q.Eq("LocationField", location))
+	c.matchers = append(c.matchers, q.Eq("Location", location))
 	return c
 }
 
@@ -117,12 +113,19 @@ type DatabaseManager struct {
 
 func (m *DatabaseManager) Init() error {
 	var command Command
+	logger := core.Logger
 
+	logger.Debug("initializing database model", map[string]interface{}{
+		"model": "command",
+	})
 	err := m.Client.Init(&command)
 	if err != nil {
 		return errors.Wrapf(err, "init database failed")
 	}
 
+	logger.Debug("indexing database model", map[string]interface{}{
+		"model": "command",
+	})
 	err = m.Client.ReIndex(&command)
 	if err != nil {
 		return errors.Wrapf(err, "reindex database failed")
@@ -151,7 +154,7 @@ func (m *DatabaseManager) Query() (core.CommandQuery, error) {
 func (m *DatabaseManager) getOrNew(name string, version string) (*Command, bool, error) {
 	var found bool
 	var command Command
-	err := m.Client.Select(q.Eq("NameField", name), q.Eq("VersionField", version)).First(&command)
+	err := m.Client.Select(q.Eq("Name", name), q.Eq("Version", version)).First(&command)
 	switch errors.Cause(err) {
 	case nil:
 		found = true
@@ -174,6 +177,11 @@ func (m *DatabaseManager) Define(name string, version string, location string) e
 	}
 
 	command.Location = location
+	core.Logger.Debug("defining command", map[string]interface{}{
+		"name":     name,
+		"version":  version,
+		"location": location,
+	})
 
 	err = m.Client.Save(command)
 	if err != nil {
@@ -193,8 +201,13 @@ func (m *DatabaseManager) Undefine(name string, version string) error {
 		return nil
 	}
 
+	core.Logger.Debug("undefining command", map[string]interface{}{
+		"name":    name,
+		"version": version,
+	})
+
 	if command.Activated {
-		return errors.Wrapf(ErrCommandAlreadyActivated, "command %s:%s is activated", name, version)
+		return errors.Wrapf(core.ErrCommandAlreadyActivated, "command %s:%s is activated", name, version)
 	}
 
 	err = m.Client.DeleteStruct(command)
@@ -215,6 +228,11 @@ func (m *DatabaseManager) Activate(name string, version string) error {
 		return errors.Errorf("command %s(%s) not found", name, version)
 	}
 
+	core.Logger.Debug("activating command", map[string]interface{}{
+		"name":    name,
+		"version": version,
+	})
+
 	err = m.Deactivate(name)
 	if err != nil {
 		return errors.Wrapf(err, "deactivate commands failed")
@@ -233,8 +251,8 @@ func (m *DatabaseManager) Activate(name string, version string) error {
 func (m *DatabaseManager) Deactivate(name string) error {
 	var commands []*Command
 	err := m.Client.Select(
-		q.Eq("NameField", name),
-		q.Eq("ActivatedField", true),
+		q.Eq("Name", name),
+		q.Eq("Activated", true),
 	).Find(&commands)
 	switch errors.Cause(err) {
 	case nil:
@@ -244,9 +262,13 @@ func (m *DatabaseManager) Deactivate(name string) error {
 		return errors.Wrapf(err, "select commands failed")
 	}
 
+	core.Logger.Debug("deactivating commands", map[string]interface{}{
+		"name": name,
+	})
+
 	for _, cmd := range commands {
 		cmd.Activated = false
-		err := m.Client.Update(cmd)
+		err := m.Client.Save(cmd)
 		if err != nil {
 			return errors.Wrapf(err, "deactivate command failed")
 		}

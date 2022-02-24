@@ -15,8 +15,6 @@ import (
 	"github.com/mrlyc/cmdr/core/utils"
 )
 
-var ErrBinariesNotFound = fmt.Errorf("binaries not found")
-
 type Binary struct {
 	binDir    string
 	shimsDir  string
@@ -104,7 +102,7 @@ func (f *BinariesFilter) All() ([]core.Command, error) {
 
 func (f *BinariesFilter) One() (core.Command, error) {
 	if len(f.binaries) == 0 {
-		return nil, errors.Wrapf(ErrBinariesNotFound, "binaries not found")
+		return nil, errors.Wrapf(core.ErrBinariesNotFound, "binaries not found")
 	}
 
 	return f.binaries[0], nil
@@ -126,7 +124,13 @@ type BinaryManager struct {
 }
 
 func (m *BinaryManager) Init() error {
+	core.Logger.Debug("creating directory", map[string]interface{}{
+		"bin_dir":   m.binDir,
+		"shims_dir": m.shimsDir,
+	})
+
 	for _, path := range []string{m.binDir, m.shimsDir} {
+
 		helper := utils.NewPathHelper(path)
 		err := helper.MkdirAll(m.dirMode)
 		if err != nil {
@@ -192,6 +196,13 @@ func (m *BinaryManager) Define(name string, version string, location string) err
 
 	shimsName := m.ShimsName(name, version)
 	dstLocation := helper.Child(shimsName).Path()
+
+	core.Logger.Debug("defining binary", map[string]interface{}{
+		"name":     name,
+		"version":  version,
+		"location": location,
+	})
+
 	err = m.linkFn(location, dstLocation)
 	if err != nil {
 		return errors.WithMessagef(err, "link %s to %s failed", location, dstLocation)
@@ -203,6 +214,11 @@ func (m *BinaryManager) Define(name string, version string, location string) err
 func (m *BinaryManager) Undefine(name string, version string) error {
 	helper := utils.NewPathHelper(m.shimsDir).Child(name)
 	shimsName := m.ShimsName(name, version)
+
+	core.Logger.Debug("undefining binary", map[string]interface{}{
+		"name":    name,
+		"version": version,
+	})
 
 	err := helper.EnsureNotExists(shimsName)
 	if err != nil {
@@ -222,6 +238,12 @@ func (m *BinaryManager) Activate(name, version string) error {
 	}
 
 	binHelper := utils.NewPathHelper(m.binDir)
+
+	core.Logger.Debug("activating binary", map[string]interface{}{
+		"name":    name,
+		"version": version,
+	})
+
 	err = binHelper.SymbolLink(name, path, 0755)
 	if err != nil {
 		return errors.WithMessagef(err, "symlink %s failed", path)
@@ -232,6 +254,11 @@ func (m *BinaryManager) Activate(name, version string) error {
 
 func (m *BinaryManager) Deactivate(name string) error {
 	binHelper := utils.NewPathHelper(m.binDir)
+
+	core.Logger.Debug("deactivating binary", map[string]interface{}{
+		"name": name,
+	})
+
 	err := binHelper.EnsureNotExists(name)
 	if err != nil {
 		return errors.Wrapf(err, "remove %s failed", name)
@@ -243,8 +270,16 @@ func (m *BinaryManager) Deactivate(name string) error {
 func NewBinaryManager(
 	binDir, shimsDir string,
 	dirMode os.FileMode,
+	linkFn func(src, dst string) error,
 ) *BinaryManager {
-	return &BinaryManager{binDir, shimsDir, dirMode, func(src, dst string) error {
+	return &BinaryManager{binDir, shimsDir, dirMode, linkFn}
+}
+
+func NewBinaryManagerWithCopy(
+	binDir, shimsDir string,
+	dirMode os.FileMode,
+) *BinaryManager {
+	return NewBinaryManager(binDir, shimsDir, dirMode, func(src, dst string) error {
 		err := flop.Copy(src, dst, flop.Options{
 			MkdirAll:  true,
 			Recursive: true,
@@ -254,15 +289,26 @@ func NewBinaryManager(
 		}
 
 		return nil
-	}}
+	})
+}
+
+func NewBinaryManagerWithLink(
+	binDir, shimsDir string,
+	dirMode os.FileMode,
+) *BinaryManager {
+	return NewBinaryManager(binDir, shimsDir, dirMode, os.Symlink)
 }
 
 func newBinaryManagerByConfiguration(cfg core.Configuration) *BinaryManager {
-	return NewBinaryManager(
-		cfg.GetString(core.CfgKeyCmdrBinDir),
-		cfg.GetString(core.CfgKeyCmdrShimsDir),
-		0755,
-	)
+	binDir := cfg.GetString(core.CfgKeyCmdrBinDir)
+	shimsDir := cfg.GetString(core.CfgKeyCmdrShimsDir)
+
+	switch cfg.GetString(core.CfgKeyCmdrLinkMode) {
+	case "link":
+		return NewBinaryManagerWithLink(binDir, shimsDir, 0755)
+	default:
+		return NewBinaryManagerWithCopy(binDir, shimsDir, 0755)
+	}
 }
 
 func init() {

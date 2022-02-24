@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -31,7 +33,7 @@ var setupCmd = &cobra.Command{
 			"profile-dir-render",
 			"profile-injector",
 		} {
-			logger.Info("initializing", map[string]interface{}{
+			logger.Debug("initializing", map[string]interface{}{
 				"step": step,
 			})
 			handler, err := core.NewInitializer(step, cfg)
@@ -48,6 +50,7 @@ var setupCmd = &cobra.Command{
 		}
 
 		utils.ExitOnError("Failed to init cmdr", errs)
+		fmt.Println("done")
 	},
 }
 

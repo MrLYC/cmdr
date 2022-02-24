@@ -26,6 +26,7 @@ const (
 	CfgKeyCmdrProfilePath  = "core.profile_path"
 	CfgKeyCmdrShell        = "core.shell"
 	CfgKeyCmdrConfigPath   = "core.config_path"
+	CfgKeyCmdrLinkMode     = "core.link_mode"
 
 	// log
 	CfgKeyLogLevel  = "log.level"
@@ -35,6 +36,7 @@ const (
 	CfgKeyXCommandDefineName     = "_.command.define.name"
 	CfgKeyXCommandDefineVersion  = "_.command.define.version"
 	CfgKeyXCommandDefineLocation = "_.command.define.location"
+	CfgKeyXCommandDefineActivate = "_.command.define.activate"
 	// command.install
 	CfgKeyXCommandInstallName     = "_.command.install.name"
 	CfgKeyXCommandInstallVersion  = "_.command.install.version"
@@ -45,9 +47,9 @@ const (
 	CfgKeyXCommandListVersion  = "_.command.list.version"
 	CfgKeyXCommandListLocation = "_.command.list.location"
 	CfgKeyXCommandListActivate = "_.command.list.activate"
-	// command.uninstall
-	CfgKeyXCommandUninstallName    = "_.command.uninstall.name"
-	CfgKeyXCommandUninstallVersion = "_.command.uninstall.version"
+	// command.remove
+	CfgKeyXCommandRemoveName    = "_.command.remove.name"
+	CfgKeyXCommandRemoveVersion = "_.command.remove.version"
 	// command.unset
 	CfgKeyXCommandUnsetName = "_.command.unset.name"
 	// command.use
