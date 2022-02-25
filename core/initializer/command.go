@@ -10,7 +10,10 @@ import (
 )
 
 type CmdrUpdater struct {
-	manager core.CommandManager
+	name     string
+	version  string
+	location string
+	manager  core.CommandManager
 }
 
 func (c *CmdrUpdater) getActivatedCmdrVersion() string {
@@ -20,7 +23,7 @@ func (c *CmdrUpdater) getActivatedCmdrVersion() string {
 	}
 
 	command, err := query.
-		WithName(core.Name).
+		WithName(c.name).
 		WithActivated(true).
 		One()
 
@@ -32,19 +35,14 @@ func (c *CmdrUpdater) getActivatedCmdrVersion() string {
 }
 
 func (c *CmdrUpdater) install() error {
-	location, err := os.Executable()
+	err := c.manager.Define(c.name, c.version, c.location)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get executable location")
+		return errors.Wrapf(err, "failed to define command %s", c.name)
 	}
 
-	err = c.manager.Define(core.Name, core.Version, location)
+	err = c.manager.Activate(c.name, c.version)
 	if err != nil {
-		return errors.Wrapf(err, "failed to define command %s", core.Name)
-	}
-
-	err = c.manager.Activate(core.Name, core.Version)
-	if err != nil {
-		return errors.Wrapf(err, "failed to activate command %s", core.Name)
+		return errors.Wrapf(err, "failed to activate command %s", c.name)
 	}
 
 	return nil
@@ -57,7 +55,7 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 	}
 
 	commands, err := query.
-		WithName(core.Name).
+		WithName(c.name).
 		All()
 
 	if err != nil {
@@ -79,7 +77,7 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 			continue
 		}
 
-		err = c.manager.Undefine(core.Name, version)
+		err = c.manager.Undefine(c.name, version)
 		if err != nil {
 			errs = multierror.Append(errs, err)
 		}
@@ -89,7 +87,7 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 }
 
 func (c *CmdrUpdater) Init() error {
-	safeVersion := []string{core.Version}
+	safeVersion := []string{c.version}
 	version := c.getActivatedCmdrVersion()
 	if version != "" {
 		safeVersion = append(safeVersion, version)
@@ -97,25 +95,33 @@ func (c *CmdrUpdater) Init() error {
 
 	err := c.install()
 	if err != nil {
-		return errors.WithMessagef(err, "failed to install command %s", core.Name)
+		return errors.WithMessagef(err, "failed to install command %s", c.name)
 	}
 
 	return c.removeLegacies(safeVersion)
 }
 
-func NewCmdrUpdater(manager core.CommandManager) *CmdrUpdater {
+func NewCmdrUpdater(manager core.CommandManager, name, version, localtion string) *CmdrUpdater {
 	return &CmdrUpdater{
-		manager: manager,
+		manager:  manager,
+		name:     name,
+		version:  version,
+		location: localtion,
 	}
 }
 
 func init() {
 	core.RegisterInitializerFactory("cmdr-updater", func(cfg core.Configuration) (core.Initializer, error) {
+		location, err := os.Executable()
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to get executable location")
+		}
+
 		manager, err := core.NewCommandManager(core.CommandProviderDefault, cfg)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to create command manager")
 		}
 
-		return NewCmdrUpdater(manager), nil
+		return NewCmdrUpdater(manager, core.Name, core.Version, location), nil
 	})
 }

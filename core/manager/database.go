@@ -262,13 +262,13 @@ func NewDatabaseManager(db DBClient) *DatabaseManager {
 }
 
 type DatabaseMigrator struct {
-	dbPath string
+	dbFactory func() (DBClient, error)
 }
 
 func (m *DatabaseMigrator) Init() error {
 	logger := core.Logger
 
-	db, err := storm.Open(m.dbPath)
+	db, err := m.dbFactory()
 	if err != nil {
 		return errors.Wrapf(err, "open database failed")
 	}
@@ -297,9 +297,9 @@ func (m *DatabaseMigrator) Init() error {
 	return nil
 }
 
-func NewDatabaseMigrator(dbPath string) *DatabaseMigrator {
+func NewDatabaseMigrator(dbFactory func() (DBClient, error)) *DatabaseMigrator {
 	return &DatabaseMigrator{
-		dbPath: dbPath,
+		dbFactory: dbFactory,
 	}
 }
 
@@ -322,6 +322,8 @@ func init() {
 	})
 
 	core.RegisterInitializerFactory("database-migrator", func(cfg core.Configuration) (core.Initializer, error) {
-		return NewDatabaseMigrator(cfg.GetString(core.CfgKeyCmdrDatabasePath)), nil
+		return NewDatabaseMigrator(func() (DBClient, error) {
+			return storm.Open(cfg.GetString(core.CfgKeyCmdrDatabasePath))
+		}), nil
 	})
 }

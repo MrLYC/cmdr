@@ -1,6 +1,8 @@
 package manager_test
 
 import (
+	"fmt"
+
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
 	"github.com/golang/mock/gomock"
@@ -328,6 +330,36 @@ var _ = Describe("Database", func() {
 
 				Expect(mgr.Deactivate(commandName)).To(Succeed())
 			})
+		})
+	})
+
+	Context("DatabaseMigrator", func() {
+		var (
+			migrator *manager.DatabaseMigrator
+		)
+
+		BeforeEach(func() {
+			migrator = manager.NewDatabaseMigrator(func() (manager.DBClient, error) {
+				return db, nil
+			})
+		})
+
+		It("should migrate models", func() {
+			histories := make(map[string][]string)
+
+			db.EXPECT().Init(gomock.Any()).DoAndReturn(func(data interface{}) error {
+				key := fmt.Sprintf("%T", data)
+				histories[key] = append(histories[key], "Init")
+				return nil
+			}).AnyTimes()
+			db.EXPECT().ReIndex(gomock.Any()).DoAndReturn(func(data interface{}) error {
+				key := fmt.Sprintf("%T", data)
+				histories[key] = append(histories[key], "ReIndex")
+				return nil
+			}).AnyTimes()
+
+			Expect(migrator.Init()).To(Succeed())
+			Expect(histories["*Command"]).To(Equal([]string{"Init", "ReIndex"}))
 		})
 	})
 })
