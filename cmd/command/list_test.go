@@ -7,7 +7,7 @@ import (
 )
 
 var _ = Describe("List", func() {
-	It("", func() {
+	It("should check flags", func() {
 		checkCommandFlag(listCmd, "name", "n", core.CfgKeyXCommandListName, "", false)
 		checkCommandFlag(listCmd, "version", "v", core.CfgKeyXCommandListVersion, "", false)
 		checkCommandFlag(listCmd, "location", "l", core.CfgKeyXCommandListLocation, "", false)

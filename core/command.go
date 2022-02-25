@@ -53,6 +53,16 @@ var (
 	factoriesCommandManager           map[CommandProvider]factoryCommandManager
 )
 
+func GetCommandManagerFactory(key CommandProvider) factoryCommandManager {
+	fn, ok := factoriesCommandManager[key]
+
+	if !ok {
+		return nil
+	}
+
+	return fn
+}
+
 func RegisterCommandManagerFactory(key CommandProvider, fn factoryCommandManager) {
 	factoriesCommandManager[key] = fn
 }

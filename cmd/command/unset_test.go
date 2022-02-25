@@ -7,7 +7,7 @@ import (
 )
 
 var _ = Describe("Unset", func() {
-	It("", func() {
+	It("should check flags", func() {
 		checkCommandFlag(unsetCmd, "name", "n", core.CfgKeyXCommandUnsetName, "", true)
 	})
 })
