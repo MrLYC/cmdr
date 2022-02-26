@@ -82,8 +82,7 @@ func preInitConfig() {
 func initConfig() {
 	cfg := core.GetConfiguration()
 
-	rootDir := cfg.GetString(core.CfgKeyCmdrRootDir)
-	cfgFile := filepath.Join(rootDir, cfg.GetString(core.CfgKeyCmdrConfigPath))
+	cfgFile := cfg.GetString(core.CfgKeyCmdrConfigPath)
 
 	cfg.SetConfigFile(cfgFile)
 	_, err := os.Stat(cfgFile)
@@ -102,7 +101,6 @@ func postInitConfig() {
 		core.CfgKeyCmdrShimsDir,
 		core.CfgKeyCmdrProfileDir,
 		core.CfgKeyCmdrDatabasePath,
-		core.CfgKeyCmdrConfigPath,
 	} {
 		path := cfg.GetString(key)
 		if filepath.IsAbs(path) {

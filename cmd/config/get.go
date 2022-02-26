@@ -9,7 +9,7 @@ import (
 	"github.com/mrlyc/cmdr/core/utils"
 )
 
-// configCmd represents the config command
+// getCmd represents the config command
 var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get configuration by key",

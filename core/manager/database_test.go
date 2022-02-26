@@ -357,9 +357,10 @@ var _ = Describe("Database", func() {
 				histories[key] = append(histories[key], "ReIndex")
 				return nil
 			}).AnyTimes()
+			db.EXPECT().Close().Return(nil)
 
 			Expect(migrator.Init()).To(Succeed())
-			Expect(histories["*Command"]).To(Equal([]string{"Init", "ReIndex"}))
+			Expect(histories["*manager.Command"]).To(Equal([]string{"Init", "ReIndex"}))
 		})
 	})
 })

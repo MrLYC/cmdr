@@ -13,7 +13,7 @@ var defineCmd = &cobra.Command{
 	Short: "Define command into cmdr",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		cfg := core.GetConfiguration()
-		cfg.SetDefault(core.CfgKeyCmdrLinkMode, "link")
+		cfg.Set(core.CfgKeyCmdrLinkMode, "link")
 	},
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
 		return defineCommand(

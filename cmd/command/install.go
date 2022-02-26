@@ -11,6 +11,10 @@ import (
 var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install command into cmdr",
+	PreRun: func(cmd *cobra.Command, args []string) {
+		cfg := core.GetConfiguration()
+		cfg.Set(core.CfgKeyCmdrLinkMode, "default")
+	},
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
 		return defineCommand(
 			manager,

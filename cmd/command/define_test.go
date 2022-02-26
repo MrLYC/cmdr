@@ -3,6 +3,7 @@ package command
 import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"github.com/spf13/viper"
 
 	"github.com/mrlyc/cmdr/core"
@@ -38,6 +39,10 @@ var _ = Describe("Define", func() {
 
 			cfg = viper.New()
 			core.SetConfiguration(cfg)
+
+			cfg.Set(core.CfgKeyXCommandDefineName, "test")
+			cfg.Set(core.CfgKeyXCommandDefineVersion, "1.0.0")
+			cfg.Set(core.CfgKeyXCommandDefineLocation, "")
 		})
 
 		AfterEach(func() {
@@ -47,9 +52,6 @@ var _ = Describe("Define", func() {
 		})
 
 		It("should define a activated command", func() {
-			cfg.Set(core.CfgKeyXCommandDefineName, "test")
-			cfg.Set(core.CfgKeyXCommandDefineVersion, "1.0.0")
-			cfg.Set(core.CfgKeyXCommandDefineLocation, "")
 			cfg.Set(core.CfgKeyXCommandDefineActivate, true)
 
 			manager.EXPECT().Define("test", "1.0.0", "").Return(nil)
@@ -60,15 +62,18 @@ var _ = Describe("Define", func() {
 		})
 
 		It("should define a non-activated command", func() {
-			cfg.Set(core.CfgKeyXCommandDefineName, "test")
-			cfg.Set(core.CfgKeyXCommandDefineVersion, "1.0.0")
-			cfg.Set(core.CfgKeyXCommandDefineLocation, "")
 			cfg.Set(core.CfgKeyXCommandDefineActivate, false)
 
 			manager.EXPECT().Define("test", "1.0.0", "").Return(nil)
 			manager.EXPECT().Close().Return(nil)
 
 			defineCmd.Run(defineCmd, []string{})
+		})
+
+		It("should change link mode", func() {
+			defineCmd.PreRun(defineCmd, []string{})
+
+			Expect(cfg.GetString(core.CfgKeyCmdrLinkMode)).To(Equal("link"))
 		})
 	})
 })
