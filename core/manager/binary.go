@@ -102,7 +102,7 @@ func (f *BinariesFilter) All() ([]core.Command, error) {
 
 func (f *BinariesFilter) One() (core.Command, error) {
 	if len(f.binaries) == 0 {
-		return nil, errors.Wrapf(core.ErrBinariesNotFound, "binaries not found")
+		return nil, errors.Wrapf(core.ErrBinaryNotFound, "binaries not found")
 	}
 
 	return f.binaries[0], nil

@@ -1,9 +1,13 @@
 package command
 
 import (
+	"os"
+
+	"github.com/hashicorp/go-getter"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/manager"
 	"github.com/mrlyc/cmdr/core/utils"
 )
 
@@ -15,9 +19,26 @@ var installCmd = &cobra.Command{
 		cfg := core.GetConfiguration()
 		cfg.Set(core.CfgKeyCmdrLinkMode, "default")
 	},
-	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
+	Run: runCommand(func(cfg core.Configuration, mgr core.CommandManager) error {
+		tracker := utils.NewProgressBarTracker("downloading", os.Stderr)
+
+		downloader := utils.NewDownloader(
+			tracker,
+			[]getter.Detector{
+				new(getter.GitHubDetector),
+				new(getter.GitLabDetector),
+				new(getter.GitDetector),
+				new(getter.BitBucketDetector),
+				new(getter.S3Detector),
+				new(getter.GCSDetector),
+			},
+			nil,
+		)
+
+		downloadManager := manager.NewDownloadManager(mgr, downloader)
+
 		return defineCommand(
-			manager,
+			downloadManager,
 			cfg.GetString(core.CfgKeyXCommandInstallName),
 			cfg.GetString(core.CfgKeyXCommandInstallVersion),
 			cfg.GetString(core.CfgKeyXCommandInstallLocation),

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/hashicorp/go-getter"
 	"github.com/pkg/errors"
 	"github.com/schollz/progressbar/v3"
 )
@@ -35,4 +36,42 @@ func DownloadToFile(ctx context.Context, url, output string) error {
 	}
 
 	return nil
+}
+
+type Downloader struct {
+	progressListener getter.ProgressTracker
+	detectors        []getter.Detector
+	options          []getter.ClientOption
+}
+
+func (d *Downloader) IsSupport(uri string) bool {
+	_, err := getter.Detect(uri, os.TempDir(), d.detectors)
+	return err == nil
+}
+
+func (d *Downloader) Fetch(uri, dir string) error {
+	client := getter.Client{
+		Src:              uri,
+		Dst:              dir,
+		Pwd:              os.TempDir(),
+		Mode:             getter.ClientModeAny,
+		Detectors:        d.detectors,
+		Options:          d.options,
+		ProgressListener: d.progressListener,
+	}
+
+	err := client.Get()
+	if err != nil {
+		return errors.Wrapf(err, "download failed")
+	}
+
+	return nil
+}
+
+func NewDownloader(progressListener getter.ProgressTracker, detectors []getter.Detector, options []getter.ClientOption) *Downloader {
+	return &Downloader{
+		progressListener: progressListener,
+		detectors:        detectors,
+		options:          options,
+	}
 }
