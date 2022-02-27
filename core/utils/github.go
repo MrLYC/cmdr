@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/go-github/v39/github"
-	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
 )
@@ -18,16 +17,4 @@ func GetCMDRRelease(ctx context.Context, tag string) (release *github.Repository
 	}
 
 	return
-}
-
-func DownloadReleaseAssetByName(ctx context.Context, release *github.RepositoryRelease, name, output string) error {
-	for _, asset := range release.Assets {
-		if name != *asset.Name {
-			continue
-		}
-
-		return DownloadToFile(ctx, *asset.BrowserDownloadURL, output)
-	}
-
-	return errors.Wrapf(core.ErrReleaseAssetNotFound, name)
 }

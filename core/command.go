@@ -8,9 +8,10 @@ type CommandProvider int
 
 const (
 	CommandProviderUnknown CommandProvider = iota
+	CommandProviderDefault
 	CommandProviderDatabase
 	CommandProviderBinary
-	CommandProviderDefault
+	CommandProviderDownload
 )
 
 type Command interface {

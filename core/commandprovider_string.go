@@ -9,14 +9,15 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[CommandProviderUnknown-0]
-	_ = x[CommandProviderDatabase-1]
-	_ = x[CommandProviderBinary-2]
-	_ = x[CommandProviderDefault-3]
+	_ = x[CommandProviderDefault-1]
+	_ = x[CommandProviderDatabase-2]
+	_ = x[CommandProviderBinary-3]
+	_ = x[CommandProviderDownload-4]
 }
 
-const _CommandProvider_name = "CommandProviderUnknownCommandProviderDatabaseCommandProviderBinaryCommandProviderDefault"
+const _CommandProvider_name = "CommandProviderUnknownCommandProviderDefaultCommandProviderDatabaseCommandProviderBinaryCommandProviderDownload"
 
-var _CommandProvider_index = [...]uint8{0, 22, 45, 66, 88}
+var _CommandProvider_index = [...]uint8{0, 22, 44, 67, 88, 111}
 
 func (i CommandProvider) String() string {
 	if i < 0 || i >= CommandProvider(len(_CommandProvider_index)-1) {

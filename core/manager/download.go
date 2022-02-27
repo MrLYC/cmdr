@@ -94,3 +94,14 @@ func NewDownloadManager(manager core.CommandManager, fetcher core.Fetcher) *Down
 		fetcher:        fetcher,
 	}
 }
+
+func init() {
+	core.RegisterCommandManagerFactory(core.CommandProviderDownload, func(cfg core.Configuration) (core.CommandManager, error) {
+		manager, err := core.NewCommandManager(core.CommandProviderDefault, cfg)
+		if err != nil {
+			utils.ExitOnError("Failed to create command manager", err)
+		}
+
+		return NewDownloadManager(manager, utils.NewProgressBarDownloader(os.Stderr)), nil
+	})
+}
