@@ -1,4 +1,6 @@
 # CMDR
+[![test](https://github.com/MrLYC/cmdr/actions/workflows/unittest.yml/badge.svg)](https://github.com/MrLYC/cmdr/actions/workflows/unittest.yml) [![release](https://github.com/MrLYC/cmdr/actions/workflows/main.yml/badge.svg)](https://github.com/MrLYC/cmdr/actions/workflows/main.yml)
+
 CMDR is a simple command version management tool that helps you quickly switch from multiple command versions.
 
 ## Installation
