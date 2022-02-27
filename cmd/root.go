@@ -44,11 +44,14 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	pFlags := rootCmd.PersistentFlags()
-
-	pFlags.StringP("config", "c", "config.yaml", "config file")
-
 	cfg := core.GetConfiguration()
+	pFlags := rootCmd.PersistentFlags()
+	pFlags.StringP(
+		"config", "c",
+		filepath.Join(cfg.GetString(core.CfgKeyCmdrRootDir), "config.yaml"),
+		"config file",
+	)
+
 	utils.PanicOnError("binding flags", cfg.BindPFlag(core.CfgKeyCmdrConfigPath, pFlags.Lookup("config")))
 
 	// Cobra also supports local flags, which will only run

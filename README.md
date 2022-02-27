@@ -1,5 +1,5 @@
 # CMDR
-[![test](https://github.com/MrLYC/cmdr/actions/workflows/unittest.yml/badge.svg)](https://github.com/MrLYC/cmdr/actions/workflows/unittest.yml) [![release](https://github.com/MrLYC/cmdr/actions/workflows/main.yml/badge.svg)](https://github.com/MrLYC/cmdr/actions/workflows/main.yml) [![codecov](https://codecov.io/gh/MrLYC/cmdr/branch/main/graph/badge.svg?token=mo4TJP4mQt)](https://codecov.io/gh/MrLYC/cmdr)
+[![test](https://github.com/MrLYC/cmdr/actions/workflows/unittest.yml/badge.svg)](https://github.com/MrLYC/cmdr/actions/workflows/unittest.yml) [![release](https://github.com/MrLYC/cmdr/actions/workflows/release.yml/badge.svg)](https://github.com/MrLYC/cmdr/actions/workflows/main.yml) [![codecov](https://codecov.io/gh/MrLYC/cmdr/branch/main/graph/badge.svg?token=mo4TJP4mQt)](https://codecov.io/gh/MrLYC/cmdr)
 
 CMDR is a simple command version management tool that helps you quickly switch from multiple command versions.
 
