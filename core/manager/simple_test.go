@@ -2,10 +2,13 @@ package manager_test
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/spf13/viper"
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/manager"
@@ -200,6 +203,35 @@ var _ = Describe("Simple", func() {
 			recoderMgr.EXPECT().Deactivate(name).Return(fmt.Errorf("testing"))
 
 			Expect(mgr.Deactivate(name)).NotTo(Succeed())
+		})
+	})
+
+	Context("Factory", func() {
+		var (
+			cfg     core.Configuration
+			rootDir string
+		)
+
+		BeforeEach(func() {
+			cfg = viper.New()
+
+			var err error
+			rootDir, err = os.MkdirTemp("", "")
+			Expect(err).NotTo(HaveOccurred())
+
+			cfg.Set(core.CfgKeyCmdrDatabasePath, filepath.Join(rootDir, "cmdr.db"))
+		})
+
+		AfterEach(func() {
+			os.RemoveAll(rootDir)
+		})
+
+		It("should create download manager", func() {
+			mgr, err := core.NewCommandManager(core.CommandProviderDefault, cfg)
+			Expect(err).To(BeNil())
+
+			_, ok := mgr.(*manager.SimpleManager)
+			Expect(ok).To(BeTrue())
 		})
 	})
 })

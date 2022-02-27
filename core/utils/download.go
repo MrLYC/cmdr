@@ -49,10 +49,10 @@ func (d *Downloader) IsSupport(uri string) bool {
 	return err == nil
 }
 
-func (d *Downloader) Fetch(uri, dir string) error {
+func (d *Downloader) Fetch(uri, dst string) error {
 	client := getter.Client{
 		Src:              uri,
-		Dst:              dir,
+		Dst:              dst,
 		Pwd:              os.TempDir(),
 		Mode:             getter.ClientModeAny,
 		Detectors:        d.detectors,
@@ -74,4 +74,21 @@ func NewDownloader(progressListener getter.ProgressTracker, detectors []getter.D
 		detectors:        detectors,
 		options:          options,
 	}
+}
+
+func NewProgressBarDownloader(stream io.Writer, options ...getter.ClientOption) *Downloader {
+	tracker := NewProgressBarTracker("downloading", stream)
+
+	return NewDownloader(
+		tracker,
+		[]getter.Detector{
+			new(getter.GitHubDetector),
+			new(getter.GitLabDetector),
+			new(getter.GitDetector),
+			new(getter.BitBucketDetector),
+			new(getter.S3Detector),
+			new(getter.GCSDetector),
+		},
+		options,
+	)
 }

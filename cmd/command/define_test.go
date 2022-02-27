@@ -6,16 +6,17 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/spf13/viper"
 
+	"github.com/mrlyc/cmdr/cmd/internal/testutils"
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/mock"
 )
 
 var _ = Describe("Define", func() {
 	It("should check flags", func() {
-		checkCommandFlag(defineCmd, "name", "n", core.CfgKeyXCommandDefineName, "", true)
-		checkCommandFlag(defineCmd, "version", "v", core.CfgKeyXCommandDefineVersion, "", true)
-		checkCommandFlag(defineCmd, "location", "l", core.CfgKeyXCommandDefineLocation, "", true)
-		checkCommandFlag(defineCmd, "activate", "a", core.CfgKeyXCommandDefineActivate, "false", false)
+		testutils.CheckCommandFlag(defineCmd, "name", "n", core.CfgKeyXCommandDefineName, "", true)
+		testutils.CheckCommandFlag(defineCmd, "version", "v", core.CfgKeyXCommandDefineVersion, "", true)
+		testutils.CheckCommandFlag(defineCmd, "location", "l", core.CfgKeyXCommandDefineLocation, "", true)
+		testutils.CheckCommandFlag(defineCmd, "activate", "a", core.CfgKeyXCommandDefineActivate, "false", false)
 	})
 
 	Context("command", func() {

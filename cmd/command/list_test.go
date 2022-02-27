@@ -5,16 +5,17 @@ import (
 	. "github.com/onsi/ginkgo"
 	"github.com/spf13/viper"
 
+	"github.com/mrlyc/cmdr/cmd/internal/testutils"
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/mock"
 )
 
 var _ = Describe("List", func() {
 	It("should check flags", func() {
-		checkCommandFlag(listCmd, "name", "n", core.CfgKeyXCommandListName, "", false)
-		checkCommandFlag(listCmd, "version", "v", core.CfgKeyXCommandListVersion, "", false)
-		checkCommandFlag(listCmd, "location", "l", core.CfgKeyXCommandListLocation, "", false)
-		checkCommandFlag(listCmd, "activate", "a", core.CfgKeyXCommandListActivate, "false", false)
+		testutils.CheckCommandFlag(listCmd, "name", "n", core.CfgKeyXCommandListName, "", false)
+		testutils.CheckCommandFlag(listCmd, "version", "v", core.CfgKeyXCommandListVersion, "", false)
+		testutils.CheckCommandFlag(listCmd, "location", "l", core.CfgKeyXCommandListLocation, "", false)
+		testutils.CheckCommandFlag(listCmd, "activate", "a", core.CfgKeyXCommandListActivate, "false", false)
 	})
 
 	Context("command", func() {

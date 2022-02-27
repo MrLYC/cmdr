@@ -6,16 +6,17 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/spf13/viper"
 
+	"github.com/mrlyc/cmdr/cmd/internal/testutils"
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/mock"
 )
 
 var _ = Describe("Install", func() {
 	It("should check flags", func() {
-		checkCommandFlag(installCmd, "name", "n", core.CfgKeyXCommandInstallName, "", true)
-		checkCommandFlag(installCmd, "version", "v", core.CfgKeyXCommandInstallVersion, "", true)
-		checkCommandFlag(installCmd, "location", "l", core.CfgKeyXCommandInstallLocation, "", true)
-		checkCommandFlag(installCmd, "activate", "a", core.CfgKeyXCommandInstallActivate, "false", false)
+		testutils.CheckCommandFlag(installCmd, "name", "n", core.CfgKeyXCommandInstallName, "", true)
+		testutils.CheckCommandFlag(installCmd, "version", "v", core.CfgKeyXCommandInstallVersion, "", true)
+		testutils.CheckCommandFlag(installCmd, "location", "l", core.CfgKeyXCommandInstallLocation, "", true)
+		testutils.CheckCommandFlag(installCmd, "activate", "a", core.CfgKeyXCommandInstallActivate, "false", false)
 	})
 
 	Context("command", func() {
@@ -28,12 +29,12 @@ var _ = Describe("Install", func() {
 		)
 
 		BeforeEach(func() {
-			factory = core.GetCommandManagerFactory(core.CommandProviderDefault)
+			factory = core.GetCommandManagerFactory(core.CommandProviderDownload)
 			rawCfg = core.GetConfiguration()
 
 			ctrl = gomock.NewController(GinkgoT())
 			manager = mock.NewMockCommandManager(ctrl)
-			core.RegisterCommandManagerFactory(core.CommandProviderDefault, func(cfg core.Configuration) (core.CommandManager, error) {
+			core.RegisterCommandManagerFactory(core.CommandProviderDownload, func(cfg core.Configuration) (core.CommandManager, error) {
 				return manager, nil
 			})
 
@@ -47,7 +48,7 @@ var _ = Describe("Install", func() {
 
 		AfterEach(func() {
 			ctrl.Finish()
-			core.RegisterCommandManagerFactory(core.CommandProviderDefault, factory)
+			core.RegisterCommandManagerFactory(core.CommandProviderDownload, factory)
 			core.SetConfiguration(rawCfg)
 		})
 

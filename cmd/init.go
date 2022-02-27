@@ -11,12 +11,6 @@ import (
 	"github.com/mrlyc/cmdr/core/utils"
 )
 
-var initCmdFlag struct {
-	skipInstall bool
-	skipProfile bool
-	upgrade     bool
-}
-
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
@@ -58,7 +52,12 @@ var initCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(initCmd)
+	cfg := core.GetConfiguration()
 
 	flags := initCmd.Flags()
-	flags.BoolVar(&initCmdFlag.upgrade, "upgrade", false, "for upgrade init")
+	flags.BoolP("upgrade", "u", false, "for upgrade init")
+
+	utils.PanicOnError("binding flags",
+		cfg.BindPFlag(core.CfgKeyXInitUpgrade, flags.Lookup("upgrade")),
+	)
 }

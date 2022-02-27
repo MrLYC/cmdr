@@ -1,16 +1,16 @@
-package command
+package utils_test
 
 import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/mock"
+	"github.com/mrlyc/cmdr/core/utils"
 )
 
-var _ = Describe("Utils", func() {
+var _ = Describe("Cmdr", func() {
 	var (
 		ctrl    *gomock.Controller
 		manager *mock.MockCommandManager
@@ -33,17 +33,16 @@ var _ = Describe("Utils", func() {
 		core.RegisterCommandManagerFactory(core.CommandProviderDefault, factory)
 	})
 
-	It("should init manager", func() {
-		var cmd cobra.Command
+	It("should define a activated command", func() {
+		manager.EXPECT().Define("test", "1.0.0", "test").Return(nil)
+		manager.EXPECT().Activate("test", "1.0.0").Return(nil)
 
-		manager.EXPECT().Close().Return(nil)
+		Expect(utils.DefineCmdrCommand(manager, "test", "1.0.0", "test", true)).To(Succeed())
+	})
 
-		fn := runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
-			Expect(manager).NotTo(BeNil())
+	It("should define a non-activated command", func() {
+		manager.EXPECT().Define("test", "1.0.0", "test").Return(nil)
 
-			return nil
-		})
-
-		fn(&cmd, []string{})
+		Expect(utils.DefineCmdrCommand(manager, "test", "1.0.0", "test", false)).To(Succeed())
 	})
 })

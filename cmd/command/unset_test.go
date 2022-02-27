@@ -5,13 +5,14 @@ import (
 	. "github.com/onsi/ginkgo"
 	"github.com/spf13/viper"
 
+	"github.com/mrlyc/cmdr/cmd/internal/testutils"
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/mock"
 )
 
 var _ = Describe("Unset", func() {
 	It("should check flags", func() {
-		checkCommandFlag(unsetCmd, "name", "n", core.CfgKeyXCommandUnsetName, "", true)
+		testutils.CheckCommandFlag(unsetCmd, "name", "n", core.CfgKeyXCommandUnsetName, "", true)
 	})
 
 	Context("command", func() {

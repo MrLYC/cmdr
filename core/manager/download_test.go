@@ -9,7 +9,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"github.com/spf13/viper"
 
+	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/manager"
 	"github.com/mrlyc/cmdr/core/mock"
 )
@@ -129,5 +131,34 @@ var _ = Describe("Download", func() {
 				"sub/dir/cmdr": 0755,
 			}, "cmdr"),
 		)
+	})
+
+	Context("Factory", func() {
+		var (
+			cfg     core.Configuration
+			rootDir string
+		)
+
+		BeforeEach(func() {
+			cfg = viper.New()
+
+			var err error
+			rootDir, err = os.MkdirTemp("", "")
+			Expect(err).NotTo(HaveOccurred())
+
+			cfg.Set(core.CfgKeyCmdrDatabasePath, filepath.Join(rootDir, "cmdr.db"))
+		})
+
+		AfterEach(func() {
+			os.RemoveAll(rootDir)
+		})
+
+		It("should create download manager", func() {
+			mgr, err := core.NewCommandManager(core.CommandProviderDownload, cfg)
+			Expect(err).To(BeNil())
+
+			_, ok := mgr.(*manager.DownloadManager)
+			Expect(ok).To(BeTrue())
+		})
 	})
 })
