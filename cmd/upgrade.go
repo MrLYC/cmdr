@@ -32,6 +32,7 @@ var upgradeCmd = &cobra.Command{
 		releaseTag := cfg.GetString(core.CfgKeyXUpgradeRelease)
 		assetName := cfg.GetString(core.CfgKeyXUpgradeAsset)
 		location := cfg.GetString(core.CfgKeyXUpgradeLocation)
+		upgradeArgs := cfg.GetStringSlice(core.CfgKeyXUpgradeArgs)
 
 		downloadFromGithub := func() (string, bool) {
 			release, err := utils.GetCMDRRelease(ctx, releaseTag)
@@ -67,7 +68,9 @@ var upgradeCmd = &cobra.Command{
 				if strings.Contains(currentAssetName, runtime.GOARCH) {
 					score += 1
 				}
-				urls.Add(asset, score)
+				if score > 0.0 {
+					urls.Add(asset, score)
+				}
 			}
 
 			item, _ := urls.PopMax()
@@ -114,17 +117,9 @@ var upgradeCmd = &cobra.Command{
 			"location": location,
 		})
 
-		upgradeFn := func() {
-			utils.ExitOnError(
-				"Reinitialize cmdr",
-				utils.WaitProcess(ctx, location, cfg.GetStringSlice(core.CfgKeyXUpgradeArgs)),
-			)
-		}
-
 		info, err := os.Stat(location)
 
-		if err == nil && info.Mode()&0111 != 0 {
-			upgradeFn()
+		if err == nil && info.Mode()&0111 != 0 && utils.WaitProcess(ctx, location, upgradeArgs) == nil {
 			return
 		}
 
@@ -138,7 +133,7 @@ var upgradeCmd = &cobra.Command{
 			utils.ExitOnError("download cmdr failed", err)
 		}
 
-		upgradeFn()
+		utils.ExitOnError("upgrade cmdr failed", utils.WaitProcess(ctx, location, upgradeArgs))
 	},
 }
 
