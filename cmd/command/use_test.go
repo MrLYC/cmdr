@@ -5,14 +5,15 @@ import (
 	. "github.com/onsi/ginkgo"
 	"github.com/spf13/viper"
 
+	"github.com/mrlyc/cmdr/cmd/internal/testutils"
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/mock"
 )
 
 var _ = Describe("Use", func() {
 	It("should check flags", func() {
-		checkCommandFlag(useCmd, "name", "n", core.CfgKeyXCommandUseName, "", true)
-		checkCommandFlag(useCmd, "version", "v", core.CfgKeyXCommandUseVersion, "", true)
+		testutils.CheckCommandFlag(useCmd, "name", "n", core.CfgKeyXCommandUseName, "", true)
+		testutils.CheckCommandFlag(useCmd, "version", "v", core.CfgKeyXCommandUseVersion, "", true)
 	})
 
 	Context("command", func() {

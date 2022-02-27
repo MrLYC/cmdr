@@ -32,36 +32,38 @@ const (
 	CfgKeyLogLevel  = "log.level"
 	CfgKeyLogOutput = "log.output"
 
-	// command.define
+	// cmd.command.define
 	CfgKeyXCommandDefineName     = "_.command.define.name"
 	CfgKeyXCommandDefineVersion  = "_.command.define.version"
 	CfgKeyXCommandDefineLocation = "_.command.define.location"
 	CfgKeyXCommandDefineActivate = "_.command.define.activate"
-	// command.install
+	// cmd.command.install
 	CfgKeyXCommandInstallName     = "_.command.install.name"
 	CfgKeyXCommandInstallVersion  = "_.command.install.version"
 	CfgKeyXCommandInstallLocation = "_.command.install.location"
 	CfgKeyXCommandInstallActivate = "_.command.install.activate"
-	// command.list
+	// cmd.command.list
 	CfgKeyXCommandListName     = "_.command.list.name"
 	CfgKeyXCommandListVersion  = "_.command.list.version"
 	CfgKeyXCommandListLocation = "_.command.list.location"
 	CfgKeyXCommandListActivate = "_.command.list.activate"
-	// command.remove
+	// cmd.command.remove
 	CfgKeyXCommandRemoveName    = "_.command.remove.name"
 	CfgKeyXCommandRemoveVersion = "_.command.remove.version"
-	// command.unset
+	// cmd.command.unset
 	CfgKeyXCommandUnsetName = "_.command.unset.name"
-	// command.use
+	// cmd.command.use
 	CfgKeyXCommandUseName    = "_.command.use.name"
 	CfgKeyXCommandUseVersion = "_.command.use.version"
 
-	// config.get
+	// cmd.config.get
 	CfgKeyXConfigGetKey = "_.config.get.key"
-
-	// config.set
+	// cmd.config.set
 	CfgKeyXConfigSetKey   = "_.config.set.key"
 	CfgKeyXConfigSetValue = "_.config.set.value"
+
+	// cmd.init
+	CfgKeyXInitUpgrade = "_.init.upgrade"
 )
 
 func init() {

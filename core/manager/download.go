@@ -4,12 +4,12 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/utils"
 )
 
 type DownloadManager struct {
@@ -18,12 +18,7 @@ type DownloadManager struct {
 }
 
 func (m *DownloadManager) search(name, output string) (string, error) {
-	type searchedFile struct {
-		path  string
-		score float64
-	}
-
-	files := make([]searchedFile, 0, 1)
+	files := utils.NewSortedHeap(1)
 	nameLength := float64(len(name))
 
 	err := filepath.Walk(output, func(path string, info fs.FileInfo, err error) error {
@@ -46,10 +41,7 @@ func (m *DownloadManager) search(name, output string) (string, error) {
 		}
 
 		if score > 0 {
-			files = append(files, searchedFile{
-				path:  path,
-				score: score,
-			})
+			files.Add(path, score)
 		}
 
 		return nil
@@ -59,19 +51,13 @@ func (m *DownloadManager) search(name, output string) (string, error) {
 		return "", errors.Wrapf(err, "failed to walk %s", output)
 	}
 
-	if len(files) == 0 {
+	if files.Len() == 0 {
 		return "", errors.Wrapf(core.ErrBinaryNotFound, "binary %s not found", name)
 	}
 
-	sort.SliceStable(files, func(i, j int) bool {
-		if files[i].score != files[j].score {
-			return files[i].score > files[j].score
-		}
+	file, _ := files.PopMax()
 
-		return len(files[i].path) < len(files[j].path)
-	})
-
-	return files[0].path, nil
+	return file.(string), nil
 }
 
 func (m *DownloadManager) fetch(name, version, location, output string) (string, error) {

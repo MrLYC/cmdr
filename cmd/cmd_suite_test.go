@@ -1,4 +1,4 @@
-package command
+package cmd
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestCommand(t *testing.T) {
+func TestCmd(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Command Suite")
+	RunSpecs(t, "Cmd Suite")
 }
