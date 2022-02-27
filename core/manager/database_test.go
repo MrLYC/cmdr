@@ -2,12 +2,15 @@ package manager_test
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/spf13/viper"
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/manager"
@@ -330,6 +333,43 @@ var _ = Describe("Database", func() {
 
 				Expect(mgr.Deactivate(commandName)).To(Succeed())
 			})
+		})
+	})
+
+	Context("Factory", func() {
+		var (
+			cfg     core.Configuration
+			rootDir string
+		)
+
+		BeforeEach(func() {
+			cfg = viper.New()
+
+			var err error
+			rootDir, err = os.MkdirTemp("", "")
+			Expect(err).NotTo(HaveOccurred())
+
+			cfg.Set(core.CfgKeyCmdrDatabasePath, filepath.Join(rootDir, "cmdr.db"))
+		})
+
+		AfterEach(func() {
+			os.RemoveAll(rootDir)
+		})
+
+		It("should new a manager", func() {
+			mgr, err := core.NewCommandManager(core.CommandProviderDatabase, cfg)
+			Expect(err).To(BeNil())
+
+			_, ok := mgr.(*manager.DatabaseManager)
+			Expect(ok).To(BeTrue())
+		})
+
+		It("should new a initializer", func() {
+			mgr, err := core.NewCommandManager(core.CommandProviderDatabase, cfg)
+			Expect(err).To(BeNil())
+
+			_, ok := mgr.(*manager.DatabaseManager)
+			Expect(ok).To(BeTrue())
 		})
 	})
 

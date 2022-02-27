@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/manager"
@@ -344,6 +345,31 @@ var _ = Describe("Binary", func() {
 				Expect(command.GetVersion()).To(Equal(version))
 				Expect(command.GetLocation()).To(Equal(getShimsPath(command.GetName())))
 			})
+		})
+
+	})
+
+	Context("Factory", func() {
+		var cfg core.Configuration
+
+		BeforeEach(func() {
+			cfg = viper.New()
+		})
+
+		It("should new command manager", func() {
+			mgr, err := core.NewCommandManager(core.CommandProviderBinary, cfg)
+			Expect(err).To(BeNil())
+
+			_, ok := mgr.(*manager.BinaryManager)
+			Expect(ok).To(BeTrue())
+		})
+
+		It("should new initializer", func() {
+			initializer, err := core.NewInitializer("binary", cfg)
+			Expect(err).To(BeNil())
+
+			_, ok := initializer.(*manager.BinaryManager)
+			Expect(ok).To(BeTrue())
 		})
 	})
 })
