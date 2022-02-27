@@ -29,12 +29,12 @@ var _ = Describe("Install", func() {
 		)
 
 		BeforeEach(func() {
-			factory = core.GetCommandManagerFactory(core.CommandProviderDefault)
+			factory = core.GetCommandManagerFactory(core.CommandProviderDownload)
 			rawCfg = core.GetConfiguration()
 
 			ctrl = gomock.NewController(GinkgoT())
 			manager = mock.NewMockCommandManager(ctrl)
-			core.RegisterCommandManagerFactory(core.CommandProviderDefault, func(cfg core.Configuration) (core.CommandManager, error) {
+			core.RegisterCommandManagerFactory(core.CommandProviderDownload, func(cfg core.Configuration) (core.CommandManager, error) {
 				return manager, nil
 			})
 
@@ -48,7 +48,7 @@ var _ = Describe("Install", func() {
 
 		AfterEach(func() {
 			ctrl.Finish()
-			core.RegisterCommandManagerFactory(core.CommandProviderDefault, factory)
+			core.RegisterCommandManagerFactory(core.CommandProviderDownload, factory)
 			core.SetConfiguration(rawCfg)
 		})
 
