@@ -33,10 +33,18 @@ var upgradeCmd = &cobra.Command{
 		assetName := cfg.GetString(core.CfgKeyXUpgradeAsset)
 		location := cfg.GetString(core.CfgKeyXUpgradeLocation)
 
-		downloadFromGithub := func() string {
+		downloadFromGithub := func() (string, bool) {
 			release, err := utils.GetCMDRRelease(ctx, releaseTag)
 			if err != nil {
 				utils.ExitOnError("search cmdr release failed", err)
+			}
+
+			releaseName := release.GetName()
+			if strings.Contains(releaseName, core.Version) {
+				logger.Info("cmdr is already latest", map[string]interface{}{
+					"version": core.Version,
+				})
+				return "", false
 			}
 
 			urls := utils.NewSortedHeap(len(release.Assets))
@@ -45,16 +53,18 @@ var upgradeCmd = &cobra.Command{
 					continue
 				}
 
-				if *asset.Name == assetName {
+				currentAssetName := asset.GetName()
+
+				if currentAssetName == assetName {
 					urls.Add(asset, 0.0)
 					break
 				}
 
 				score := 0.0
-				if strings.Contains(*asset.Name, runtime.GOOS) {
+				if strings.Contains(currentAssetName, runtime.GOOS) {
 					score += 1
 				}
-				if strings.Contains(*asset.Name, runtime.GOARCH) {
+				if strings.Contains(currentAssetName, runtime.GOARCH) {
 					score += 1
 				}
 				urls.Add(asset, score)
@@ -62,19 +72,22 @@ var upgradeCmd = &cobra.Command{
 
 			item, _ := urls.PopMax()
 			if item == nil {
-				utils.ExitOnError("no asset found")
+				logger.Warn("no asset found", map[string]interface{}{
+					"release": release,
+				})
+				return "", false
 			}
 
-			assert := item.(*github.ReleaseAsset)
-			url := *assert.BrowserDownloadURL
+			asset := item.(*github.ReleaseAsset)
+			url := asset.GetBrowserDownloadURL()
 
 			logger.Debug("asset url found", map[string]interface{}{
 				"url":     url,
-				"release": releaseTag,
-				"asset":   *assert.Name,
+				"release": releaseName,
+				"asset":   asset.GetName(),
 			})
 
-			return url
+			return url, true
 		}
 
 		installCmdr := func(uri string) error {
@@ -101,19 +114,31 @@ var upgradeCmd = &cobra.Command{
 			"location": location,
 		})
 
-		info, err := os.Stat(location)
-
-		if err != nil || info.Mode()&0111 == 0 {
-			err := installCmdr(downloadFromGithub())
-			if err != nil {
-				utils.ExitOnError("download cmdr failed", err)
-			}
+		upgradeFn := func() {
+			utils.ExitOnError(
+				"Reinitialize cmdr",
+				utils.WaitProcess(ctx, location, cfg.GetStringSlice(core.CfgKeyXUpgradeArgs)),
+			)
 		}
 
-		utils.ExitOnError(
-			"Reinitialize cmdr",
-			utils.WaitProcess(ctx, location, cfg.GetStringSlice(core.CfgKeyXUpgradeArgs)),
-		)
+		info, err := os.Stat(location)
+
+		if err == nil && info.Mode()&0111 != 0 {
+			upgradeFn()
+			return
+		}
+
+		url, found := downloadFromGithub()
+		if !found {
+			return
+		}
+
+		err = installCmdr(url)
+		if err != nil {
+			utils.ExitOnError("download cmdr failed", err)
+		}
+
+		upgradeFn()
 	},
 }
 
