@@ -16,13 +16,14 @@ var installCmd = &cobra.Command{
 		cfg.Set(core.CfgKeyCmdrLinkMode, "default")
 	},
 	Run: runCommandWith(core.CommandProviderDownload, func(cfg core.Configuration, manager core.CommandManager) error {
-		return utils.DefineCmdrCommand(
+		_, err := utils.DefineCmdrCommand(
 			manager,
 			cfg.GetString(core.CfgKeyXCommandInstallName),
 			cfg.GetString(core.CfgKeyXCommandInstallVersion),
 			cfg.GetString(core.CfgKeyXCommandInstallLocation),
 			cfg.GetBool(core.CfgKeyXCommandInstallActivate),
 		)
+		return err
 	}),
 }
 

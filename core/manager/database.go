@@ -148,10 +148,10 @@ func (m *DatabaseManager) getOrNew(name string, version string) (*Command, bool,
 	return &command, found, nil
 }
 
-func (m *DatabaseManager) Define(name string, version string, location string) error {
+func (m *DatabaseManager) Define(name string, version string, location string) (core.Command, error) {
 	command, _, err := m.getOrNew(name, version)
 	if err != nil {
-		return errors.Wrapf(err, "define command failed")
+		return nil, errors.Wrapf(err, "define command failed")
 	}
 
 	command.Location = location
@@ -163,10 +163,10 @@ func (m *DatabaseManager) Define(name string, version string, location string) e
 
 	err = m.Client.Save(command)
 	if err != nil {
-		return errors.Wrapf(err, "save command failed")
+		return nil, errors.Wrapf(err, "save command failed")
 	}
 
-	return nil
+	return command, nil
 }
 
 func (m *DatabaseManager) Undefine(name string, version string) error {

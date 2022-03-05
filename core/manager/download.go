@@ -69,20 +69,20 @@ func (m *DownloadManager) fetch(name, version, location, output string) (string,
 	return m.search(name, output)
 }
 
-func (m *DownloadManager) Define(name string, version string, uri string) error {
+func (m *DownloadManager) Define(name string, version string, uri string) (core.Command, error) {
 	if !m.fetcher.IsSupport(uri) {
 		return m.CommandManager.Define(name, version, uri)
 	}
 
 	dst, err := os.MkdirTemp("", "")
 	if err != nil {
-		return errors.Wrapf(err, "failed to create temp dir")
+		return nil, errors.Wrapf(err, "failed to create temp dir")
 	}
 	defer os.RemoveAll(dst)
 
 	location, err := m.fetch(name, version, uri, dst)
 	if err != nil {
-		return errors.Wrapf(err, "failed to fetch %s", location)
+		return nil, errors.Wrapf(err, "failed to fetch %s", location)
 	}
 
 	return m.CommandManager.Define(name, version, location)

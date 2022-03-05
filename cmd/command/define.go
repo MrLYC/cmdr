@@ -16,13 +16,14 @@ var defineCmd = &cobra.Command{
 		cfg.Set(core.CfgKeyCmdrLinkMode, "link")
 	},
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
-		return utils.DefineCmdrCommand(
+		_, err := utils.DefineCmdrCommand(
 			manager,
 			cfg.GetString(core.CfgKeyXCommandDefineName),
 			cfg.GetString(core.CfgKeyXCommandDefineVersion),
 			cfg.GetString(core.CfgKeyXCommandDefineLocation),
 			cfg.GetBool(core.CfgKeyXCommandDefineActivate),
 		)
+		return err
 	}),
 }
 

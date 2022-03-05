@@ -186,12 +186,12 @@ func (m *BinaryManager) Query() (core.CommandQuery, error) {
 	return NewBinariesFilter(binaries), nil
 }
 
-func (m *BinaryManager) Define(name string, version string, location string) error {
+func (m *BinaryManager) Define(name string, version string, location string) (core.Command, error) {
 	helper := utils.NewPathHelper(m.shimsDir).Child(name)
 
 	err := helper.MkdirAll(m.dirMode)
 	if err != nil {
-		return errors.WithMessagef(err, "create dir %s failed", helper.Path())
+		return nil, errors.WithMessagef(err, "create dir %s failed", helper.Path())
 	}
 
 	shimsName := m.ShimsName(name, version)
@@ -205,10 +205,15 @@ func (m *BinaryManager) Define(name string, version string, location string) err
 
 	err = m.linkFn(location, dstLocation)
 	if err != nil {
-		return errors.WithMessagef(err, "link %s to %s failed", location, dstLocation)
+		return nil, errors.WithMessagef(err, "link %s to %s failed", location, dstLocation)
 	}
 
-	return helper.Chmod(shimsName, 0755)
+	err = helper.Chmod(shimsName, 0755)
+	if err != nil {
+		return nil, errors.WithMessagef(err, "chmod %s failed", dstLocation)
+	}
+
+	return NewBinary(m.binDir, m.shimsDir, name, version, shimsName), nil
 }
 
 func (m *BinaryManager) Undefine(name string, version string) error {

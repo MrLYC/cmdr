@@ -260,12 +260,14 @@ var _ = Describe("Binary", func() {
 			It("should define a command", func() {
 				nonexistsCommand := "nonexists"
 
-				Expect(mgr.Define(nonexistsCommand, version, location)).To(Succeed())
+				_, err := mgr.Define(nonexistsCommand, version, location)
+				Expect(err).To(BeNil())
 				checkDefineResult(nonexistsCommand)
 			})
 
 			It("should redefine a command", func() {
-				Expect(mgr.Define(commandName, version, location)).To(Succeed())
+				_, err := mgr.Define(commandName, version, location)
+				Expect(err).To(BeNil())
 				checkDefineResult(commandName)
 			})
 

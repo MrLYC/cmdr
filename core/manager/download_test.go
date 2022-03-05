@@ -62,9 +62,9 @@ var _ = Describe("Download", func() {
 
 				return nil
 			})
-			baseManager.EXPECT().Define(name, version, gomock.Any()).DoAndReturn(func(name, version, location string) error {
+			baseManager.EXPECT().Define(name, version, gomock.Any()).DoAndReturn(func(name, version, location string) (core.Command, error) {
 				Expect(targetPath).To(Equal(location))
-				return nil
+				return nil, nil
 			})
 
 			Expect(downloadManager.Define(name, version, uri)).To(Succeed())
@@ -86,9 +86,9 @@ var _ = Describe("Download", func() {
 				return nil
 			})
 
-			baseManager.EXPECT().Define(name, version, gomock.Any()).DoAndReturn(func(name, version, location string) error {
+			baseManager.EXPECT().Define(name, version, gomock.Any()).DoAndReturn(func(name, version, location string) (core.Command, error) {
 				Expect(filepath.Rel(outputDir, location)).To(Equal(expected))
-				return nil
+				return nil, nil
 			})
 
 			Expect(downloadManager.Define(name, version, uri)).To(Succeed())

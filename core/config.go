@@ -65,10 +65,9 @@ const (
 	// cmd.init
 	CfgKeyXInitUpgrade = "_.init.upgrade"
 	// cmd.upgrade
-	CfgKeyXUpgradeRelease  = "_.upgrade.release"
-	CfgKeyXUpgradeAsset    = "_.upgrade.asset"
-	CfgKeyXUpgradeLocation = "_.upgrade.location"
-	CfgKeyXUpgradeArgs     = "_.upgrade.args"
+	CfgKeyXUpgradeRelease = "_.upgrade.release"
+	CfgKeyXUpgradeAsset   = "_.upgrade.asset"
+	CfgKeyXUpgradeArgs    = "_.upgrade.args"
 )
 
 func init() {
