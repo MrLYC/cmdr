@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/google/go-github/v39/github"
@@ -65,11 +62,6 @@ func init() {
 	flags := upgradeCmd.Flags()
 	flags.StringP("release", "r", "latest", "cmdr release tag name")
 	flags.StringP("asset", "a", core.Asset, "cmdr release assert name")
-	flags.StringP(
-		"location", "l",
-		filepath.Join(os.TempDir(), fmt.Sprintf("cmdr_%s_replacement", core.Version)),
-		"cmdr binary local location",
-	)
 
 	utils.PanicOnError("binding flags",
 		cfg.BindPFlag(core.CfgKeyXUpgradeRelease, flags.Lookup("release")),
