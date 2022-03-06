@@ -12,6 +12,7 @@ const (
 	CommandProviderDatabase
 	CommandProviderBinary
 	CommandProviderDownload
+	CommandProviderDoctor
 )
 
 type Command interface {

@@ -1,6 +1,7 @@
 package manager
 
 import (
+	. "github.com/ahmetb/go-linq/v3"
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
 	"github.com/pkg/errors"
@@ -39,6 +40,63 @@ func (c *Command) GetActivated() bool {
 
 func (c *Command) GetLocation() string {
 	return c.Location
+}
+
+type CommandFilter struct {
+	commands []*Command
+}
+
+func (f *CommandFilter) Filter(fn func(b interface{}) bool) *CommandFilter {
+	From(f.commands).Where(fn).ToSlice(&f.commands)
+	return f
+}
+
+func (f *CommandFilter) WithName(name string) core.CommandQuery {
+	return f.Filter(func(b interface{}) bool {
+		return b.(*Command).Name == name
+	})
+}
+
+func (f *CommandFilter) WithVersion(version string) core.CommandQuery {
+	return f.Filter(func(b interface{}) bool {
+		return b.(*Command).Version == version
+	})
+}
+
+func (f *CommandFilter) WithActivated(activated bool) core.CommandQuery {
+	return f.Filter(func(b interface{}) bool {
+		return b.(*Command).Activated == activated
+	})
+}
+
+func (f *CommandFilter) WithLocation(location string) core.CommandQuery {
+	return f.Filter(func(b interface{}) bool {
+		return b.(*Command).Location == location
+	})
+}
+func (f *CommandFilter) All() ([]core.Command, error) {
+	commands := make([]core.Command, 0, len(f.commands))
+	for _, b := range f.commands {
+		commands = append(commands, b)
+	}
+
+	return commands, nil
+}
+
+func (f *CommandFilter) One() (core.Command, error) {
+	if len(f.commands) == 0 {
+		return nil, errors.Wrapf(core.ErrBinaryNotFound, "commands not found")
+	}
+
+	return f.commands[0], nil
+}
+
+func (f *CommandFilter) Count() (int, error) {
+	return len(f.commands), nil
+}
+
+func NewCommandFilter(commands []*Command) *CommandFilter {
+	return &CommandFilter{commands}
 }
 
 type CommandQuery struct {

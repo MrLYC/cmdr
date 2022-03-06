@@ -13,11 +13,12 @@ func _() {
 	_ = x[CommandProviderDatabase-2]
 	_ = x[CommandProviderBinary-3]
 	_ = x[CommandProviderDownload-4]
+	_ = x[CommandProviderDoctor-5]
 }
 
-const _CommandProvider_name = "CommandProviderUnknownCommandProviderDefaultCommandProviderDatabaseCommandProviderBinaryCommandProviderDownload"
+const _CommandProvider_name = "CommandProviderUnknownCommandProviderDefaultCommandProviderDatabaseCommandProviderBinaryCommandProviderDownloadCommandProviderDoctor"
 
-var _CommandProvider_index = [...]uint8{0, 22, 44, 67, 88, 111}
+var _CommandProvider_index = [...]uint8{0, 22, 44, 67, 88, 111, 132}
 
 func (i CommandProvider) String() string {
 	if i < 0 || i >= CommandProvider(len(_CommandProvider_index)-1) {
