@@ -95,6 +95,17 @@ func (f *CommandFilter) Count() (int, error) {
 	return len(f.commands), nil
 }
 
+func (f *CommandFilter) AddCommand(commands ...core.Command) {
+	for _, command := range commands {
+		f.commands = append(f.commands, &Command{
+			Name:      command.GetName(),
+			Version:   command.GetVersion(),
+			Activated: command.GetActivated(),
+			Location:  command.GetLocation(),
+		})
+	}
+}
+
 func NewCommandFilter(commands []*Command) *CommandFilter {
 	return &CommandFilter{commands}
 }

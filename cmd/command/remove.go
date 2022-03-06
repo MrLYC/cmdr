@@ -44,5 +44,7 @@ func init() {
 
 		cfg.BindPFlag(core.CfgKeyXCommandRemoveVersion, flags.Lookup("version")),
 		removeCmd.MarkFlagRequired("version"),
+
+		utils.NewDefaultCobraCommandCompleteHelper(removeCmd).RegisterAll(),
 	)
 }

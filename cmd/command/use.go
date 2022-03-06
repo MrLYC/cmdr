@@ -34,5 +34,7 @@ func init() {
 
 		cfg.BindPFlag(core.CfgKeyXCommandUseVersion, flags.Lookup("version")),
 		useCmd.MarkFlagRequired("version"),
+
+		utils.NewDefaultCobraCommandCompleteHelper(useCmd).RegisterAll(),
 	)
 }

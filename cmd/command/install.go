@@ -35,6 +35,7 @@ func init() {
 	flags.StringP("location", "l", "", "command location")
 	flags.BoolP("activate", "a", false, "activate command")
 
+	helper := utils.NewDefaultCobraCommandCompleteHelper(installCmd)
 	cfg := core.GetConfiguration()
 	utils.PanicOnError("binding flags",
 
@@ -48,5 +49,8 @@ func init() {
 		installCmd.MarkFlagRequired("location"),
 
 		cfg.BindPFlag(core.CfgKeyXCommandInstallActivate, flags.Lookup("activate")),
+
+		helper.RegisterNameFunc(),
+		helper.RegisterVersionFunc(),
 	)
 }
