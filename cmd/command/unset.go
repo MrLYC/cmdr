@@ -26,5 +26,7 @@ func init() {
 	utils.PanicOnError("binding flags",
 		cfg.BindPFlag(core.CfgKeyXCommandUnsetName, flags.Lookup("name")),
 		unsetCmd.MarkFlagRequired("name"),
+
+		utils.NewDefaultCobraCommandCompleteHelper(unsetCmd).RegisterAll(),
 	)
 }

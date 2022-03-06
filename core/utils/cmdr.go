@@ -2,11 +2,9 @@ package utils
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
 )
@@ -88,19 +86,4 @@ func UpgradeCmdr(ctx context.Context, cfg core.Configuration, url, version strin
 	}
 
 	return nil
-}
-
-func RunCobraCommandWith(provider core.CommandProvider, fn func(cfg core.Configuration, manager core.CommandManager) error) func(cmd *cobra.Command, args []string) {
-	return func(cmd *cobra.Command, args []string) {
-		cfg := core.GetConfiguration()
-
-		manager, err := core.NewCommandManager(provider, cfg)
-		if err != nil {
-			ExitOnError("Failed to create command manager", err)
-		}
-
-		defer CallClose(manager)
-
-		ExitOnError(fmt.Sprintf("Failed to run command %s", cmd.Name()), fn(cfg, manager))
-	}
 }

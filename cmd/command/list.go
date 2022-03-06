@@ -74,5 +74,7 @@ func init() {
 		cfg.BindPFlag(core.CfgKeyXCommandListVersion, flags.Lookup("version")),
 		cfg.BindPFlag(core.CfgKeyXCommandListLocation, flags.Lookup("location")),
 		cfg.BindPFlag(core.CfgKeyXCommandListActivate, flags.Lookup("activate")),
+
+		utils.NewDefaultCobraCommandCompleteHelper(listCmd).RegisterAll(),
 	)
 }
