@@ -280,11 +280,12 @@ func (mr *MockCommandManagerMockRecorder) Deactivate(name interface{}) *gomock.C
 }
 
 // Define mocks base method.
-func (m *MockCommandManager) Define(name, version, location string) error {
+func (m *MockCommandManager) Define(name, version, location string) (core.Command, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Define", name, version, location)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(core.Command)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Define indicates an expected call of Define.

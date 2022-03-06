@@ -55,9 +55,9 @@ var _ = Describe("Command", func() {
 	})
 
 	It("should update cmdr", func() {
-		manager.EXPECT().Define(name, version, location).Return(nil)
-		manager.EXPECT().Activate(name, version).Return(nil)
-		manager.EXPECT().Undefine(name, legacyCommand.GetVersion()).Return(nil)
+		manager.EXPECT().Define(name, version, location)
+		manager.EXPECT().Activate(name, version)
+		manager.EXPECT().Undefine(name, legacyCommand.GetVersion())
 
 		Expect(updater.Init()).To(Succeed())
 	})

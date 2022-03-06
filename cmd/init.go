@@ -13,8 +13,9 @@ import (
 
 // initCmd represents the init command
 var initCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Initialize cmdr",
+	Use:                "init",
+	Short:              "Initialize cmdr",
+	FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := core.Logger
 		cfg := core.GetConfiguration()

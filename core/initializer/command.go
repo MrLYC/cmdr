@@ -35,7 +35,7 @@ func (c *CmdrUpdater) getActivatedCmdrVersion() string {
 }
 
 func (c *CmdrUpdater) install() error {
-	err := c.manager.Define(c.name, c.version, c.location)
+	_, err := c.manager.Define(c.name, c.version, c.location)
 	if err != nil {
 		return errors.Wrapf(err, "failed to define command %s", c.name)
 	}

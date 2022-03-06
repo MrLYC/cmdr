@@ -83,40 +83,52 @@ var _ = Describe("Simple", func() {
 	})
 
 	Context("Define", func() {
-		It("should call all managers", func() {
-			mainMgr.EXPECT().Define(name, version, location).Return(nil)
-			recoderMgr.EXPECT().Define(name, version, location).Return(nil)
+		var (
+			command *mock.MockCommand
+		)
 
-			Expect(mgr.Define(name, version, location)).To(Succeed())
+		BeforeEach(func() {
+			command = mock.NewMockCommand(ctrl)
+			command.EXPECT().GetLocation().Return("shims_path").AnyTimes()
+		})
+
+		It("should call all managers", func() {
+			mainMgr.EXPECT().Define(name, version, location).Return(command, nil)
+			recoderMgr.EXPECT().Define(name, version, command.GetLocation())
+
+			_, err := mgr.Define(name, version, location)
+			Expect(err).To(BeNil())
 		})
 
 		It("should call in a specific order", func() {
 			var ordering []string
 
-			mainMgr.EXPECT().Define(name, version, location).DoAndReturn(func(name string, version string, location string) error {
+			mainMgr.EXPECT().Define(name, version, location).DoAndReturn(func(name string, version string, location string) (core.Command, error) {
 				ordering = append(ordering, "main")
-				return nil
+				return command, nil
 			})
-			recoderMgr.EXPECT().Define(name, version, location).DoAndReturn(func(name string, version string, location string) error {
+			recoderMgr.EXPECT().Define(name, version, command.GetLocation()).DoAndReturn(func(name string, version string, location string) (core.Command, error) {
 				ordering = append(ordering, "recoder")
-				return nil
+				return command, nil
 			})
 
-			Expect(mgr.Define(name, version, location)).To(Succeed())
+			_, err := mgr.Define(name, version, location)
+			Expect(err).To(BeNil())
 			Expect(ordering).To(Equal([]string{"main", "recoder"}))
 		})
 
 		It("should return when catch error", func() {
-			mainMgr.EXPECT().Define(name, version, location).Return(fmt.Errorf("testing"))
+			mainMgr.EXPECT().Define(name, version, location).Return(nil, fmt.Errorf("testing"))
 
-			Expect(mgr.Define(name, version, location)).NotTo(Succeed())
+			_, err := mgr.Define(name, version, location)
+			Expect(err).NotTo(BeNil())
 		})
 	})
 
 	Context("Undefine", func() {
 		It("should call all managers", func() {
-			mainMgr.EXPECT().Undefine(name, version).Return(nil)
-			recoderMgr.EXPECT().Undefine(name, version).Return(nil)
+			mainMgr.EXPECT().Undefine(name, version)
+			recoderMgr.EXPECT().Undefine(name, version)
 
 			Expect(mgr.Undefine(name, version)).To(Succeed())
 		})

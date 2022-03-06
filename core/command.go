@@ -39,7 +39,7 @@ type CommandManager interface {
 
 	Query() (CommandQuery, error)
 
-	Define(name string, version string, location string) error
+	Define(name string, version string, location string) (Command, error)
 	Undefine(name string, version string) error
 	Activate(name string, version string) error
 	Deactivate(name string) error
@@ -47,14 +47,12 @@ type CommandManager interface {
 
 //go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock Command,CommandQuery,CommandManager
 
-type factoryCommandManager func(cfg Configuration) (CommandManager, error)
-
 var (
 	ErrCommandManagerFactoryeNotFound = fmt.Errorf("factory not found")
-	factoriesCommandManager           map[CommandProvider]factoryCommandManager
+	factoriesCommandManager           map[CommandProvider]func(cfg Configuration) (CommandManager, error)
 )
 
-func GetCommandManagerFactory(key CommandProvider) factoryCommandManager {
+func GetCommandManagerFactory(key CommandProvider) func(cfg Configuration) (CommandManager, error) {
 	fn, ok := factoriesCommandManager[key]
 
 	if !ok {
@@ -64,7 +62,7 @@ func GetCommandManagerFactory(key CommandProvider) factoryCommandManager {
 	return fn
 }
 
-func RegisterCommandManagerFactory(key CommandProvider, fn factoryCommandManager) {
+func RegisterCommandManagerFactory(key CommandProvider, fn func(cfg Configuration) (CommandManager, error)) {
 	factoriesCommandManager[key] = fn
 }
 
@@ -79,5 +77,5 @@ func NewCommandManager(key CommandProvider, cfg Configuration) (CommandManager, 
 }
 
 func init() {
-	factoriesCommandManager = make(map[CommandProvider]factoryCommandManager)
+	factoriesCommandManager = make(map[CommandProvider]func(cfg Configuration) (CommandManager, error))
 }

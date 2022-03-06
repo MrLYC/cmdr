@@ -60,10 +60,13 @@ func (m *SimpleManager) Query() (core.CommandQuery, error) {
 	return m.recoder.Query()
 }
 
-func (m *SimpleManager) Define(name, version, location string) error {
-	return m.each(func(mgr core.CommandManager) error {
-		return mgr.Define(name, version, location)
-	})
+func (m *SimpleManager) Define(name, version, location string) (core.Command, error) {
+	binary, err := m.main.Define(name, version, location)
+	if err != nil {
+		return nil, err
+	}
+
+	return m.recoder.Define(name, version, binary.GetLocation())
 }
 
 func (m *SimpleManager) Undefine(name, version string) error {

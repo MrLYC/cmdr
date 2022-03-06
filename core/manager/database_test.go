@@ -191,7 +191,8 @@ var _ = Describe("Database", func() {
 					return nil
 				})
 
-				Expect(mgr.Define(commandName, version, location)).To(Succeed())
+				_, err := mgr.Define(commandName, version, location)
+				Expect(err).To(BeNil())
 			})
 
 			It("should update a command", func() {
@@ -208,7 +209,8 @@ var _ = Describe("Database", func() {
 					return nil
 				})
 
-				Expect(mgr.Define(commandName, version, location)).To(Succeed())
+				_, err := mgr.Define(commandName, version, location)
+				Expect(err).To(BeNil())
 			})
 		})
 

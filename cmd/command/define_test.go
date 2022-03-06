@@ -55,7 +55,7 @@ var _ = Describe("Define", func() {
 		It("should define a activated command", func() {
 			cfg.Set(core.CfgKeyXCommandDefineActivate, true)
 
-			manager.EXPECT().Define("test", "1.0.0", "").Return(nil)
+			manager.EXPECT().Define("test", "1.0.0", "")
 			manager.EXPECT().Activate("test", "1.0.0").Return(nil)
 			manager.EXPECT().Close().Return(nil)
 
@@ -65,7 +65,7 @@ var _ = Describe("Define", func() {
 		It("should define a non-activated command", func() {
 			cfg.Set(core.CfgKeyXCommandDefineActivate, false)
 
-			manager.EXPECT().Define("test", "1.0.0", "").Return(nil)
+			manager.EXPECT().Define("test", "1.0.0", "")
 			manager.EXPECT().Close().Return(nil)
 
 			defineCmd.Run(defineCmd, []string{})

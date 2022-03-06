@@ -55,7 +55,7 @@ var _ = Describe("Install", func() {
 		It("should install a activated command", func() {
 			cfg.Set(core.CfgKeyXCommandInstallActivate, true)
 
-			manager.EXPECT().Define("cmdr", "1.0.0", "").Return(nil)
+			manager.EXPECT().Define("cmdr", "1.0.0", "")
 			manager.EXPECT().Activate("cmdr", "1.0.0").Return(nil)
 			manager.EXPECT().Close().Return(nil)
 
@@ -65,7 +65,7 @@ var _ = Describe("Install", func() {
 		It("should install a non-activated command", func() {
 			cfg.Set(core.CfgKeyXCommandInstallActivate, false)
 
-			manager.EXPECT().Define("cmdr", "1.0.0", "").Return(nil)
+			manager.EXPECT().Define("cmdr", "1.0.0", "")
 			manager.EXPECT().Close().Return(nil)
 
 			installCmd.Run(installCmd, []string{})
