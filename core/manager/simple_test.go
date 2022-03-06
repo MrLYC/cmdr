@@ -17,20 +17,20 @@ import (
 
 var _ = Describe("Simple", func() {
 	var (
-		ctrl       *gomock.Controller
-		mainMgr    *mock.MockCommandManager
-		recoderMgr *mock.MockCommandManager
-		mgr        *manager.SimpleManager
-		name       = "command"
-		version    = "1.0.0"
-		location   = "location"
+		ctrl        *gomock.Controller
+		mainMgr     *mock.MockCommandManager
+		recorderMgr *mock.MockCommandManager
+		mgr         *manager.SimpleManager
+		name        = "command"
+		version     = "1.0.0"
+		location    = "location"
 	)
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 		mainMgr = mock.NewMockCommandManager(ctrl)
-		recoderMgr = mock.NewMockCommandManager(ctrl)
-		mgr = manager.NewSimpleManager(mainMgr, recoderMgr)
+		recorderMgr = mock.NewMockCommandManager(ctrl)
+		mgr = manager.NewSimpleManager(mainMgr, recorderMgr)
 	})
 
 	AfterEach(func() {
@@ -40,14 +40,14 @@ var _ = Describe("Simple", func() {
 	Context("Close", func() {
 		It("should close main and recorder manager", func() {
 			mainMgr.EXPECT().Close()
-			recoderMgr.EXPECT().Close()
+			recorderMgr.EXPECT().Close()
 
 			Expect(mgr.Close()).To(Succeed())
 		})
 
 		It("should continue close even if fail", func() {
 			mainMgr.EXPECT().Close().Return(fmt.Errorf("testing"))
-			recoderMgr.EXPECT().Close().Return(fmt.Errorf("testing"))
+			recorderMgr.EXPECT().Close().Return(fmt.Errorf("testing"))
 
 			Expect(mgr.Close()).NotTo(Succeed())
 		})
@@ -59,13 +59,13 @@ var _ = Describe("Simple", func() {
 				ordering = append(ordering, "main")
 				return nil
 			})
-			recoderMgr.EXPECT().Close().DoAndReturn(func() error {
-				ordering = append(ordering, "recoder")
+			recorderMgr.EXPECT().Close().DoAndReturn(func() error {
+				ordering = append(ordering, "recorder")
 				return nil
 			})
 
 			Expect(mgr.Close()).To(Succeed())
-			Expect(ordering).To(Equal([]string{"main", "recoder"}))
+			Expect(ordering).To(Equal([]string{"main", "recorder"}))
 		})
 	})
 
@@ -75,7 +75,7 @@ var _ = Describe("Simple", func() {
 
 	It("should return query by recorder manager", func() {
 		query := mock.NewMockCommandQuery(ctrl)
-		recoderMgr.EXPECT().Query().Return(query, nil)
+		recorderMgr.EXPECT().Query().Return(query, nil)
 
 		result, err := mgr.Query()
 		Expect(err).To(BeNil())
@@ -94,7 +94,7 @@ var _ = Describe("Simple", func() {
 
 		It("should call all managers", func() {
 			mainMgr.EXPECT().Define(name, version, location).Return(command, nil)
-			recoderMgr.EXPECT().Define(name, version, command.GetLocation())
+			recorderMgr.EXPECT().Define(name, version, command.GetLocation())
 
 			_, err := mgr.Define(name, version, location)
 			Expect(err).To(BeNil())
@@ -107,14 +107,14 @@ var _ = Describe("Simple", func() {
 				ordering = append(ordering, "main")
 				return command, nil
 			})
-			recoderMgr.EXPECT().Define(name, version, command.GetLocation()).DoAndReturn(func(name string, version string, location string) (core.Command, error) {
-				ordering = append(ordering, "recoder")
+			recorderMgr.EXPECT().Define(name, version, command.GetLocation()).DoAndReturn(func(name string, version string, location string) (core.Command, error) {
+				ordering = append(ordering, "recorder")
 				return command, nil
 			})
 
 			_, err := mgr.Define(name, version, location)
 			Expect(err).To(BeNil())
-			Expect(ordering).To(Equal([]string{"main", "recoder"}))
+			Expect(ordering).To(Equal([]string{"main", "recorder"}))
 		})
 
 		It("should return when catch error", func() {
@@ -128,7 +128,7 @@ var _ = Describe("Simple", func() {
 	Context("Undefine", func() {
 		It("should call all managers", func() {
 			mainMgr.EXPECT().Undefine(name, version)
-			recoderMgr.EXPECT().Undefine(name, version)
+			recorderMgr.EXPECT().Undefine(name, version)
 
 			Expect(mgr.Undefine(name, version)).To(Succeed())
 		})
@@ -140,17 +140,17 @@ var _ = Describe("Simple", func() {
 				ordering = append(ordering, "main")
 				return nil
 			})
-			recoderMgr.EXPECT().Undefine(name, version).DoAndReturn(func(name string, version string) error {
-				ordering = append(ordering, "recoder")
+			recorderMgr.EXPECT().Undefine(name, version).DoAndReturn(func(name string, version string) error {
+				ordering = append(ordering, "recorder")
 				return nil
 			})
 
 			Expect(mgr.Undefine(name, version)).To(Succeed())
-			Expect(ordering).To(Equal([]string{"recoder", "main"}))
+			Expect(ordering).To(Equal([]string{"recorder", "main"}))
 		})
 
 		It("should return when catch error", func() {
-			recoderMgr.EXPECT().Undefine(name, version).Return(fmt.Errorf("testing"))
+			recorderMgr.EXPECT().Undefine(name, version).Return(fmt.Errorf("testing"))
 
 			Expect(mgr.Undefine(name, version)).NotTo(Succeed())
 		})
@@ -159,7 +159,7 @@ var _ = Describe("Simple", func() {
 	Context("Activate", func() {
 		It("should call all managers", func() {
 			mainMgr.EXPECT().Activate(name, version).Return(nil)
-			recoderMgr.EXPECT().Activate(name, version).Return(nil)
+			recorderMgr.EXPECT().Activate(name, version).Return(nil)
 
 			Expect(mgr.Activate(name, version)).To(Succeed())
 		})
@@ -171,13 +171,13 @@ var _ = Describe("Simple", func() {
 				ordering = append(ordering, "main")
 				return nil
 			})
-			recoderMgr.EXPECT().Activate(name, version).DoAndReturn(func(name string, version string) error {
-				ordering = append(ordering, "recoder")
+			recorderMgr.EXPECT().Activate(name, version).DoAndReturn(func(name string, version string) error {
+				ordering = append(ordering, "recorder")
 				return nil
 			})
 
 			Expect(mgr.Activate(name, version)).To(Succeed())
-			Expect(ordering).To(Equal([]string{"main", "recoder"}))
+			Expect(ordering).To(Equal([]string{"main", "recorder"}))
 		})
 
 		It("should return when catch error", func() {
@@ -190,7 +190,7 @@ var _ = Describe("Simple", func() {
 	Context("Deactivate", func() {
 		It("should call all managers", func() {
 			mainMgr.EXPECT().Deactivate(name).Return(nil)
-			recoderMgr.EXPECT().Deactivate(name).Return(nil)
+			recorderMgr.EXPECT().Deactivate(name).Return(nil)
 
 			Expect(mgr.Deactivate(name)).To(Succeed())
 		})
@@ -202,17 +202,17 @@ var _ = Describe("Simple", func() {
 				ordering = append(ordering, "main")
 				return nil
 			})
-			recoderMgr.EXPECT().Deactivate(name).DoAndReturn(func(name string) error {
-				ordering = append(ordering, "recoder")
+			recorderMgr.EXPECT().Deactivate(name).DoAndReturn(func(name string) error {
+				ordering = append(ordering, "recorder")
 				return nil
 			})
 
 			Expect(mgr.Deactivate(name)).To(Succeed())
-			Expect(ordering).To(Equal([]string{"recoder", "main"}))
+			Expect(ordering).To(Equal([]string{"recorder", "main"}))
 		})
 
 		It("should return when catch error", func() {
-			recoderMgr.EXPECT().Deactivate(name).Return(fmt.Errorf("testing"))
+			recorderMgr.EXPECT().Deactivate(name).Return(fmt.Errorf("testing"))
 
 			Expect(mgr.Deactivate(name)).NotTo(Succeed())
 		})

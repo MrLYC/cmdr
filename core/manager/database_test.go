@@ -34,6 +34,47 @@ var _ = Describe("Database", func() {
 		ctrl.Finish()
 	})
 
+	Context("CommandFilter", func() {
+		var (
+			filter             *manager.CommandFilter
+			commandA, commandB *manager.Command
+		)
+
+		BeforeEach(func() {
+			commandA = &manager.Command{
+				Name:      "command-a",
+				Version:   "1.0.0",
+				Activated: true,
+				Location:  "location-a",
+			}
+			commandB = &manager.Command{
+				Name:      "command-b",
+				Version:   "1.0.1",
+				Activated: false,
+				Location:  "location-b",
+			}
+			filter = manager.NewCommandFilter([]*manager.Command{commandA, commandB})
+		})
+
+		It("should return array", func() {
+			result, err := filter.All()
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal([]core.Command{commandA, commandB}))
+		})
+
+		It("should return error", func() {
+			command, err := filter.WithName(commandA.Name).One()
+			Expect(err).To(BeNil())
+			Expect(command).To(Equal(commandA))
+		})
+
+		It("should return 0", func() {
+			result, err := filter.Count()
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal(2))
+		})
+	})
+
 	Context("CommandQuery", func() {
 		var query *manager.CommandQuery
 

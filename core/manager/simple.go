@@ -8,12 +8,12 @@ import (
 )
 
 type SimpleManager struct {
-	main    core.CommandManager
-	recoder core.CommandManager
+	main     core.CommandManager
+	recorder core.CommandManager
 }
 
 func (m *SimpleManager) each(fn func(mgr core.CommandManager) error) error {
-	for _, mgr := range []core.CommandManager{m.main, m.recoder} {
+	for _, mgr := range []core.CommandManager{m.main, m.recorder} {
 		err := fn(mgr)
 		if err != nil {
 			return err
@@ -24,7 +24,7 @@ func (m *SimpleManager) each(fn func(mgr core.CommandManager) error) error {
 }
 
 func (m *SimpleManager) reverseEach(fn func(mgr core.CommandManager) error) error {
-	for _, mgr := range []core.CommandManager{m.recoder, m.main} {
+	for _, mgr := range []core.CommandManager{m.recorder, m.main} {
 		err := fn(mgr)
 		if err != nil {
 			return err
@@ -36,7 +36,7 @@ func (m *SimpleManager) reverseEach(fn func(mgr core.CommandManager) error) erro
 
 func (m *SimpleManager) all(fn func(mgr core.CommandManager) error) error {
 	var errs error
-	for _, mgr := range []core.CommandManager{m.main, m.recoder} {
+	for _, mgr := range []core.CommandManager{m.main, m.recorder} {
 		err := fn(mgr)
 		if err != nil {
 			errs = multierror.Append(errs, err)
@@ -57,7 +57,7 @@ func (m *SimpleManager) Provider() core.CommandProvider {
 }
 
 func (m *SimpleManager) Query() (core.CommandQuery, error) {
-	return m.recoder.Query()
+	return m.recorder.Query()
 }
 
 func (m *SimpleManager) Define(name, version, location string) (core.Command, error) {
@@ -66,7 +66,7 @@ func (m *SimpleManager) Define(name, version, location string) (core.Command, er
 		return nil, err
 	}
 
-	return m.recoder.Define(name, version, binary.GetLocation())
+	return m.recorder.Define(name, version, binary.GetLocation())
 }
 
 func (m *SimpleManager) Undefine(name, version string) error {
@@ -87,8 +87,8 @@ func (m *SimpleManager) Deactivate(name string) error {
 	})
 }
 
-func NewSimpleManager(main core.CommandManager, recoder core.CommandManager) *SimpleManager {
-	return &SimpleManager{main: main, recoder: recoder}
+func NewSimpleManager(main core.CommandManager, recorder core.CommandManager) *SimpleManager {
+	return &SimpleManager{main: main, recorder: recorder}
 }
 
 func init() {
