@@ -11,7 +11,7 @@ import (
 )
 
 func WaitProcess(ctx context.Context, command string, args []string) error {
-	logger := core.Logger
+	logger := core.GetLogger()
 	process := exec.CommandContext(ctx, command, args...)
 	logger.Debug("running process", map[string]interface{}{
 		"process": process,

@@ -124,7 +124,7 @@ type BinaryManager struct {
 }
 
 func (m *BinaryManager) Init() error {
-	core.Logger.Debug("creating directory", map[string]interface{}{
+	core.GetLogger().Debug("creating directory", map[string]interface{}{
 		"bin_dir":   m.binDir,
 		"shims_dir": m.shimsDir,
 	})
@@ -197,7 +197,7 @@ func (m *BinaryManager) Define(name string, version string, location string) (co
 	shimsName := m.ShimsName(name, version)
 	dstLocation := helper.Child(shimsName).Path()
 
-	core.Logger.Debug("defining binary", map[string]interface{}{
+	core.GetLogger().Debug("defining binary", map[string]interface{}{
 		"name":     name,
 		"version":  version,
 		"location": location,
@@ -220,7 +220,7 @@ func (m *BinaryManager) Undefine(name string, version string) error {
 	helper := utils.NewPathHelper(m.shimsDir).Child(name)
 	shimsName := m.ShimsName(name, version)
 
-	core.Logger.Debug("undefining binary", map[string]interface{}{
+	core.GetLogger().Debug("undefining binary", map[string]interface{}{
 		"name":    name,
 		"version": version,
 	})
@@ -244,7 +244,7 @@ func (m *BinaryManager) Activate(name, version string) error {
 
 	binHelper := utils.NewPathHelper(m.binDir)
 
-	core.Logger.Debug("activating binary", map[string]interface{}{
+	core.GetLogger().Debug("activating binary", map[string]interface{}{
 		"name":    name,
 		"version": version,
 	})
@@ -260,7 +260,7 @@ func (m *BinaryManager) Activate(name, version string) error {
 func (m *BinaryManager) Deactivate(name string) error {
 	binHelper := utils.NewPathHelper(m.binDir)
 
-	core.Logger.Debug("deactivating binary", map[string]interface{}{
+	core.GetLogger().Debug("deactivating binary", map[string]interface{}{
 		"name": name,
 	})
 

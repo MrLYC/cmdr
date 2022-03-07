@@ -12,7 +12,7 @@ var unsetCmd = &cobra.Command{
 	Use:   "unset",
 	Short: "Deactivate a command",
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
-		logger := core.Logger
+		logger := core.GetLogger()
 		name := cfg.GetString(core.CfgKeyXCommandUnsetName)
 		if name == core.Name {
 			logger.Error("unset command is not allowed to unset itself")

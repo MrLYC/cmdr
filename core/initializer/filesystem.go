@@ -29,7 +29,7 @@ func (b *FSBackup) Init() error {
 		return errors.Wrapf(err, "failed to create backup directory for %s", b.path)
 	}
 
-	core.Logger.Debug("backup directory", map[string]interface{}{
+	core.GetLogger().Debug("backup directory", map[string]interface{}{
 		"path": dir,
 	})
 
@@ -121,7 +121,7 @@ func (e *EmbedFSExporter) Init() error {
 		return errors.Wrap(err, "failed to create destination directory")
 	}
 
-	core.Logger.Debug("exporting embedded filesystem", map[string]interface{}{
+	core.GetLogger().Debug("exporting embedded filesystem", map[string]interface{}{
 		"src": e.srcPath,
 		"dst": e.dstPath,
 	})
@@ -221,14 +221,14 @@ func (r *DirRender) renderFile(path string, info os.FileInfo) error {
 	}
 	defer os.Remove(path)
 
-	core.Logger.Debug("rendering file", map[string]interface{}{
+	core.GetLogger().Debug("rendering file", map[string]interface{}{
 		"path": path,
 	})
 	return r.renderTemplate(path, string(templateContent), dstFile)
 }
 
 func (r *DirRender) renderDir(path string, info os.FileInfo) error {
-	core.Logger.Debug("rendering dir", map[string]interface{}{
+	core.GetLogger().Debug("rendering dir", map[string]interface{}{
 		"path": path,
 	})
 

@@ -17,7 +17,7 @@ var initCmd = &cobra.Command{
 	Short:              "Initialize cmdr",
 	FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
 	Run: func(cmd *cobra.Command, args []string) {
-		logger := core.Logger
+		logger := core.GetLogger()
 		cfg := core.GetConfiguration()
 		var errs error
 

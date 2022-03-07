@@ -19,7 +19,7 @@ var upgradeCmd = &cobra.Command{
 		cfg.Set(core.CfgKeyXUpgradeArgs, []string{"init", "--upgrade"})
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		logger := core.Logger
+		logger := core.GetLogger()
 		ctx := cmd.Context()
 		cfg := core.GetConfiguration()
 		releaseTag := cfg.GetString(core.CfgKeyXUpgradeRelease)

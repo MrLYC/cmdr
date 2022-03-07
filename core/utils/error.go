@@ -24,7 +24,7 @@ func ExitOnError(message string, errs ...error) {
 			continue
 		}
 
-		core.Logger.Error(message, map[string]interface{}{
+		core.GetLogger().Error(message, map[string]interface{}{
 			"error": err,
 		})
 		os.Exit(-1)
@@ -37,7 +37,7 @@ func PanicOnError(message string, errs ...error) {
 			continue
 		}
 
-		core.Logger.Error(message, map[string]interface{}{
+		core.GetLogger().Error(message, map[string]interface{}{
 			"error": err,
 		})
 		panic(err)

@@ -224,7 +224,7 @@ func (m *DatabaseManager) Define(name string, version string, location string) (
 	}
 
 	command.Location = location
-	core.Logger.Debug("defining command", map[string]interface{}{
+	core.GetLogger().Debug("defining command", map[string]interface{}{
 		"name":     name,
 		"version":  version,
 		"location": location,
@@ -248,7 +248,7 @@ func (m *DatabaseManager) Undefine(name string, version string) error {
 		return nil
 	}
 
-	core.Logger.Debug("undefining command", map[string]interface{}{
+	core.GetLogger().Debug("undefining command", map[string]interface{}{
 		"name":    name,
 		"version": version,
 	})
@@ -275,7 +275,7 @@ func (m *DatabaseManager) Activate(name string, version string) error {
 		return errors.Errorf("command %s(%s) not found", name, version)
 	}
 
-	core.Logger.Debug("activating command", map[string]interface{}{
+	core.GetLogger().Debug("activating command", map[string]interface{}{
 		"name":    name,
 		"version": version,
 	})
@@ -309,7 +309,7 @@ func (m *DatabaseManager) Deactivate(name string) error {
 		return errors.Wrapf(err, "select commands failed")
 	}
 
-	core.Logger.Debug("deactivating commands", map[string]interface{}{
+	core.GetLogger().Debug("deactivating commands", map[string]interface{}{
 		"name": name,
 	})
 
@@ -335,7 +335,7 @@ type DatabaseMigrator struct {
 }
 
 func (m *DatabaseMigrator) Init() error {
-	logger := core.Logger
+	logger := core.GetLogger()
 
 	db, err := m.dbFactory()
 	if err != nil {

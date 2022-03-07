@@ -11,7 +11,7 @@ import (
 	"logur.dev/logur"
 )
 
-var Logger logur.Logger
+var globalLogger logur.Logger
 
 type terminalLogger struct {
 	adapter.Logger
@@ -96,13 +96,21 @@ func (l *terminalLogger) Error(msg string, fields ...map[string]interface{}) {
 }
 
 func InitTerminalLogger(level logur.Level, withErrorStack bool, errorKey string) {
-	Logger = &terminalLogger{
+	globalLogger = &terminalLogger{
 		level:          level,
 		withErrorStack: withErrorStack,
 		errorKey:       errorKey,
 	}
 }
 
+func SetLogger(logger logur.Logger) {
+	globalLogger = logger
+}
+
+func GetLogger() logur.Logger {
+	return globalLogger
+}
+
 func init() {
-	Logger = logur.NoopLogger{}
+	globalLogger = logur.NoopLogger{}
 }

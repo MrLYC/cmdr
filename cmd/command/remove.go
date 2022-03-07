@@ -19,7 +19,7 @@ var removeCmd = &cobra.Command{
 		err := manager.Undefine(name, version)
 
 		if errors.Cause(err) == core.ErrCommandAlreadyActivated {
-			core.Logger.Warn("command is already activated, please deactivate it first", map[string]interface{}{
+			core.GetLogger().Warn("command is already activated, please deactivate it first", map[string]interface{}{
 				"name":    name,
 				"version": version,
 			})

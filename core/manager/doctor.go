@@ -115,7 +115,7 @@ type CommandDoctor struct {
 }
 
 func (d *CommandDoctor) Fix() error {
-	logger := core.Logger
+	logger := core.GetLogger()
 
 	query, err := d.Query()
 	if err != nil {

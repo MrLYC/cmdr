@@ -18,7 +18,7 @@ var listCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := core.GetConfiguration()
 
-		logger := core.Logger
+		logger := core.GetLogger()
 		logger.Debug("listing configurations", map[string]interface{}{
 			"path": cfg.ConfigFileUsed(),
 		})
