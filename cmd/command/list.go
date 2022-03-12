@@ -42,6 +42,7 @@ var listCmd = &cobra.Command{
 			return err
 		}
 
+		utils.SortCommands(commands)
 		for _, command := range commands {
 			var parts []string
 			if command.GetActivated() {
