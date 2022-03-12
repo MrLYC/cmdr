@@ -62,7 +62,7 @@ func (h *CobraCommandCompleteHelper) updateQuery(query core.CommandQuery) core.C
 }
 
 func (h *CobraCommandCompleteHelper) getCommands() []core.Command {
-	logger := core.Logger
+	logger := core.GetLogger()
 
 	h.queryOnce.Do(func() {
 		manager, err := core.NewCommandManager(h.managerProvider, core.GetConfiguration())
