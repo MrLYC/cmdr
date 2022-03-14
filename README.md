@@ -18,7 +18,7 @@ CMDR is a simple command version management tool that helps you quickly switch f
 ## Get Started
 To install a new command, run the following command:
 ```shell
-% cmdr command install -n <command-name> -v <version> -l <path_or_url>
+% cmdr command install -n <command-name> -v <version> -l <path-or-url>
 ```
 
 Then you can list the installed commands by running the following command:
