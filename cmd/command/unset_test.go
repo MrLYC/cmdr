@@ -37,7 +37,7 @@ var _ = Describe("Unset", func() {
 			cfg = viper.New()
 			core.SetConfiguration(cfg)
 
-			cfg.Set(core.CfgKeyXCommandUnsetName, "cmdr")
+			cfg.Set(core.CfgKeyXCommandUnsetName, "testing")
 		})
 
 		AfterEach(func() {
@@ -47,7 +47,14 @@ var _ = Describe("Unset", func() {
 		})
 
 		It("should unset a command", func() {
-			manager.EXPECT().Deactivate("cmdr").Return(nil)
+			manager.EXPECT().Deactivate("testing").Return(nil)
+			manager.EXPECT().Close().Return(nil)
+
+			unsetCmd.Run(unsetCmd, []string{})
+		})
+
+		It("should not unset a cmdr", func() {
+			cfg.Set(core.CfgKeyXCommandUnsetName, "cmdr")
 			manager.EXPECT().Close().Return(nil)
 
 			unsetCmd.Run(unsetCmd, []string{})

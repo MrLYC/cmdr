@@ -64,6 +64,7 @@ const (
 
 	// cmd.init
 	CfgKeyXInitUpgrade = "_.init.upgrade"
+
 	// cmd.upgrade
 	CfgKeyXUpgradeRelease = "_.upgrade.release"
 	CfgKeyXUpgradeAsset   = "_.upgrade.asset"

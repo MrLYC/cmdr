@@ -75,7 +75,6 @@ func preInitConfig() {
 	cfg.SetDefault(core.CfgKeyCmdrShimsDir, "shims")
 	cfg.SetDefault(core.CfgKeyCmdrProfileDir, "profile")
 	cfg.SetDefault(core.CfgKeyCmdrDatabasePath, "cmdr.db")
-	cfg.SetDefault(core.CfgKeyCmdrShell, os.Getenv("SHELL"))
 
 	cfg.SetDefault(core.CfgKeyLogLevel, "info")
 	cfg.SetDefault(core.CfgKeyLogOutput, "stderr")

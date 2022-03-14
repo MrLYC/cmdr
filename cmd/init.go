@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -57,8 +58,10 @@ func init() {
 
 	flags := initCmd.Flags()
 	flags.BoolP("upgrade", "u", false, "for upgrade init")
+	flags.StringP("shell", "s", os.Getenv("SHELL"), "shell to use")
 
 	utils.PanicOnError("binding flags",
 		cfg.BindPFlag(core.CfgKeyXInitUpgrade, flags.Lookup("upgrade")),
+		cfg.BindPFlag(core.CfgKeyCmdrShell, flags.Lookup("shell")),
 	)
 }
