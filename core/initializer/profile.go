@@ -117,7 +117,7 @@ func getProfilePathByShell(path string) (string, error) {
 	}
 
 	switch shell {
-	case "bash":
+	case "bash", "ash":
 		return filepath.Join(homeDir, ".bashrc"), nil
 	case "zsh":
 		return filepath.Join(homeDir, ".zshrc"), nil
