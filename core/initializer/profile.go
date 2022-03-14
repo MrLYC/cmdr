@@ -75,6 +75,10 @@ func (p *ProfileInjector) makeProfileScript() (io.Reader, error) {
 
 func (p *ProfileInjector) Init() error {
 	var script io.Reader
+	logger := core.GetLogger()
+	logger.Debug("writing cmdr initializer script to profile", map[string]interface{}{
+		"profile": p.profilePath,
+	})
 
 	_, err := os.Stat(p.profilePath)
 	if err == nil {
