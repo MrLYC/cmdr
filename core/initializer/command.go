@@ -87,12 +87,17 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 }
 
 func (c *CmdrUpdater) Init() error {
+	logger := core.GetLogger()
 	safeVersion := []string{c.version}
 	version := c.getActivatedCmdrVersion()
 	if version != "" {
 		safeVersion = append(safeVersion, version)
 	}
 
+	logger.Debug("update command", map[string]interface{}{
+		"name":    c.name,
+		"version": c.version,
+	})
 	err := c.install()
 	if err != nil {
 		return errors.WithMessagef(err, "failed to install command %s", c.name)

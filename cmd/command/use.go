@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
@@ -12,10 +13,21 @@ var useCmd = &cobra.Command{
 	Use:   "use",
 	Short: "Activate a command",
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
-		return manager.Activate(
-			cfg.GetString(core.CfgKeyXCommandUseName),
-			cfg.GetString(core.CfgKeyXCommandUseVersion),
-		)
+		logger := core.GetLogger()
+		name := cfg.GetString(core.CfgKeyXCommandUseName)
+		version := cfg.GetString(core.CfgKeyXCommandUseVersion)
+
+		err := manager.Activate(name, version)
+		if err != nil {
+			return errors.WithMessagef(err, "failed to activate command %s", name)
+		}
+
+		logger.Info("command activated", map[string]interface{}{
+			"name":    name,
+			"version": version,
+		})
+
+		return nil
 	}),
 }
 

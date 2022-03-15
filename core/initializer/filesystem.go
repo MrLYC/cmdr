@@ -24,12 +24,13 @@ type FSBackup struct {
 }
 
 func (b *FSBackup) Init() error {
+	logger := core.GetLogger()
 	dir, err := os.MkdirTemp("", fmt.Sprintf("%s-backup-%s-*", core.Name, filepath.Base(b.path)))
 	if err != nil {
 		return errors.Wrapf(err, "failed to create backup directory for %s", b.path)
 	}
 
-	core.GetLogger().Debug("backup directory", map[string]interface{}{
+	logger.Debug("backup directory", map[string]interface{}{
 		"path": dir,
 	})
 
@@ -116,12 +117,13 @@ func (e *EmbedFSExporter) exportDir(srcPath string, d fs.DirEntry, err error) er
 }
 
 func (e *EmbedFSExporter) Init() error {
+	logger := core.GetLogger()
 	err := os.MkdirAll(e.dstPath, 0755)
 	if err != nil {
 		return errors.Wrap(err, "failed to create destination directory")
 	}
 
-	core.GetLogger().Debug("exporting embedded filesystem", map[string]interface{}{
+	logger.Debug("exporting embedded filesystem", map[string]interface{}{
 		"src": e.srcPath,
 		"dst": e.dstPath,
 	})
@@ -246,6 +248,10 @@ func (r *DirRender) renderDir(path string, info os.FileInfo) error {
 }
 
 func (r *DirRender) Init() error {
+	logger := core.GetLogger()
+	logger.Debug("rendering embedded filesystem", map[string]interface{}{
+		"src": r.srcPath,
+	})
 	return r.walkTemplates(r.renderFile, r.renderDir)
 }
 

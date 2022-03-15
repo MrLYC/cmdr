@@ -13,20 +13,30 @@ var removeCmd = &cobra.Command{
 	Use:   "remove",
 	Short: "Remove command from cmdr",
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
+		logger := core.GetLogger()
 		name := cfg.GetString(core.CfgKeyXCommandRemoveName)
 		version := cfg.GetString(core.CfgKeyXCommandRemoveVersion)
 
 		err := manager.Undefine(name, version)
 
 		if errors.Cause(err) == core.ErrCommandAlreadyActivated {
-			core.GetLogger().Warn("command is already activated, please deactivate it first", map[string]interface{}{
+			logger.Warn("command is already activated, please deactivate it first", map[string]interface{}{
 				"name":    name,
 				"version": version,
 			})
 			return nil
 		}
 
-		return err
+		if err != nil {
+			return errors.WithMessagef(err, "failed to remove command %s", name)
+		}
+
+		logger.Info("command removed", map[string]interface{}{
+			"name":    name,
+			"version": version,
+		})
+
+		return nil
 	}),
 }
 

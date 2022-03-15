@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
@@ -16,14 +17,21 @@ var defineCmd = &cobra.Command{
 		cfg.Set(core.CfgKeyCmdrLinkMode, "link")
 	},
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
-		_, err := utils.DefineCmdrCommand(
-			manager,
-			cfg.GetString(core.CfgKeyXCommandDefineName),
-			cfg.GetString(core.CfgKeyXCommandDefineVersion),
-			cfg.GetString(core.CfgKeyXCommandDefineLocation),
-			cfg.GetBool(core.CfgKeyXCommandDefineActivate),
-		)
-		return err
+		logger := core.GetLogger()
+		name := cfg.GetString(core.CfgKeyXCommandDefineName)
+		version := cfg.GetString(core.CfgKeyXCommandDefineVersion)
+		location := cfg.GetString(core.CfgKeyXCommandDefineLocation)
+		activate := cfg.GetBool(core.CfgKeyXCommandDefineActivate)
+		_, err := utils.DefineCmdrCommand(manager, name, version, location, activate)
+		if err != nil {
+			return errors.WithMessagef(err, "failed to define command %s:%s", name, version)
+		}
+
+		logger.Info("command defined", map[string]interface{}{
+			"name":    name,
+			"version": version,
+		})
+		return nil
 	}),
 }
 
