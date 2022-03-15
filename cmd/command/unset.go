@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
@@ -15,10 +16,20 @@ var unsetCmd = &cobra.Command{
 		logger := core.GetLogger()
 		name := cfg.GetString(core.CfgKeyXCommandUnsetName)
 		if name == core.Name {
-			logger.Error("unset command is not allowed to unset itself")
+			logger.Error("it is not allowed to unset cmdr itself")
 			return nil
 		}
-		return manager.Deactivate(name)
+
+		err := manager.Deactivate(name)
+		if err != nil {
+			return errors.WithMessagef(err, "failed to deactivate command %s", name)
+		}
+
+		logger.Info("command deactivated", map[string]interface{}{
+			"name": name,
+		})
+
+		return nil
 	}),
 }
 

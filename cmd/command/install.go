@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
@@ -16,14 +17,22 @@ var installCmd = &cobra.Command{
 		cfg.Set(core.CfgKeyCmdrLinkMode, "default")
 	},
 	Run: utils.RunCobraCommandWith(core.CommandProviderDownload, func(cfg core.Configuration, manager core.CommandManager) error {
-		_, err := utils.DefineCmdrCommand(
-			manager,
-			cfg.GetString(core.CfgKeyXCommandInstallName),
-			cfg.GetString(core.CfgKeyXCommandInstallVersion),
-			cfg.GetString(core.CfgKeyXCommandInstallLocation),
-			cfg.GetBool(core.CfgKeyXCommandInstallActivate),
-		)
-		return err
+		logger := core.GetLogger()
+		name := cfg.GetString(core.CfgKeyXCommandInstallName)
+		version := cfg.GetString(core.CfgKeyXCommandInstallVersion)
+		location := cfg.GetString(core.CfgKeyXCommandInstallLocation)
+		activate := cfg.GetBool(core.CfgKeyXCommandInstallActivate)
+		_, err := utils.DefineCmdrCommand(manager, name, version, location, activate)
+		if err != nil {
+			return errors.WithMessagef(err, "failed to install command %s:%s", name, version)
+		}
+
+		logger.Info("command installed", map[string]interface{}{
+			"name":    name,
+			"version": version,
+		})
+
+		return nil
 	}),
 }
 

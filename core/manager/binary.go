@@ -124,7 +124,8 @@ type BinaryManager struct {
 }
 
 func (m *BinaryManager) Init() error {
-	core.GetLogger().Debug("creating directory", map[string]interface{}{
+	logger := core.GetLogger()
+	logger.Debug("creating directory", map[string]interface{}{
 		"bin_dir":   m.binDir,
 		"shims_dir": m.shimsDir,
 	})
