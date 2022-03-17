@@ -43,8 +43,7 @@ func SearchReleaseAsset(ctx context.Context, assetName string, release *github.R
 		currentAssetName := asset.GetName()
 
 		if currentAssetName == assetName {
-			assets.Add(asset, 0.0)
-			break
+			return asset, nil
 		}
 
 		score := 0.0

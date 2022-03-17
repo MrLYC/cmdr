@@ -44,7 +44,7 @@ var upgradeCmd = &cobra.Command{
 		utils.ExitOnError("search release asset failed", err)
 
 		logger.Info("release asset found", map[string]interface{}{
-			"release": releaseTag,
+			"release": release.GetName(),
 			"asset":   asset.GetName(),
 		})
 		utils.ExitOnError("upgrade cmdr failed", utils.UpgradeCmdr(
