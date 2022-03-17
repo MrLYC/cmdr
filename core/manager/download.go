@@ -102,6 +102,6 @@ func init() {
 			utils.ExitOnError("Failed to create command manager", err)
 		}
 
-		return NewDownloadManager(manager, utils.NewProgressBarDownloader(os.Stderr)), nil
+		return NewDownloadManager(manager, utils.NewDefaultDownloader(os.Stderr)), nil
 	})
 }
