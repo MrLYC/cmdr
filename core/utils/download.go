@@ -46,19 +46,18 @@ func NewDownloader(progressListener getter.ProgressTracker, detectors []getter.D
 	}
 }
 
-func NewProgressBarDownloader(stream io.Writer, options ...getter.ClientOption) *Downloader {
+func NewDefaultDownloader(stream io.Writer, options ...getter.ClientOption) *Downloader {
 	tracker := NewProgressBarTracker("downloading", stream)
+	detectors := make([]getter.Detector, 0, len(getter.Detectors))
+	for _, d := range getter.Detectors {
+		switch d.(type) {
+		case *getter.FileDetector:
+			// it is no need to download a local file
+			continue
+		}
 
-	return NewDownloader(
-		tracker,
-		[]getter.Detector{
-			new(getter.GitHubDetector),
-			new(getter.GitLabDetector),
-			new(getter.GitDetector),
-			new(getter.BitBucketDetector),
-			new(getter.S3Detector),
-			new(getter.GCSDetector),
-		},
-		options,
-	)
+		detectors = append(detectors, d)
+	}
+
+	return NewDownloader(tracker, detectors, options)
 }
