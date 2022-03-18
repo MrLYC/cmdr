@@ -13,6 +13,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/homedepot/flop v0.1.6
 	github.com/jaswdr/faker v1.10.2
+	github.com/mitchellh/go-ps v1.0.0
 	github.com/muesli/termenv v0.9.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0

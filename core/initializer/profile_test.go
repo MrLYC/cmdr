@@ -7,7 +7,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"github.com/spf13/viper"
 
+	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/initializer"
 )
 
@@ -73,6 +75,28 @@ var _ = Describe("Profile", func() {
 				"#!/bin/bash\n# a comment\n. ~/cmdr_profile\ndo_some_thing\n. ~/cmdr_profile\n",
 				"#!/bin/bash\n# a comment\n. '~/.cmdr/cmdr_profile'\ndo_some_thing\n",
 			),
+		)
+	})
+
+	Context("Injector", func() {
+		homeDir, _ := os.UserHomeDir()
+
+		DescribeTable("Profile path", func(shell, excepted string) {
+			cfg := viper.New()
+			cfg.Set(core.CfgKeyCmdrShell, shell)
+
+			i, err := core.NewInitializer("profile-injector", cfg)
+			Expect(err).To(BeNil())
+
+			injector := i.(*initializer.ProfileInjector)
+
+			Expect(injector.ProfilePath()).To(Equal(excepted))
+		},
+			Entry("bash", "bash", filepath.Join(homeDir, ".bashrc")),
+			Entry("ash", "ash", filepath.Join(homeDir, ".profile")),
+			Entry("zsh", "zsh", filepath.Join(homeDir, ".zshrc")),
+			Entry("sh", "sh", filepath.Join(homeDir, ".profile")),
+			Entry("fish", "fish", filepath.Join(homeDir, ".config", "fish", "config.fish")),
 		)
 	})
 })

@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 
+	ps "github.com/mitchellh/go-ps"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
@@ -105,6 +106,10 @@ func (p *ProfileInjector) Init() error {
 	return nil
 }
 
+func (p *ProfileInjector) ProfilePath() string {
+	return p.profilePath
+}
+
 func NewProfileInjector(scriptPath, profilePath string) *ProfileInjector {
 	return &ProfileInjector{
 		scriptPath:  scriptPath,
@@ -112,23 +117,32 @@ func NewProfileInjector(scriptPath, profilePath string) *ProfileInjector {
 	}
 }
 
-func getProfilePathByShell(path string) (string, error) {
-	shell := filepath.Base(path)
-
+func getProfilePathByShell(shell string) (string, error) {
+	ppid := os.Getppid()
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to get user home dir")
 	}
 
-	switch shell {
-	case "bash", "ash":
-		return filepath.Join(homeDir, ".bashrc"), nil
-	case "zsh":
-		return filepath.Join(homeDir, ".zshrc"), nil
-	case "sh":
-		return filepath.Join(homeDir, ".profile"), nil
-	default:
-		return "", errors.Wrapf(core.ErrShellNotSupported, shell)
+	for {
+		switch filepath.Base(shell) {
+		case "bash":
+			return filepath.Join(homeDir, ".bashrc"), nil
+		case "zsh":
+			return filepath.Join(homeDir, ".zshrc"), nil
+		case "fish":
+			return filepath.Join(homeDir, ".config", "fish", "config.fish"), nil
+		case "ash", "sh":
+			return filepath.Join(homeDir, ".profile"), nil
+		}
+
+		process, err := ps.FindProcess(ppid)
+		if err != nil {
+			return "", errors.Wrapf(err, "unsupported shell")
+		}
+
+		shell = process.Executable()
+		ppid = process.PPid()
 	}
 }
 
