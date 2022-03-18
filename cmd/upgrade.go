@@ -24,7 +24,7 @@ var upgradeCmd = &cobra.Command{
 		cfg := core.GetConfiguration()
 		releaseTag := cfg.GetString(core.CfgKeyXUpgradeRelease)
 		assetName := cfg.GetString(core.CfgKeyXUpgradeAsset)
-		upgradeArgs := cfg.GetStringSlice(core.CfgKeyXUpgradeArgs)
+		upgradeArgs := append(cfg.GetStringSlice(core.CfgKeyXUpgradeArgs), args...)
 		githubClient := github.NewClient(nil)
 
 		logger.Info("searching for release", map[string]interface{}{
