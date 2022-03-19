@@ -11,11 +11,12 @@ func _() {
 	_ = x[CmdrSearcherProviderUnknown-0]
 	_ = x[CmdrSearcherProviderDefault-1]
 	_ = x[CmdrSearcherProviderApi-2]
+	_ = x[CmdrSearcherProviderAtom-3]
 }
 
-const _CmdrSearcherProvider_name = "CmdrSearcherProviderUnknownCmdrSearcherProviderDefaultCmdrSearcherProviderApi"
+const _CmdrSearcherProvider_name = "CmdrSearcherProviderUnknownCmdrSearcherProviderDefaultCmdrSearcherProviderApiCmdrSearcherProviderAtom"
 
-var _CmdrSearcherProvider_index = [...]uint8{0, 27, 54, 77}
+var _CmdrSearcherProvider_index = [...]uint8{0, 27, 54, 77, 101}
 
 func (i CmdrSearcherProvider) String() string {
 	if i < 0 || i >= CmdrSearcherProvider(len(_CmdrSearcherProvider_index)-1) {

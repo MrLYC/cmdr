@@ -26,6 +26,9 @@ var upgradeCmd = &cobra.Command{
 		searcher, err := core.NewCmdrSearcher(core.CmdrSearcherProviderDefault, cfg)
 		utils.ExitOnError("getting cmdr searcher", err)
 
+		logger.Info("searching for release", map[string]interface{}{
+			"release": releaseName,
+		})
 		info, err := searcher.GetLatestAsset(ctx, releaseName, assetName)
 		utils.ExitOnError("get latest asset url failed", err)
 

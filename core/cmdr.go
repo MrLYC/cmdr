@@ -25,6 +25,7 @@ const (
 	CmdrSearcherProviderUnknown CmdrSearcherProvider = iota
 	CmdrSearcherProviderDefault
 	CmdrSearcherProviderApi
+	CmdrSearcherProviderAtom
 )
 
 type factoryCmdrSearcher func(cfg Configuration) (CmdrSearcher, error)
