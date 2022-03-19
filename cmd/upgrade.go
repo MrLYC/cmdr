@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"strings"
-
-	"github.com/google/go-github/v39/github"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
@@ -22,35 +20,35 @@ var upgradeCmd = &cobra.Command{
 		logger := core.GetLogger()
 		ctx := cmd.Context()
 		cfg := core.GetConfiguration()
-		releaseTag := cfg.GetString(core.CfgKeyXUpgradeRelease)
+		releaseName := cfg.GetString(core.CfgKeyXUpgradeRelease)
 		assetName := cfg.GetString(core.CfgKeyXUpgradeAsset)
-		upgradeArgs := cfg.GetStringSlice(core.CfgKeyXUpgradeArgs)
-		githubClient := github.NewClient(nil)
+		upgradeArgs := append(cfg.GetStringSlice(core.CfgKeyXUpgradeArgs), args...)
+
+		searcher, err := core.NewCmdrSearcher(core.CmdrSearcherProviderDefault, cfg)
+		utils.ExitOnError("getting cmdr searcher", err)
 
 		logger.Info("searching for release", map[string]interface{}{
-			"release": releaseTag,
+			"release": releaseName,
 		})
-		release, err := utils.GetCmdrRelease(ctx, githubClient.Repositories, releaseTag)
-		utils.ExitOnError("get release failed", err)
+		info, err := searcher.GetLatestAsset(ctx, releaseName, assetName)
+		utils.ExitOnError("get latest asset url failed", err)
 
-		if strings.Contains(release.GetTagName(), core.Version) {
+		err = utils.UpgradeCmdr(ctx, cfg, info.Url, info.Version, upgradeArgs)
+		switch errors.Cause(err) {
+		case nil:
+			logger.Info("upgrade cmdr success")
+		case utils.ErrCmdrAlreadyLatestVersion:
 			logger.Info("cmdr already latest version", map[string]interface{}{
 				"version": core.Version,
 			})
-			return
+		case utils.ErrCmdrCommandAlreadyDefined:
+			logger.Warn("cmdr latest version has already defined", map[string]interface{}{
+				"expected": info.Version,
+				"current":  core.Version,
+			})
+		default:
+			utils.ExitOnError("upgrade cmdr failed", err)
 		}
-
-		asset, err := utils.SearchReleaseAsset(ctx, assetName, release)
-		utils.ExitOnError("search release asset failed", err)
-
-		logger.Info("release asset found", map[string]interface{}{
-			"release": release.GetName(),
-			"asset":   asset.GetName(),
-		})
-		utils.ExitOnError("upgrade cmdr failed", utils.UpgradeCmdr(
-			ctx, cfg, asset.GetBrowserDownloadURL(),
-			release.GetTagName(), upgradeArgs,
-		))
 	},
 }
 
