@@ -18,37 +18,38 @@ import (
 )
 
 var _ = Describe("Github", func() {
-	Context("GetRelease", func() {
-		var (
-			ctrl    *gomock.Controller
-			client  *mock.MockGithubRepositoryClient
-			ctx     context.Context
-			release github.RepositoryRelease
-		)
+	var (
+		ctrl     *gomock.Controller
+		client   *mock.MockGithubRepositoryClient
+		ctx      context.Context
+		release  *github.RepositoryRelease
+		searcher *utils.CmdrApiSearcher
+	)
 
-		BeforeEach(func() {
-			ctrl = gomock.NewController(GinkgoT())
-			client = mock.NewMockGithubRepositoryClient(ctrl)
-			ctx = context.Background()
-		})
+	BeforeEach(func() {
+		release = &github.RepositoryRelease{}
+		ctrl = gomock.NewController(GinkgoT())
+		client = mock.NewMockGithubRepositoryClient(ctrl)
+		ctx = context.Background()
+		searcher = utils.NewCmdrApiSearcher(client)
+	})
 
-		AfterEach(func() {
-			ctrl.Finish()
-		})
+	AfterEach(func() {
+		ctrl.Finish()
+	})
 
-		It("should get latest release", func() {
-			client.EXPECT().GetLatestRelease(ctx, core.Author, core.Name).Return(&release, nil, nil)
+	It("should get latest release", func() {
+		client.EXPECT().GetLatestRelease(ctx, core.Author, core.Name).Return(release, nil, nil)
 
-			_, err := utils.GetCmdrRelease(ctx, client, "latest")
-			Expect(err).To(BeNil())
-		})
+		_, err := searcher.GetCmdrRelease(ctx, "latest")
+		Expect(err).To(BeNil())
+	})
 
-		It("should get named release", func() {
-			client.EXPECT().GetReleaseByTag(ctx, core.Author, core.Name, "v0.0.0").Return(&release, nil, nil)
+	It("should get named release", func() {
+		client.EXPECT().GetReleaseByTag(ctx, core.Author, core.Name, "v0.0.0").Return(release, nil, nil)
 
-			_, err := utils.GetCmdrRelease(ctx, client, "v0.0.0")
-			Expect(err).To(BeNil())
-		})
+		_, err := searcher.GetCmdrRelease(ctx, "v0.0.0")
+		Expect(err).To(BeNil())
 	})
 
 	Context("SearchReleaseAsset", func() {
@@ -72,7 +73,7 @@ var _ = Describe("Github", func() {
 				Assets: assets,
 			}
 
-			asset, err := utils.SearchReleaseAsset(context.Background(), assetName, release)
+			asset, err := searcher.SearchReleaseAsset(context.Background(), assetName, release)
 			Expect(err).To(BeNil())
 			Expect(asset.GetName()).To(Equal(expected))
 		},
@@ -99,5 +100,29 @@ var _ = Describe("Github", func() {
 				{runtime.GOOS, runtime.GOARCH},
 			}),
 		)
+	})
+
+	It("GetLatestAsset", func() {
+		releaseName := "latest"
+		assetName := "cmdr-goos-goarch"
+		fakeUrl := "http://example.com"
+		tagName := "v1.0.0"
+		release.Name = &releaseName
+		release.TagName = &tagName
+		release.Assets = []*github.ReleaseAsset{
+			{
+				Name:               &assetName,
+				BrowserDownloadURL: &fakeUrl,
+			},
+		}
+		client.EXPECT().GetLatestRelease(ctx, core.Author, core.Name).Return(release, nil, nil)
+
+		asset, err := searcher.GetLatestAsset(ctx, releaseName, assetName)
+		Expect(err).To(BeNil())
+
+		Expect(asset.Name).To(Equal(releaseName))
+		Expect(asset.Version).To(Equal("1.0.0"))
+		Expect(asset.Asset).To(Equal(assetName))
+		Expect(asset.Url).To(Equal(fakeUrl))
 	})
 })

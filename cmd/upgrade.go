@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"strings"
-
-	"github.com/google/go-github/v39/github"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
@@ -22,34 +19,25 @@ var upgradeCmd = &cobra.Command{
 		logger := core.GetLogger()
 		ctx := cmd.Context()
 		cfg := core.GetConfiguration()
-		releaseTag := cfg.GetString(core.CfgKeyXUpgradeRelease)
+		releaseName := cfg.GetString(core.CfgKeyXUpgradeRelease)
 		assetName := cfg.GetString(core.CfgKeyXUpgradeAsset)
 		upgradeArgs := append(cfg.GetStringSlice(core.CfgKeyXUpgradeArgs), args...)
-		githubClient := github.NewClient(nil)
 
-		logger.Info("searching for release", map[string]interface{}{
-			"release": releaseTag,
-		})
-		release, err := utils.GetCmdrRelease(ctx, githubClient.Repositories, releaseTag)
-		utils.ExitOnError("get release failed", err)
+		searcher, err := core.NewCmdrSearcher(core.CmdrSearcherProviderDefault, cfg)
+		utils.ExitOnError("getting cmdr searcher", err)
 
-		if strings.Contains(release.GetTagName(), core.Version) {
+		info, err := searcher.GetLatestAsset(ctx, releaseName, assetName)
+		utils.ExitOnError("get latest asset url failed", err)
+
+		if info.Version == core.Version {
 			logger.Info("cmdr already latest version", map[string]interface{}{
 				"version": core.Version,
 			})
 			return
 		}
 
-		asset, err := utils.SearchReleaseAsset(ctx, assetName, release)
-		utils.ExitOnError("search release asset failed", err)
-
-		logger.Info("release asset found", map[string]interface{}{
-			"release": release.GetName(),
-			"asset":   asset.GetName(),
-		})
 		utils.ExitOnError("upgrade cmdr failed", utils.UpgradeCmdr(
-			ctx, cfg, asset.GetBrowserDownloadURL(),
-			release.GetTagName(), upgradeArgs,
+			ctx, cfg, info.Url, info.Version, upgradeArgs,
 		))
 	},
 }
