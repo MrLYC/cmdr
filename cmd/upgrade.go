@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
@@ -32,16 +33,22 @@ var upgradeCmd = &cobra.Command{
 		info, err := searcher.GetLatestAsset(ctx, releaseName, assetName)
 		utils.ExitOnError("get latest asset url failed", err)
 
-		if info.Version == core.Version {
+		err = utils.UpgradeCmdr(ctx, cfg, info.Url, info.Version, upgradeArgs)
+		switch errors.Cause(err) {
+		case nil:
+			logger.Info("upgrade cmdr success")
+		case utils.ErrCmdrAlreadyLatestVersion:
 			logger.Info("cmdr already latest version", map[string]interface{}{
 				"version": core.Version,
 			})
-			return
+		case utils.ErrCmdrCommandAlreadyDefined:
+			logger.Warn("cmdr latest version has already defined", map[string]interface{}{
+				"expected": info.Version,
+				"current":  core.Version,
+			})
+		default:
+			utils.ExitOnError("upgrade cmdr failed", err)
 		}
-
-		utils.ExitOnError("upgrade cmdr failed", utils.UpgradeCmdr(
-			ctx, cfg, info.Url, info.Version, upgradeArgs,
-		))
 	},
 }
 

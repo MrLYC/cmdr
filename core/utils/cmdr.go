@@ -9,7 +9,10 @@ import (
 	"github.com/mrlyc/cmdr/core"
 )
 
-var ErrCmdrCommandAlreadyDefined = errors.New("cmdr command already defined")
+var (
+	ErrCmdrCommandAlreadyDefined = errors.New("cmdr command already defined")
+	ErrCmdrAlreadyLatestVersion  = errors.New("cmdr already latest version")
+)
 
 func normalizeVersion(version string) string {
 	return strings.TrimPrefix(version, "v")
@@ -58,6 +61,10 @@ func GetCmdrCommand(manager core.CommandManager, name, version string) (core.Com
 }
 
 func UpgradeCmdr(ctx context.Context, cfg core.Configuration, url, version string, args []string) error {
+	if version == core.Version {
+		return errors.Wrapf(ErrCmdrAlreadyLatestVersion, core.Version)
+	}
+
 	name := core.Name
 	version = normalizeVersion(version)
 	manager, err := core.NewCommandManager(core.CommandProviderDownload, cfg)
