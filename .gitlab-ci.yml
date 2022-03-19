@@ -1,0 +1,14 @@
+stages:
+  - release
+release:
+  stage: release
+  image:
+    name: goreleaser/goreleaser
+    entrypoint: ['']
+  only:
+    - tags
+  variables:
+    GIT_DEPTH: 0
+  script:
+    - goreleaser release --rm-dist
+
