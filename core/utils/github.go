@@ -28,15 +28,15 @@ type GithubRepositoryClient interface {
 	GetReleaseByTag(ctx context.Context, owner, repo, tag string) (*github.RepositoryRelease, *github.Response, error)
 }
 
-type CmdrApiSearcher struct {
+type CmdrApiFetcher struct {
 	client GithubRepositoryClient
 }
 
-func (s *CmdrApiSearcher) String() string {
+func (s *CmdrApiFetcher) String() string {
 	return "github-api"
 }
 
-func (s *CmdrApiSearcher) SearchReleaseAsset(ctx context.Context, assetName string, release *github.RepositoryRelease) (*github.ReleaseAsset, error) {
+func (s *CmdrApiFetcher) SearchReleaseAsset(ctx context.Context, assetName string, release *github.RepositoryRelease) (*github.ReleaseAsset, error) {
 	assets := NewSortedHeap(len(release.Assets))
 	for _, asset := range release.Assets {
 		if asset.BrowserDownloadURL == nil {
@@ -69,7 +69,7 @@ func (s *CmdrApiSearcher) SearchReleaseAsset(ctx context.Context, assetName stri
 	return item.(*github.ReleaseAsset), nil
 }
 
-func (s *CmdrApiSearcher) GetCmdrRelease(ctx context.Context, releaseName string) (release *github.RepositoryRelease, err error) {
+func (s *CmdrApiFetcher) GetCmdrRelease(ctx context.Context, releaseName string) (release *github.RepositoryRelease, err error) {
 	if releaseName == "latest" {
 		release, _, err = s.client.GetLatestRelease(ctx, core.Author, core.Name)
 	} else {
@@ -79,7 +79,7 @@ func (s *CmdrApiSearcher) GetCmdrRelease(ctx context.Context, releaseName string
 	return
 }
 
-func (s *CmdrApiSearcher) GetLatestAsset(ctx context.Context, releaseName, assetName string) (result core.CmdrReleaseInfo, err error) {
+func (s *CmdrApiFetcher) GetReleaseAsset(ctx context.Context, releaseName, assetName string) (result core.CmdrReleaseAsset, err error) {
 	logger := core.GetLogger()
 	logger.Debug("searching cmdr release by github api", map[string]interface{}{
 		"release": releaseName,
@@ -109,21 +109,21 @@ func (s *CmdrApiSearcher) GetLatestAsset(ctx context.Context, releaseName, asset
 	return result, nil
 }
 
-func NewCmdrApiSearcher(client GithubRepositoryClient) *CmdrApiSearcher {
-	return &CmdrApiSearcher{
+func NewCmdrApiFetcher(client GithubRepositoryClient) *CmdrApiFetcher {
+	return &CmdrApiFetcher{
 		client: client,
 	}
 }
 
-type CmdrAtomSearcher struct {
+type CmdrFeedFetcher struct {
 	fetchFn func(ctx context.Context) (feed *gofeed.Feed, err error)
 }
 
-func (s *CmdrAtomSearcher) String() string {
+func (s *CmdrFeedFetcher) String() string {
 	return "github-feed"
 }
 
-func (s *CmdrAtomSearcher) searchRelease(releaseName string, feed *gofeed.Feed) *gofeed.Item {
+func (s *CmdrFeedFetcher) searchRelease(releaseName string, feed *gofeed.Feed) *gofeed.Item {
 	if releaseName == "latest" {
 		return feed.Items[len(feed.Items)-1]
 	}
@@ -137,22 +137,40 @@ func (s *CmdrAtomSearcher) searchRelease(releaseName string, feed *gofeed.Feed) 
 	return nil
 }
 
-func (s *CmdrAtomSearcher) GetLatestAsset(ctx context.Context, releaseName, assetName string) (result core.CmdrReleaseInfo, err error) {
+func (s *CmdrFeedFetcher) getRelease(ctx context.Context, releaseName string) (*gofeed.Item, error) {
+	feed, err := s.fetchFn(ctx)
+	if err != nil {
+		return nil, errors.Wrapf(err, "fetch cmdr atom feed failed")
+	}
+
+	sort.Sort(feed)
+	item := s.searchRelease(releaseName, feed)
+	if item == nil {
+		return nil, errors.Wrapf(ErrGithubReleaseAssetNotFound, "search release %s failed", releaseName)
+	}
+
+	return item, nil
+}
+
+func (s *CmdrFeedFetcher) GetRelease(ctx context.Context, releaseName string) (string, error) {
+	item, err := s.getRelease(ctx, releaseName)
+	if err != nil {
+		return "", err
+	}
+
+	return item.Title, nil
+}
+
+func (s *CmdrFeedFetcher) GetReleaseAsset(ctx context.Context, releaseName, assetName string) (result core.CmdrReleaseAsset, err error) {
 	logger := core.GetLogger()
 	logger.Debug("searching cmdr release by github feed", map[string]interface{}{
 		"release": releaseName,
 		"asset":   assetName,
 	})
 
-	feed, err := s.fetchFn(ctx)
+	item, err := s.getRelease(ctx, releaseName)
 	if err != nil {
-		return result, errors.Wrapf(err, "fetch cmdr atom feed failed")
-	}
-
-	sort.Sort(feed)
-	item := s.searchRelease(releaseName, feed)
-	if item == nil {
-		return result, errors.Wrapf(ErrGithubReleaseAssetNotFound, "search release %s failed", releaseName)
+		return result, err
 	}
 
 	releaseVersion, err := version.NewVersion(item.Title)
@@ -182,17 +200,28 @@ func (s *CmdrAtomSearcher) GetLatestAsset(ctx context.Context, releaseName, asse
 	return
 }
 
-func NewCmdrAtomSearcher(fetchFn func(ctx context.Context) (feed *gofeed.Feed, err error)) *CmdrAtomSearcher {
-	return &CmdrAtomSearcher{
+func NewCmdrFeedFetcher(fetchFn func(ctx context.Context) (feed *gofeed.Feed, err error)) *CmdrFeedFetcher {
+	return &CmdrFeedFetcher{
 		fetchFn: fetchFn,
 	}
+}
+
+func NewCmdrAtomFetcher() *CmdrFeedFetcher {
+	return NewCmdrFeedFetcher(func(ctx context.Context) (feed *gofeed.Feed, err error) {
+		return gofeed.NewParser().ParseURL(
+			fmt.Sprintf(
+				`https://github.com/%s/%s/releases.atom`,
+				core.Author, core.Name,
+			),
+		)
+	})
 }
 
 type CmdrReleaseSearcher struct {
 	searchers []core.CmdrSearcher
 }
 
-func (s *CmdrReleaseSearcher) GetLatestAsset(ctx context.Context, releaseName, assetName string) (result core.CmdrReleaseInfo, err error) {
+func (s *CmdrReleaseSearcher) GetReleaseAsset(ctx context.Context, releaseName, assetName string) (result core.CmdrReleaseAsset, err error) {
 	logger := core.GetLogger()
 	var errs error
 
@@ -203,7 +232,7 @@ func (s *CmdrReleaseSearcher) GetLatestAsset(ctx context.Context, releaseName, a
 			"asset":    assetName,
 		})
 
-		result, err = searcher.GetLatestAsset(ctx, releaseName, assetName)
+		result, err = searcher.GetReleaseAsset(ctx, releaseName, assetName)
 		if err == nil {
 			return
 		}
@@ -222,18 +251,11 @@ func NewCmdrReleaseSearcher(searchers ...core.CmdrSearcher) *CmdrReleaseSearcher
 
 func init() {
 	core.RegisterCmdrSearcherFactory(core.CmdrSearcherProviderApi, func(cfg core.Configuration) (core.CmdrSearcher, error) {
-		return NewCmdrApiSearcher(github.NewClient(nil).Repositories), nil
+		return NewCmdrApiFetcher(github.NewClient(nil).Repositories), nil
 	})
 
 	core.RegisterCmdrSearcherFactory(core.CmdrSearcherProviderAtom, func(cfg core.Configuration) (core.CmdrSearcher, error) {
-		return NewCmdrAtomSearcher(func(ctx context.Context) (feed *gofeed.Feed, err error) {
-			return gofeed.NewParser().ParseURL(
-				fmt.Sprintf(
-					`https://github.com/%s/%s/releases.atom`,
-					core.Author, core.Name,
-				),
-			)
-		}), nil
+		return NewCmdrAtomFetcher(), nil
 	})
 
 	core.RegisterCmdrSearcherFactory(core.CmdrSearcherProviderDefault, func(cfg core.Configuration) (core.CmdrSearcher, error) {

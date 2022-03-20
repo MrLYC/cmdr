@@ -35,17 +35,17 @@ var _ = Describe("Github", func() {
 		ctrl.Finish()
 	})
 
-	Context("CmdrApiSearcher", func() {
+	Context("CmdrApiFetcher", func() {
 		var (
 			client   *mock.MockGithubRepositoryClient
 			release  *github.RepositoryRelease
-			searcher *utils.CmdrApiSearcher
+			searcher *utils.CmdrApiFetcher
 		)
 
 		BeforeEach(func() {
 			release = &github.RepositoryRelease{}
 			client = mock.NewMockGithubRepositoryClient(ctrl)
-			searcher = utils.NewCmdrApiSearcher(client)
+			searcher = utils.NewCmdrApiFetcher(client)
 		})
 
 		It("should get latest release", func() {
@@ -112,7 +112,7 @@ var _ = Describe("Github", func() {
 			)
 		})
 
-		It("GetLatestAsset", func() {
+		It("GetReleaseAsset", func() {
 			releaseName := "latest"
 			assetName := "cmdr-goos-goarch"
 			fakeUrl := "http://example.com"
@@ -127,7 +127,7 @@ var _ = Describe("Github", func() {
 			}
 			client.EXPECT().GetLatestRelease(ctx, core.Author, core.Name).Return(release, nil, nil)
 
-			asset, err := searcher.GetLatestAsset(ctx, releaseName, assetName)
+			asset, err := searcher.GetReleaseAsset(ctx, releaseName, assetName)
 			Expect(err).To(BeNil())
 
 			Expect(asset.Name).To(Equal(releaseName))
@@ -137,10 +137,10 @@ var _ = Describe("Github", func() {
 		})
 	})
 
-	Context("CmdrAtomSearcher", func() {
+	Context("CmdrFeedFetcher", func() {
 		var (
 			feed     gofeed.Feed
-			searcher *utils.CmdrAtomSearcher
+			searcher *utils.CmdrFeedFetcher
 		)
 
 		BeforeEach(func() {
@@ -159,13 +159,13 @@ var _ = Describe("Github", func() {
 					},
 				},
 			}
-			searcher = utils.NewCmdrAtomSearcher(func(ctx context.Context) (*gofeed.Feed, error) {
+			searcher = utils.NewCmdrFeedFetcher(func(ctx context.Context) (*gofeed.Feed, error) {
 				return &feed, nil
 			})
 		})
 
 		It("should return latest release", func() {
-			info, err := searcher.GetLatestAsset(ctx, "latest", "cmdr-goos-goarch")
+			info, err := searcher.GetReleaseAsset(ctx, "latest", "cmdr-goos-goarch")
 			Expect(err).To(BeNil())
 
 			Expect(info.Name).To(Equal("v1.0.1"))
@@ -177,7 +177,7 @@ var _ = Describe("Github", func() {
 		})
 
 		It("should return specified release", func() {
-			info, err := searcher.GetLatestAsset(ctx, "v1.0.0", "cmdr-goos-goarch")
+			info, err := searcher.GetReleaseAsset(ctx, "v1.0.0", "cmdr-goos-goarch")
 			Expect(err).To(BeNil())
 
 			Expect(info.Name).To(Equal("v1.0.0"))
@@ -202,31 +202,31 @@ var _ = Describe("Github", func() {
 		})
 
 		It("should return latest release from searcher1", func() {
-			var release core.CmdrReleaseInfo
+			var release core.CmdrReleaseAsset
 			mockSearcher1.
 				EXPECT().
-				GetLatestAsset(ctx, "latest", "cmdr-goos-goarch").
+				GetReleaseAsset(ctx, "latest", "cmdr-goos-goarch").
 				Return(release, nil)
 
-			info, err := searcher.GetLatestAsset(ctx, "latest", "cmdr-goos-goarch")
+			info, err := searcher.GetReleaseAsset(ctx, "latest", "cmdr-goos-goarch")
 			Expect(err).To(BeNil())
 			Expect(info).To(Equal(release))
 		})
 
 		It("should return latest release from searcher2", func() {
-			var release1, release2 core.CmdrReleaseInfo
+			var release1, release2 core.CmdrReleaseAsset
 
 			mockSearcher1.
 				EXPECT().
-				GetLatestAsset(ctx, "latest", "cmdr-goos-goarch").
+				GetReleaseAsset(ctx, "latest", "cmdr-goos-goarch").
 				Return(release1, fmt.Errorf("testing"))
 
 			mockSearcher2.
 				EXPECT().
-				GetLatestAsset(ctx, "latest", "cmdr-goos-goarch").
+				GetReleaseAsset(ctx, "latest", "cmdr-goos-goarch").
 				Return(release2, nil)
 
-			info, err := searcher.GetLatestAsset(ctx, "latest", "cmdr-goos-goarch")
+			info, err := searcher.GetReleaseAsset(ctx, "latest", "cmdr-goos-goarch")
 			Expect(err).To(BeNil())
 			Expect(info).To(Equal(release2))
 		})
