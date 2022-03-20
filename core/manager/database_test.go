@@ -1,7 +1,6 @@
 package manager_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -14,19 +13,19 @@ import (
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/manager"
-	"github.com/mrlyc/cmdr/core/manager/mock"
+	"github.com/mrlyc/cmdr/core/mock"
 )
 
 var _ = Describe("Database", func() {
 	var (
 		ctrl    *gomock.Controller
-		db      *mock.MockDBClient
+		db      *mock.MockDatabase
 		dbQuery *mock.MockQuery
 	)
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
-		db = mock.NewMockDBClient(ctrl)
+		db = mock.NewMockDatabase(ctrl)
 		dbQuery = mock.NewMockQuery(ctrl)
 	})
 
@@ -312,37 +311,6 @@ var _ = Describe("Database", func() {
 
 			_, ok := mgr.(*manager.DatabaseManager)
 			Expect(ok).To(BeTrue())
-		})
-	})
-
-	Context("DatabaseMigrator", func() {
-		var (
-			migrator *manager.DatabaseMigrator
-		)
-
-		BeforeEach(func() {
-			migrator = manager.NewDatabaseMigrator(func() (manager.DBClient, error) {
-				return db, nil
-			})
-		})
-
-		It("should migrate models", func() {
-			histories := make(map[string][]string)
-
-			db.EXPECT().Init(gomock.Any()).DoAndReturn(func(data interface{}) error {
-				key := fmt.Sprintf("%T", data)
-				histories[key] = append(histories[key], "Init")
-				return nil
-			}).AnyTimes()
-			db.EXPECT().ReIndex(gomock.Any()).DoAndReturn(func(data interface{}) error {
-				key := fmt.Sprintf("%T", data)
-				histories[key] = append(histories[key], "ReIndex")
-				return nil
-			}).AnyTimes()
-			db.EXPECT().Close().Return(nil)
-
-			Expect(migrator.Init()).To(Succeed())
-			Expect(histories["*manager.Command"]).To(Equal([]string{"Init", "ReIndex"}))
 		})
 	})
 })

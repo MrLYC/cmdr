@@ -6,19 +6,10 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
-	"github.com/mrlyc/cmdr/core/utils"
 )
 
-//go:generate mockgen -destination=mock/storm.go -package=mock github.com/asdine/storm/v3 Query
-//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock DBClient
-
-type DBClient interface {
-	storm.TypeStore
-	Close() error
-}
-
 type DatabaseManager struct {
-	Client DBClient
+	Client core.Database
 }
 
 func (m *DatabaseManager) Close() error {
@@ -164,61 +155,13 @@ func (m *DatabaseManager) Deactivate(name string) error {
 	return nil
 }
 
-func NewDatabaseManager(db DBClient) *DatabaseManager {
+func NewDatabaseManager(db core.Database) *DatabaseManager {
 	return &DatabaseManager{
 		Client: db,
 	}
 }
 
-type DatabaseMigrator struct {
-	dbFactory func() (DBClient, error)
-}
-
-func (m *DatabaseMigrator) Init() error {
-	logger := core.GetLogger()
-
-	db, err := m.dbFactory()
-	if err != nil {
-		return errors.Wrapf(err, "open database failed")
-	}
-	defer utils.CallClose(db)
-
-	for name, model := range map[string]interface{}{
-		"command": &Command{},
-	} {
-		logger.Debug("initializing database model", map[string]interface{}{
-			"model": name,
-		})
-		err := db.Init(model)
-		if err != nil {
-			return errors.Wrapf(err, "init database failed")
-		}
-
-		logger.Debug("indexing database model", map[string]interface{}{
-			"model": name,
-		})
-		err = db.ReIndex(model)
-		if err != nil {
-			return errors.Wrapf(err, "reindex database failed")
-		}
-	}
-
-	return nil
-}
-
-func NewDatabaseMigrator(dbFactory func() (DBClient, error)) *DatabaseMigrator {
-	return &DatabaseMigrator{
-		dbFactory: dbFactory,
-	}
-}
-
 func init() {
-	var (
-		_ core.Command        = (*Command)(nil)
-		_ core.CommandQuery   = (*CommandQuery)(nil)
-		_ core.CommandManager = (*DatabaseManager)(nil)
-	)
-
 	core.RegisterCommandManagerFactory(core.CommandProviderDatabase, func(cfg core.Configuration) (core.CommandManager, error) {
 		dbPath := cfg.GetString(core.CfgKeyCmdrDatabasePath)
 
@@ -228,11 +171,5 @@ func init() {
 		}
 
 		return NewDatabaseManager(db), nil
-	})
-
-	core.RegisterInitializerFactory("database-migrator", func(cfg core.Configuration) (core.Initializer, error) {
-		return NewDatabaseMigrator(func() (DBClient, error) {
-			return storm.Open(cfg.GetString(core.CfgKeyCmdrDatabasePath))
-		}), nil
 	})
 }

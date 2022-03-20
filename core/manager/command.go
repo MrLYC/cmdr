@@ -167,3 +167,7 @@ func NewCommandQuery(db storm.TypeStore) *CommandQuery {
 		Client: db,
 	}
 }
+
+func init() {
+	core.RegisterDatabaseModel(core.ModelTypeCommand, &Command{})
+}

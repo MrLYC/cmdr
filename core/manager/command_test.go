@@ -8,19 +8,19 @@ import (
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/manager"
-	"github.com/mrlyc/cmdr/core/manager/mock"
+	"github.com/mrlyc/cmdr/core/mock"
 )
 
 var _ = Describe("Database", func() {
 	var (
 		ctrl    *gomock.Controller
-		db      *mock.MockDBClient
+		db      *mock.MockDatabase
 		dbQuery *mock.MockQuery
 	)
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
-		db = mock.NewMockDBClient(ctrl)
+		db = mock.NewMockDatabase(ctrl)
 		dbQuery = mock.NewMockQuery(ctrl)
 	})
 
