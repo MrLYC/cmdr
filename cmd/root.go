@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,10 +12,6 @@ import (
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/utils"
-)
-
-var (
-	exitCode int
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -32,8 +27,7 @@ var rootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func ExecuteContext(ctx context.Context) {
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
-		fmt.Println(err)
-		os.Exit(exitCode)
+		utils.ExitOnError("execute failed", err)
 	}
 }
 

@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"os"
-
 	"github.com/mrlyc/cmdr/core"
 )
 
@@ -27,7 +25,7 @@ func ExitOnError(message string, errs ...error) {
 		core.GetLogger().Error(message, map[string]interface{}{
 			"error": err,
 		})
-		os.Exit(-1)
+		panic(core.NewExitError(-1))
 	}
 }
 
