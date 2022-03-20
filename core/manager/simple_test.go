@@ -18,8 +18,8 @@ import (
 var _ = Describe("Simple", func() {
 	var (
 		ctrl        *gomock.Controller
-		mainMgr     *mock.MockCommandManager
-		recorderMgr *mock.MockCommandManager
+		binaryMgr   *mock.MockCommandManager
+		databaseMgr *mock.MockCommandManager
 		mgr         *manager.SimpleManager
 		name        = "command"
 		version     = "1.0.0"
@@ -28,9 +28,9 @@ var _ = Describe("Simple", func() {
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
-		mainMgr = mock.NewMockCommandManager(ctrl)
-		recorderMgr = mock.NewMockCommandManager(ctrl)
-		mgr = manager.NewSimpleManager(mainMgr, recorderMgr)
+		binaryMgr = mock.NewMockCommandManager(ctrl)
+		databaseMgr = mock.NewMockCommandManager(ctrl)
+		mgr = manager.NewSimpleManager(databaseMgr, []core.CommandManager{binaryMgr})
 	})
 
 	AfterEach(func() {
@@ -39,15 +39,15 @@ var _ = Describe("Simple", func() {
 
 	Context("Close", func() {
 		It("should close main and recorder manager", func() {
-			mainMgr.EXPECT().Close()
-			recorderMgr.EXPECT().Close()
+			binaryMgr.EXPECT().Close()
+			databaseMgr.EXPECT().Close()
 
 			Expect(mgr.Close()).To(Succeed())
 		})
 
 		It("should continue close even if fail", func() {
-			mainMgr.EXPECT().Close().Return(fmt.Errorf("testing"))
-			recorderMgr.EXPECT().Close().Return(fmt.Errorf("testing"))
+			binaryMgr.EXPECT().Close().Return(fmt.Errorf("testing"))
+			databaseMgr.EXPECT().Close().Return(fmt.Errorf("testing"))
 
 			Expect(mgr.Close()).NotTo(Succeed())
 		})
@@ -55,17 +55,17 @@ var _ = Describe("Simple", func() {
 		It("should call in a specific order", func() {
 			var ordering []string
 
-			mainMgr.EXPECT().Close().DoAndReturn(func() error {
-				ordering = append(ordering, "main")
+			binaryMgr.EXPECT().Close().DoAndReturn(func() error {
+				ordering = append(ordering, "binary")
 				return nil
 			})
-			recorderMgr.EXPECT().Close().DoAndReturn(func() error {
-				ordering = append(ordering, "recorder")
+			databaseMgr.EXPECT().Close().DoAndReturn(func() error {
+				ordering = append(ordering, "database")
 				return nil
 			})
 
 			Expect(mgr.Close()).To(Succeed())
-			Expect(ordering).To(Equal([]string{"main", "recorder"}))
+			Expect(ordering).To(Equal([]string{"database", "binary"}))
 		})
 	})
 
@@ -75,7 +75,7 @@ var _ = Describe("Simple", func() {
 
 	It("should return query by recorder manager", func() {
 		query := mock.NewMockCommandQuery(ctrl)
-		recorderMgr.EXPECT().Query().Return(query, nil)
+		databaseMgr.EXPECT().Query().Return(query, nil)
 
 		result, err := mgr.Query()
 		Expect(err).To(BeNil())
@@ -93,8 +93,8 @@ var _ = Describe("Simple", func() {
 		})
 
 		It("should call all managers", func() {
-			mainMgr.EXPECT().Define(name, version, location).Return(command, nil)
-			recorderMgr.EXPECT().Define(name, version, command.GetLocation())
+			binaryMgr.EXPECT().Define(name, version, location).Return(command, nil)
+			databaseMgr.EXPECT().Define(name, version, location)
 
 			_, err := mgr.Define(name, version, location)
 			Expect(err).To(BeNil())
@@ -103,22 +103,22 @@ var _ = Describe("Simple", func() {
 		It("should call in a specific order", func() {
 			var ordering []string
 
-			mainMgr.EXPECT().Define(name, version, location).DoAndReturn(func(name string, version string, location string) (core.Command, error) {
-				ordering = append(ordering, "main")
+			binaryMgr.EXPECT().Define(name, version, location).DoAndReturn(func(name string, version string, location string) (core.Command, error) {
+				ordering = append(ordering, "binary")
 				return command, nil
 			})
-			recorderMgr.EXPECT().Define(name, version, command.GetLocation()).DoAndReturn(func(name string, version string, location string) (core.Command, error) {
-				ordering = append(ordering, "recorder")
+			databaseMgr.EXPECT().Define(name, version, location).DoAndReturn(func(name string, version string, location string) (core.Command, error) {
+				ordering = append(ordering, "database")
 				return command, nil
 			})
 
 			_, err := mgr.Define(name, version, location)
 			Expect(err).To(BeNil())
-			Expect(ordering).To(Equal([]string{"main", "recorder"}))
+			Expect(ordering).To(Equal([]string{"database", "binary"}))
 		})
 
 		It("should return when catch error", func() {
-			mainMgr.EXPECT().Define(name, version, location).Return(nil, fmt.Errorf("testing"))
+			databaseMgr.EXPECT().Define(name, version, location).Return(nil, fmt.Errorf("testing"))
 
 			_, err := mgr.Define(name, version, location)
 			Expect(err).NotTo(BeNil())
@@ -127,8 +127,8 @@ var _ = Describe("Simple", func() {
 
 	Context("Undefine", func() {
 		It("should call all managers", func() {
-			mainMgr.EXPECT().Undefine(name, version)
-			recorderMgr.EXPECT().Undefine(name, version)
+			binaryMgr.EXPECT().Undefine(name, version)
+			databaseMgr.EXPECT().Undefine(name, version)
 
 			Expect(mgr.Undefine(name, version)).To(Succeed())
 		})
@@ -136,11 +136,11 @@ var _ = Describe("Simple", func() {
 		It("should call in a specific order", func() {
 			var ordering []string
 
-			mainMgr.EXPECT().Undefine(name, version).DoAndReturn(func(name string, version string) error {
+			binaryMgr.EXPECT().Undefine(name, version).DoAndReturn(func(name string, version string) error {
 				ordering = append(ordering, "main")
 				return nil
 			})
-			recorderMgr.EXPECT().Undefine(name, version).DoAndReturn(func(name string, version string) error {
+			databaseMgr.EXPECT().Undefine(name, version).DoAndReturn(func(name string, version string) error {
 				ordering = append(ordering, "recorder")
 				return nil
 			})
@@ -150,7 +150,7 @@ var _ = Describe("Simple", func() {
 		})
 
 		It("should return when catch error", func() {
-			recorderMgr.EXPECT().Undefine(name, version).Return(fmt.Errorf("testing"))
+			databaseMgr.EXPECT().Undefine(name, version).Return(fmt.Errorf("testing"))
 
 			Expect(mgr.Undefine(name, version)).NotTo(Succeed())
 		})
@@ -158,8 +158,8 @@ var _ = Describe("Simple", func() {
 
 	Context("Activate", func() {
 		It("should call all managers", func() {
-			mainMgr.EXPECT().Activate(name, version).Return(nil)
-			recorderMgr.EXPECT().Activate(name, version).Return(nil)
+			binaryMgr.EXPECT().Activate(name, version).Return(nil)
+			databaseMgr.EXPECT().Activate(name, version).Return(nil)
 
 			Expect(mgr.Activate(name, version)).To(Succeed())
 		})
@@ -167,21 +167,21 @@ var _ = Describe("Simple", func() {
 		It("should call in a specific order", func() {
 			var ordering []string
 
-			mainMgr.EXPECT().Activate(name, version).DoAndReturn(func(name string, version string) error {
-				ordering = append(ordering, "main")
+			binaryMgr.EXPECT().Activate(name, version).DoAndReturn(func(name string, version string) error {
+				ordering = append(ordering, "binary")
 				return nil
 			})
-			recorderMgr.EXPECT().Activate(name, version).DoAndReturn(func(name string, version string) error {
-				ordering = append(ordering, "recorder")
+			databaseMgr.EXPECT().Activate(name, version).DoAndReturn(func(name string, version string) error {
+				ordering = append(ordering, "database")
 				return nil
 			})
 
 			Expect(mgr.Activate(name, version)).To(Succeed())
-			Expect(ordering).To(Equal([]string{"main", "recorder"}))
+			Expect(ordering).To(Equal([]string{"database", "binary"}))
 		})
 
 		It("should return when catch error", func() {
-			mainMgr.EXPECT().Activate(name, version).Return(fmt.Errorf("testing"))
+			databaseMgr.EXPECT().Activate(name, version).Return(fmt.Errorf("testing"))
 
 			Expect(mgr.Activate(name, version)).NotTo(Succeed())
 		})
@@ -189,8 +189,8 @@ var _ = Describe("Simple", func() {
 
 	Context("Deactivate", func() {
 		It("should call all managers", func() {
-			mainMgr.EXPECT().Deactivate(name).Return(nil)
-			recorderMgr.EXPECT().Deactivate(name).Return(nil)
+			binaryMgr.EXPECT().Deactivate(name).Return(nil)
+			databaseMgr.EXPECT().Deactivate(name).Return(nil)
 
 			Expect(mgr.Deactivate(name)).To(Succeed())
 		})
@@ -198,21 +198,21 @@ var _ = Describe("Simple", func() {
 		It("should call in a specific order", func() {
 			var ordering []string
 
-			mainMgr.EXPECT().Deactivate(name).DoAndReturn(func(name string) error {
-				ordering = append(ordering, "main")
+			binaryMgr.EXPECT().Deactivate(name).DoAndReturn(func(name string) error {
+				ordering = append(ordering, "binary")
 				return nil
 			})
-			recorderMgr.EXPECT().Deactivate(name).DoAndReturn(func(name string) error {
-				ordering = append(ordering, "recorder")
+			databaseMgr.EXPECT().Deactivate(name).DoAndReturn(func(name string) error {
+				ordering = append(ordering, "database")
 				return nil
 			})
 
 			Expect(mgr.Deactivate(name)).To(Succeed())
-			Expect(ordering).To(Equal([]string{"recorder", "main"}))
+			Expect(ordering).To(Equal([]string{"database", "binary"}))
 		})
 
 		It("should return when catch error", func() {
-			recorderMgr.EXPECT().Deactivate(name).Return(fmt.Errorf("testing"))
+			databaseMgr.EXPECT().Deactivate(name).Return(fmt.Errorf("testing"))
 
 			Expect(mgr.Deactivate(name)).NotTo(Succeed())
 		})

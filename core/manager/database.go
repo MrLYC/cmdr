@@ -3,22 +3,31 @@ package manager
 import (
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
 )
 
 type DatabaseManager struct {
-	Client core.Database
+	Client  core.Database
+	manager core.CommandManager
 }
 
 func (m *DatabaseManager) Close() error {
+	var errs error
+
 	err := m.Client.Close()
 	if err != nil {
-		return errors.Wrapf(err, "close database failed")
+		errs = multierror.Append(errs, errors.Wrapf(err, "close database failed"))
 	}
 
-	return nil
+	err = m.manager.Close()
+	if err != nil {
+		errs = multierror.Append(errs, err)
+	}
+
+	return errs
 }
 
 func (m *DatabaseManager) Provider() core.CommandProvider {
@@ -49,6 +58,13 @@ func (m *DatabaseManager) getOrNew(name string, version string) (*Command, bool,
 }
 
 func (m *DatabaseManager) Define(name string, version string, location string) (core.Command, error) {
+	defined, err := m.manager.Define(name, version, location)
+	if err != nil {
+		return nil, err
+	}
+
+	location = defined.GetLocation()
+
 	command, _, err := m.getOrNew(name, version)
 	if err != nil {
 		return nil, errors.Wrapf(err, "define command failed")
@@ -93,7 +109,7 @@ func (m *DatabaseManager) Undefine(name string, version string) error {
 		return errors.Wrapf(err, "delete command failed")
 	}
 
-	return nil
+	return m.manager.Undefine(name, version)
 }
 
 func (m *DatabaseManager) Activate(name string, version string) error {
@@ -123,7 +139,7 @@ func (m *DatabaseManager) Activate(name string, version string) error {
 		return errors.Wrapf(err, "save command failed")
 	}
 
-	return nil
+	return m.manager.Activate(name, version)
 }
 
 func (m *DatabaseManager) Deactivate(name string) error {
@@ -152,17 +168,23 @@ func (m *DatabaseManager) Deactivate(name string) error {
 		}
 	}
 
-	return nil
+	return m.manager.Deactivate(name)
 }
 
-func NewDatabaseManager(db core.Database) *DatabaseManager {
+func NewDatabaseManager(db core.Database, manager core.CommandManager) *DatabaseManager {
 	return &DatabaseManager{
-		Client: db,
+		Client:  db,
+		manager: manager,
 	}
 }
 
 func init() {
 	core.RegisterCommandManagerFactory(core.CommandProviderDatabase, func(cfg core.Configuration) (core.CommandManager, error) {
+		mgr, err := core.NewCommandManager(core.CommandProviderBinary, cfg)
+		if err != nil {
+			return nil, errors.Wrapf(err, "new manager binary failed")
+		}
+
 		dbPath := cfg.GetString(core.CfgKeyCmdrDatabasePath)
 
 		db, err := storm.Open(dbPath)
@@ -170,6 +192,6 @@ func init() {
 			return nil, errors.Wrapf(err, "open database failed")
 		}
 
-		return NewDatabaseManager(db), nil
+		return NewDatabaseManager(db, mgr), nil
 	})
 }

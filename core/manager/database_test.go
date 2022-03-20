@@ -18,15 +18,17 @@ import (
 
 var _ = Describe("Database", func() {
 	var (
-		ctrl    *gomock.Controller
-		db      *mock.MockDatabase
-		dbQuery *mock.MockQuery
+		ctrl      *gomock.Controller
+		db        *mock.MockDatabase
+		dbQuery   *mock.MockQuery
+		binaryMgr *mock.MockCommandManager
 	)
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 		db = mock.NewMockDatabase(ctrl)
 		dbQuery = mock.NewMockQuery(ctrl)
+		binaryMgr = mock.NewMockCommandManager(ctrl)
 	})
 
 	AfterEach(func() {
@@ -103,11 +105,12 @@ var _ = Describe("Database", func() {
 		}
 
 		BeforeEach(func() {
-			mgr = manager.NewDatabaseManager(db)
+			mgr = manager.NewDatabaseManager(db, binaryMgr)
 		})
 
 		It("should close database", func() {
 			db.EXPECT().Close()
+			binaryMgr.EXPECT().Close().Return(nil)
 
 			Expect(mgr.Close()).To(Succeed())
 		})
@@ -117,8 +120,19 @@ var _ = Describe("Database", func() {
 		})
 
 		Context("Define", func() {
+			var (
+				binaryCommand *mock.MockCommand
+			)
+
+			BeforeEach(func() {
+				binaryCommand = mock.NewMockCommand(ctrl)
+				binaryCommand.EXPECT().GetLocation().Return("binary").AnyTimes()
+			})
+
 			It("should create a command", func() {
 				makeCommandNotFound()
+
+				binaryMgr.EXPECT().Define(commandName, version, location).Return(binaryCommand, nil)
 
 				db.EXPECT().Save(gomock.Any()).DoAndReturn(func(data interface{}) error {
 					command, ok := data.(*manager.Command)
@@ -126,7 +140,7 @@ var _ = Describe("Database", func() {
 
 					Expect(command.Name).To(Equal(commandName))
 					Expect(command.Version).To(Equal(version))
-					Expect(command.Location).To(Equal(location))
+					Expect(command.Location).To(Equal(binaryCommand.GetLocation()))
 					return nil
 				})
 
@@ -137,6 +151,8 @@ var _ = Describe("Database", func() {
 			It("should update a command", func() {
 				makeCommandFound()
 
+				binaryMgr.EXPECT().Define(commandName, version, location).Return(binaryCommand, nil)
+
 				db.EXPECT().Save(gomock.Any()).DoAndReturn(func(data interface{}) error {
 					command, ok := data.(*manager.Command)
 					Expect(ok).To(BeTrue())
@@ -144,12 +160,13 @@ var _ = Describe("Database", func() {
 					Expect(command.ID).To(Equal(existsCommand.ID))
 					Expect(command.Name).To(Equal(commandName))
 					Expect(command.Version).To(Equal(version))
-					Expect(command.Location).To(Equal(location))
+					Expect(command.Location).To(Equal(binaryCommand.GetLocation()))
 					return nil
 				})
 
-				_, err := mgr.Define(commandName, version, location)
+				result, err := mgr.Define(commandName, version, location)
 				Expect(err).To(BeNil())
+				Expect(result.GetLocation()).To(Equal(binaryCommand.GetLocation()))
 			})
 		})
 
@@ -164,6 +181,8 @@ var _ = Describe("Database", func() {
 					Expect(command.Version).To(Equal(version))
 					return nil
 				})
+
+				binaryMgr.EXPECT().Undefine(commandName, version).Return(nil)
 
 				Expect(mgr.Undefine(commandName, version)).To(Succeed())
 			})
@@ -199,6 +218,8 @@ var _ = Describe("Database", func() {
 					return nil
 				})
 
+				binaryMgr.EXPECT().Activate(commandName, version).Return(nil)
+
 				Expect(mgr.Activate(commandName, version)).To(Succeed())
 			})
 
@@ -219,6 +240,9 @@ var _ = Describe("Database", func() {
 
 					return nil
 				})
+
+				binaryMgr.EXPECT().Deactivate(commandName).Return(nil)
+				binaryMgr.EXPECT().Activate(commandName, version).Return(nil)
 
 				Expect(mgr.Activate(commandName, version)).To(Succeed())
 			})
@@ -243,6 +267,8 @@ var _ = Describe("Database", func() {
 
 					return nil
 				})
+
+				binaryMgr.EXPECT().Deactivate(gomock.Any()).Return(nil)
 
 				Expect(mgr.Deactivate(commandName)).To(Succeed())
 			})
@@ -271,6 +297,8 @@ var _ = Describe("Database", func() {
 
 				db.EXPECT().Save(&command1).Return(nil)
 				db.EXPECT().Save(&command2).Return(nil)
+
+				binaryMgr.EXPECT().Deactivate(commandName).Return(nil)
 
 				Expect(mgr.Deactivate(commandName)).To(Succeed())
 			})
