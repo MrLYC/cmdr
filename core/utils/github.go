@@ -237,6 +237,10 @@ func (s *CmdrReleaseSearcher) GetReleaseAsset(ctx context.Context, releaseName, 
 			return
 		}
 
+		logger.Debug("search cmdr release failed, continue", map[string]interface{}{
+			"searcher": searcher,
+			"error":    err,
+		})
 		errs = multierror.Append(errs, err)
 	}
 

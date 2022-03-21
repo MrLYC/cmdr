@@ -22,6 +22,7 @@ var _ = Describe("Database", func() {
 		db        *mock.MockDatabase
 		dbQuery   *mock.MockQuery
 		binaryMgr *mock.MockCommandManager
+		dbFactory func() (core.Database, error)
 	)
 
 	BeforeEach(func() {
@@ -29,10 +30,15 @@ var _ = Describe("Database", func() {
 		db = mock.NewMockDatabase(ctrl)
 		dbQuery = mock.NewMockQuery(ctrl)
 		binaryMgr = mock.NewMockCommandManager(ctrl)
+		core.SetDatabaseFactory(func() (core.Database, error) {
+			return db, nil
+		})
+		dbFactory = core.GetDatabaseFactory()
 	})
 
 	AfterEach(func() {
 		ctrl.Finish()
+		core.SetDatabaseFactory(dbFactory)
 	})
 
 	Context("DatabaseManager", func() {
@@ -109,7 +115,6 @@ var _ = Describe("Database", func() {
 		})
 
 		It("should close database", func() {
-			db.EXPECT().Close()
 			binaryMgr.EXPECT().Close().Return(nil)
 
 			Expect(mgr.Close()).To(Succeed())

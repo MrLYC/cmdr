@@ -1,6 +1,11 @@
 package core
 
-import "github.com/asdine/storm/v3"
+import (
+	"errors"
+	"sync"
+
+	"github.com/asdine/storm/v3"
+)
 
 //go:generate mockgen -destination=mock/storm.go -package=mock github.com/asdine/storm/v3 Query
 //go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock DBClient
@@ -32,6 +37,51 @@ func GetDatabaseModel(modelType ModelType) interface{} {
 	return databaseModels[modelType]
 }
 
+var (
+	database                 Database
+	databaseFactory          func() (Database, error)
+	databaseLock             sync.Mutex
+	ErrDatabaseFactoryNotSet = errors.New("database factory not set")
+)
+
+func SetDatabaseFactory(fn func() (Database, error)) {
+	databaseFactory = fn
+}
+
+func GetDatabaseFactory() func() (Database, error) {
+	return databaseFactory
+}
+
+func GetDatabase() (Database, error) {
+	databaseLock.Lock()
+	defer databaseLock.Unlock()
+
+	if database != nil {
+		return database, nil
+	}
+
+	var err error
+	database, err = databaseFactory()
+	return database, err
+}
+
+func CloseDatabase() error {
+	databaseLock.Lock()
+	defer databaseLock.Unlock()
+
+	if database == nil {
+		return nil
+	}
+
+	db := database
+	database = nil
+
+	return db.Close()
+}
+
 func init() {
 	databaseModels = make(map[ModelType]interface{})
+	databaseFactory = func() (Database, error) {
+		return nil, ErrDatabaseFactoryNotSet
+	}
 }

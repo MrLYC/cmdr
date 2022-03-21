@@ -6,7 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/asdine/storm/v3"
 	"github.com/gookit/color"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"logur.dev/logur"
 
@@ -32,7 +34,7 @@ func ExecuteContext(ctx context.Context) {
 }
 
 func init() {
-	cobra.OnInitialize(preInitConfig, initConfig, postInitConfig, initLogger)
+	cobra.OnInitialize(preInitConfig, initConfig, postInitConfig, initLogger, initDatabase)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
@@ -128,4 +130,27 @@ func initLogger() {
 	}
 
 	core.InitTerminalLogger(level, level < logur.Info, "error")
+}
+
+func initDatabase() {
+	core.SetDatabaseFactory(func() (core.Database, error) {
+		logger := core.GetLogger()
+
+		core.SubscribeEventOnce(core.EventExit, func() {
+			utils.PanicOnError("closing database", core.CloseDatabase())
+		})
+
+		cfg := core.GetConfiguration()
+		dbPath := cfg.GetString(core.CfgKeyCmdrDatabasePath)
+		logger.Debug("opening database", map[string]interface{}{
+			"path": dbPath,
+		})
+
+		db, err := storm.Open(dbPath)
+		if err != nil {
+			return nil, errors.Wrapf(err, "open database failed")
+		}
+
+		return db, nil
+	})
 }

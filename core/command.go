@@ -49,7 +49,7 @@ type CommandManager interface {
 //go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock Command,CommandQuery,CommandManager
 
 var (
-	ErrCommandManagerFactoryeNotFound = fmt.Errorf("factory not found")
+	ErrCommandManagerFactoryeNotFound = fmt.Errorf("command manager factory not found")
 	factoriesCommandManager           map[CommandProvider]func(cfg Configuration) (CommandManager, error)
 )
 

@@ -99,7 +99,7 @@ func init() {
 	var _ core.CommandManager = (*SimpleManager)(nil)
 
 	core.RegisterCommandManagerFactory(core.CommandProviderDefault, func(cfg core.Configuration) (core.CommandManager, error) {
-		mainMgr, err := core.NewCommandManager(core.CommandProviderBinary, cfg)
+		mainMgr, err := core.NewCommandManager(core.CommandProviderDatabase, cfg)
 		if err != nil {
 			return nil, errors.Wrapf(err, "new main command manager failed")
 		}

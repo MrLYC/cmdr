@@ -31,7 +31,7 @@ const (
 type factoryCmdrSearcher func(cfg Configuration) (CmdrSearcher, error)
 
 var (
-	ErrCmdrSearcherFactoryeNotFound = fmt.Errorf("factory not found")
+	ErrCmdrSearcherFactoryeNotFound = fmt.Errorf("cmdr searcher factory not found")
 	factoriesCmdrSearcher           map[CmdrSearcherProvider]factoryCmdrSearcher
 )
 

@@ -122,7 +122,7 @@ func init() {
 			return nil, errors.Wrapf(err, "failed to get executable location")
 		}
 
-		manager, err := core.NewCommandManager(core.CommandProviderDefault, cfg)
+		manager, err := core.NewCommandManager(core.CommandProviderDatabase, cfg)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to create command manager")
 		}

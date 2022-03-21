@@ -3,7 +3,6 @@ package manager
 import (
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
-	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
@@ -15,19 +14,12 @@ type DatabaseManager struct {
 }
 
 func (m *DatabaseManager) Close() error {
-	var errs error
-
-	err := m.Client.Close()
+	err := m.manager.Close()
 	if err != nil {
-		errs = multierror.Append(errs, errors.Wrapf(err, "close database failed"))
+		return errors.Wrapf(err, "close %v manager failed", m.manager.Provider())
 	}
 
-	err = m.manager.Close()
-	if err != nil {
-		errs = multierror.Append(errs, err)
-	}
-
-	return errs
+	return nil
 }
 
 func (m *DatabaseManager) Provider() core.CommandProvider {
@@ -185,9 +177,7 @@ func init() {
 			return nil, errors.Wrapf(err, "new manager binary failed")
 		}
 
-		dbPath := cfg.GetString(core.CfgKeyCmdrDatabasePath)
-
-		db, err := storm.Open(dbPath)
+		db, err := core.GetDatabase()
 		if err != nil {
 			return nil, errors.Wrapf(err, "open database failed")
 		}

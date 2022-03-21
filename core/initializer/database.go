@@ -1,7 +1,6 @@
 package initializer
 
 import (
-	"github.com/asdine/storm/v3"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
@@ -53,7 +52,7 @@ func NewDatabaseMigrator(dbFactory func() (core.Database, error), models map[cor
 func init() {
 	core.RegisterInitializerFactory("database-migrator", func(cfg core.Configuration) (core.Initializer, error) {
 		return NewDatabaseMigrator(func() (core.Database, error) {
-			return storm.Open(cfg.GetString(core.CfgKeyCmdrDatabasePath))
+			return core.GetDatabase()
 		}, core.GetDatabaseModels()), nil
 	})
 }

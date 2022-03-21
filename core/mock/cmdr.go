@@ -9,7 +9,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
 	core "github.com/mrlyc/cmdr/core"
 )
 

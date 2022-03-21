@@ -18,15 +18,23 @@ import (
 
 var _ = Describe("Download", func() {
 	var (
-		ctrl *gomock.Controller
+		ctrl      *gomock.Controller
+		db        *mock.MockDatabase
+		dbFactory func() (core.Database, error)
 	)
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
+		db = mock.NewMockDatabase(ctrl)
+		core.SetDatabaseFactory(func() (core.Database, error) {
+			return db, nil
+		})
+		dbFactory = core.GetDatabaseFactory()
 	})
 
 	AfterEach(func() {
 		ctrl.Finish()
+		core.SetDatabaseFactory(dbFactory)
 	})
 
 	Context("DownloadManager", func() {

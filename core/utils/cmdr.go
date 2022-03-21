@@ -87,6 +87,11 @@ func UpgradeCmdr(ctx context.Context, cfg core.Configuration, url, version strin
 		return errors.Wrapf(err, "close command manager %v failed", core.CommandProviderDownload)
 	}
 
+	err = core.CloseDatabase()
+	if err != nil {
+		return errors.Wrapf(err, "close database failed")
+	}
+
 	err = WaitProcess(ctx, command.GetLocation(), args)
 	if err != nil {
 		return errors.Wrapf(err, "run command %v failed", name)

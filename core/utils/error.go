@@ -25,7 +25,7 @@ func ExitOnError(message string, errs ...error) {
 		core.GetLogger().Error(message, map[string]interface{}{
 			"error": err,
 		})
-		panic(core.NewExitError(-1))
+		panic(core.NewExitError(err.Error(), -1))
 	}
 }
 

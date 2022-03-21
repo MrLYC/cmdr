@@ -27,6 +27,7 @@ func main() {
 
 	}()
 
+	defer core.PublishEvent(core.EventExit)
 	ctx := context.Background()
 	cmd.ExecuteContext(ctx)
 }

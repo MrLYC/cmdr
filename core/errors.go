@@ -3,7 +3,8 @@ package core
 import "fmt"
 
 type ExitError struct {
-	code int
+	code    int
+	message string
 }
 
 func (e ExitError) Code() int {
@@ -11,12 +12,13 @@ func (e ExitError) Code() int {
 }
 
 func (e ExitError) Error() string {
-	return fmt.Sprintf("exit code %d", e.code)
+	return fmt.Sprintf("%v: %d", e.message, e.code)
 }
 
-func NewExitError(code int) ExitError {
+func NewExitError(message string, code int) ExitError {
 	return ExitError{
-		code: code,
+		code:    code,
+		message: message,
 	}
 }
 
