@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/ahmetb/go-linq/v3 v3.2.0
+	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/golang/mock v1.6.0
@@ -13,7 +14,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.4.0
 	github.com/homedepot/flop v0.1.6
-	github.com/jaswdr/faker v1.10.2
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mmcdole/gofeed v1.1.3
 	github.com/muesli/termenv v0.9.0
@@ -38,7 +38,6 @@ require (
 	cloud.google.com/go/storage v1.10.0 // indirect
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/andybalholm/cascadia v1.1.0 // indirect
-	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
 	github.com/aws/aws-sdk-go v1.15.78 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect

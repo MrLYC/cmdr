@@ -2,6 +2,7 @@ package manager
 
 import (
 	"github.com/hashicorp/go-multierror"
+	ver "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
@@ -60,11 +61,28 @@ func (m *SimpleManager) Query() (core.CommandQuery, error) {
 	return m.main.Query()
 }
 
-func (m *SimpleManager) Define(name, version, location string) (core.Command, error) {
-	var result core.Command
+func (m *SimpleManager) normalizeVersion(version string) (string, error) {
+	if version == "" {
+		return "", nil
+	}
 
+	v, err := ver.NewVersion(version)
+	if err != nil {
+		return "", errors.Wrapf(err, "invalid version %s", version)
+	}
+
+	return v.String(), nil
+}
+
+func (m *SimpleManager) Define(name, version, location string) (core.Command, error) {
+	semver, err := m.normalizeVersion(version)
+	if err != nil {
+		return nil, err
+	}
+
+	var result core.Command
 	return result, m.each(func(mgr core.CommandManager) error {
-		command, err := mgr.Define(name, version, location)
+		command, err := mgr.Define(name, semver, location)
 		if command == nil {
 			result = command
 		}

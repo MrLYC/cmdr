@@ -67,7 +67,7 @@ var _ = Describe("Doctor", func() {
 			It("should return commands from main query when recorder query failed", func() {
 				command := mock.NewMockCommand(ctrl)
 				command.EXPECT().GetName().Return("command").AnyTimes()
-				command.EXPECT().GetVersion().Return("1.0.0").AnyTimes()
+				command.EXPECT().GetVersion().Return("1.0.1").AnyTimes()
 				command.EXPECT().GetLocation().Return("/path/to/command").AnyTimes()
 				command.EXPECT().GetActivated().Return(true).AnyTimes()
 
@@ -89,7 +89,7 @@ var _ = Describe("Doctor", func() {
 				Expect(err).To(BeNil())
 
 				Expect(result.GetName()).To(Equal("command"))
-				Expect(result.GetVersion()).To(Equal("1.0.0"))
+				Expect(result.GetVersion()).To(Equal("1.0.1"))
 				Expect(result.GetLocation()).To(Equal("/path/to/command"))
 				Expect(result.GetActivated()).To(BeTrue())
 			})
@@ -97,7 +97,7 @@ var _ = Describe("Doctor", func() {
 			It("should return commands from recorder query when main query failed", func() {
 				command := mock.NewMockCommand(ctrl)
 				command.EXPECT().GetName().Return("command").AnyTimes()
-				command.EXPECT().GetVersion().Return("1.0.0").AnyTimes()
+				command.EXPECT().GetVersion().Return("1.0.1").AnyTimes()
 				command.EXPECT().GetLocation().Return("/path/to/command").AnyTimes()
 				command.EXPECT().GetActivated().Return(true).AnyTimes()
 
@@ -119,7 +119,7 @@ var _ = Describe("Doctor", func() {
 				Expect(err).To(BeNil())
 
 				Expect(result.GetName()).To(Equal("command"))
-				Expect(result.GetVersion()).To(Equal("1.0.0"))
+				Expect(result.GetVersion()).To(Equal("1.0.1"))
 				Expect(result.GetLocation()).To(Equal("/path/to/command"))
 				Expect(result.GetActivated()).To(BeTrue())
 			})
@@ -127,13 +127,13 @@ var _ = Describe("Doctor", func() {
 			It("should merge commands", func() {
 				mainCommand := mock.NewMockCommand(ctrl)
 				mainCommand.EXPECT().GetName().Return("command").AnyTimes()
-				mainCommand.EXPECT().GetVersion().Return("1.0.0").AnyTimes()
+				mainCommand.EXPECT().GetVersion().Return("1.0.1").AnyTimes()
 				mainCommand.EXPECT().GetLocation().Return("/path/to/command").AnyTimes()
 				mainCommand.EXPECT().GetActivated().Return(false).AnyTimes()
 
 				recorderCommand := mock.NewMockCommand(ctrl)
 				recorderCommand.EXPECT().GetName().Return("command").AnyTimes()
-				recorderCommand.EXPECT().GetVersion().Return("1.0.0").AnyTimes()
+				recorderCommand.EXPECT().GetVersion().Return("1.0.1").AnyTimes()
 				recorderCommand.EXPECT().GetLocation().Return("no_important").AnyTimes()
 				recorderCommand.EXPECT().GetActivated().Return(true).AnyTimes()
 
@@ -155,7 +155,7 @@ var _ = Describe("Doctor", func() {
 				Expect(err).To(BeNil())
 
 				Expect(result.GetName()).To(Equal("command"))
-				Expect(result.GetVersion()).To(Equal("1.0.0"))
+				Expect(result.GetVersion()).To(Equal("1.0.1"))
 				Expect(result.GetLocation()).To(Equal("/path/to/command"))
 				Expect(result.GetActivated()).To(BeTrue())
 			})
@@ -180,7 +180,7 @@ var _ = Describe("Doctor", func() {
 			rootDir, _ = ioutil.TempDir("", "")
 
 			command.EXPECT().GetName().Return("command").AnyTimes()
-			command.EXPECT().GetVersion().Return("1.0.0").AnyTimes()
+			command.EXPECT().GetVersion().Return("1.0.1").AnyTimes()
 			command.EXPECT().GetLocation().Return(filepath.Join(rootDir, "command")).AnyTimes()
 		})
 

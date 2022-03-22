@@ -4,6 +4,7 @@ import (
 	"github.com/asdine/storm/v3/q"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 
 	"github.com/mrlyc/cmdr/core"
@@ -26,6 +27,22 @@ var _ = Describe("Database", func() {
 
 	AfterEach(func() {
 		ctrl.Finish()
+	})
+
+	Context("Command", func() {
+		DescribeTable("should shorttern command version", func(version, expected string) {
+			cmd := manager.Command{
+				Version: version,
+			}
+			Expect(cmd.GetVersion()).To(Equal(expected))
+		},
+			Entry("1", "1", "1"),
+			Entry("1.0", "1.0", "1"),
+			Entry("1.0.0", "1.0.0", "1"),
+			Entry("1.1", "1.1", "1.1"),
+			Entry("1.1.0", "1.1.0", "1.1"),
+			Entry("1.1.1", "1.1.1", "1.1.1"),
+		)
 	})
 
 	Context("CommandFilter", func() {
@@ -67,6 +84,34 @@ var _ = Describe("Database", func() {
 			Expect(err).To(BeNil())
 			Expect(result).To(Equal(2))
 		})
+
+		DescribeTable("return command-a", func(fn func(core.CommandQuery)) {
+			fn(filter.WithName(commandA.Name))
+			result, err := filter.All()
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal([]core.Command{commandA}))
+		},
+			Entry("by version 1", func(query core.CommandQuery) {
+				query.WithVersion("1")
+			}),
+			Entry("by version 1.0", func(query core.CommandQuery) {
+				query.WithVersion("1.0")
+			}),
+			Entry("by version 1.0.0", func(query core.CommandQuery) {
+				query.WithVersion("1.0.0")
+			}),
+		)
+
+		DescribeTable("return command-b", func(fn func(core.CommandQuery)) {
+			fn(filter.WithName(commandB.Name))
+			result, err := filter.All()
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal([]core.Command{commandB}))
+		},
+			Entry("by version 1.0.1", func(query core.CommandQuery) {
+				query.WithVersion("1.0.1")
+			}),
+		)
 	})
 
 	Context("CommandQuery", func() {
@@ -79,13 +124,16 @@ var _ = Describe("Database", func() {
 		It("should append matchers", func() {
 			query.
 				WithName("name").
-				WithVersion("version").
+				WithVersion("1.0").
 				WithActivated(true).
 				WithLocation("location")
 
 			db.EXPECT().Select(
 				q.Eq("Name", "name"),
-				q.Eq("Version", "version"),
+				q.Or(
+					q.Eq("Version", "1.0"),
+					q.Eq("Version", "1.0.0"),
+				),
 				q.Eq("Activated", true),
 				q.Eq("Location", "location"),
 			).Return(dbQuery)

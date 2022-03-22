@@ -2,8 +2,6 @@ package manager_test
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -220,22 +218,22 @@ var _ = Describe("Simple", func() {
 
 	Context("Factory", func() {
 		var (
-			cfg     core.Configuration
-			rootDir string
+			cfg       core.Configuration
+			db        *mock.MockDatabase
+			dbFactory func() (core.Database, error)
 		)
 
 		BeforeEach(func() {
 			cfg = viper.New()
-
-			var err error
-			rootDir, err = os.MkdirTemp("", "")
-			Expect(err).NotTo(HaveOccurred())
-
-			cfg.Set(core.CfgKeyCmdrDatabasePath, filepath.Join(rootDir, "cmdr.db"))
+			db = mock.NewMockDatabase(ctrl)
+			core.SetDatabaseFactory(func() (core.Database, error) {
+				return db, nil
+			})
+			dbFactory = core.GetDatabaseFactory()
 		})
 
 		AfterEach(func() {
-			os.RemoveAll(rootDir)
+			core.SetDatabaseFactory(dbFactory)
 		})
 
 		It("should create download manager", func() {

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	. "github.com/ahmetb/go-linq/v3"
+	ver "github.com/hashicorp/go-version"
 	"github.com/homedepot/flop"
 	"github.com/pkg/errors"
 
@@ -74,8 +75,11 @@ func (f *BinariesFilter) WithName(name string) core.CommandQuery {
 }
 
 func (f *BinariesFilter) WithVersion(version string) core.CommandQuery {
+	semver := ver.Must(ver.NewVersion(version))
+
 	return f.Filter(func(b interface{}) bool {
-		return b.(*Binary).GetVersion() == version
+		binVer := ver.Must(ver.NewVersion(b.(*Binary).GetVersion()))
+		return semver.Equal(binVer)
 	})
 }
 

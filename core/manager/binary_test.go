@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jaswdr/faker"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
@@ -115,51 +114,45 @@ var _ = Describe("Binary", func() {
 		})
 
 		Context("Binaries filter", func() {
-			var chosen *manager.Binary
+			var (
+				binaryA, binaryB *manager.Binary
+			)
 
 			BeforeEach(func() {
-				faker := faker.New()
-				binaries = []*manager.Binary{
-					manager.NewBinary(
-						"bin",
-						"shims",
-						faker.App().Name(),
-						faker.App().Version(),
-						faker.App().Name(),
-					),
-					manager.NewBinary(
-						"bin",
-						"shims",
-						faker.App().Name(),
-						faker.App().Version(),
-						faker.App().Name(),
-					),
-				}
-				chosen = binaries[faker.IntBetween(0, len(binaries)-1)]
+				binaryA = manager.NewBinary(
+					"bin",
+					"shims",
+					"command-a",
+					"1.0.0",
+					"location-a",
+				)
+				binaryB = manager.NewBinary(
+					"bin",
+					"shims",
+					"command-b",
+					"1.0.1",
+					"location-b",
+				)
+				binaries = []*manager.Binary{binaryA, binaryB}
 				filter = manager.NewBinariesFilter(binaries)
-
-				filter.Filter(func(b interface{}) bool {
-					return b.(*manager.Binary) == chosen
-				})
 			})
 
 			It("should return array", func() {
 				result, err := filter.All()
 				Expect(err).To(BeNil())
-				Expect(result).To(HaveLen(1))
-				Expect(result[0]).To(Equal(chosen))
+				Expect(result).To(Equal([]core.Command{binaryA, binaryB}))
 			})
 
-			It("should return chosen command", func() {
+			It("should return first command", func() {
 				result, err := filter.One()
 				Expect(err).To(BeNil())
-				Expect(result).To(Equal(chosen))
+				Expect(result).To(Equal(binaryA))
 			})
 
 			It("should return 1", func() {
 				count, err := filter.Count()
 				Expect(err).To(BeNil())
-				Expect(count).To(Equal(1))
+				Expect(count).To(Equal(2))
 			})
 		})
 	})
@@ -239,8 +232,7 @@ var _ = Describe("Binary", func() {
 				tempDir, err = os.MkdirTemp("", "")
 				Expect(err).To(BeNil())
 
-				faker := faker.New()
-				location = filepath.Join(tempDir, faker.App().Name())
+				location = filepath.Join(tempDir, "location")
 				Expect(os.WriteFile(location, []byte(""), 0755)).To(Succeed())
 			})
 

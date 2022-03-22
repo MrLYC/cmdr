@@ -45,7 +45,7 @@ var _ = Describe("Database", func() {
 		var (
 			mgr           *manager.DatabaseManager
 			commandName   = "command"
-			version       = "1.0.0"
+			version       = "1.0"
 			location      = "location"
 			existsCommand = manager.Command{
 				ID: 1,
@@ -56,7 +56,10 @@ var _ = Describe("Database", func() {
 			db.EXPECT().
 				Select(
 					q.Eq("Name", commandName),
-					q.Eq("Version", version),
+					q.Or(
+						q.Eq("Version", "1.0"),
+						q.Eq("Version", "1.0.0"),
+					),
 				).
 				Return(dbQuery)
 
@@ -82,7 +85,10 @@ var _ = Describe("Database", func() {
 			db.EXPECT().
 				Select(
 					q.Eq("Name", commandName),
-					q.Eq("Version", version),
+					q.Or(
+						q.Eq("Version", "1.0"),
+						q.Eq("Version", "1.0.0"),
+					),
 				).
 				Return(dbQuery)
 

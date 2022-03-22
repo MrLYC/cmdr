@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/go-github/v39/github"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/go-version"
+	ver "github.com/hashicorp/go-version"
 	"github.com/mmcdole/gofeed"
 	"github.com/pkg/errors"
 
@@ -96,8 +96,14 @@ func (s *CmdrApiFetcher) GetReleaseAsset(ctx context.Context, releaseName, asset
 		return result, errors.Wrapf(err, "search release asset failed")
 	}
 
+	tag := release.GetTagName()
+	version, err := ver.NewVersion(tag)
+	if err != nil {
+		return result, errors.Wrapf(err, "release %s tag %s is not a valid version", releaseName, tag)
+	}
+
 	result.Name = release.GetName()
-	result.Version = strings.Trim(release.GetTagName(), "v")
+	result.Version = version.String()
 	result.Asset = asset.GetName()
 	result.Url = asset.GetBrowserDownloadURL()
 
@@ -173,7 +179,7 @@ func (s *CmdrFeedFetcher) GetReleaseAsset(ctx context.Context, releaseName, asse
 		return result, err
 	}
 
-	releaseVersion, err := version.NewVersion(item.Title)
+	releaseVersion, err := ver.NewVersion(item.Title)
 	if err != nil {
 		return result, errors.Wrapf(err, "parse release %s version failed", item.Title)
 	}
