@@ -20,7 +20,7 @@ func (d *GoGetter) IsSupport(uri string) bool {
 	return err == nil
 }
 
-func (d *GoGetter) Fetch(uri, dst string) error {
+func (d *GoGetter) Fetch(name, version, uri, dst string) error {
 	client := getter.Client{
 		Src:              uri,
 		Dst:              dst,

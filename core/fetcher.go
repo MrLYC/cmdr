@@ -4,5 +4,5 @@ package core
 
 type Fetcher interface {
 	IsSupport(uri string) bool
-	Fetch(uri, dir string) error
+	Fetch(name, version, uri, dir string) error
 }

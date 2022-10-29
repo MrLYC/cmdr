@@ -62,7 +62,7 @@ func (m *DownloadManager) search(name, output string) (string, error) {
 }
 
 func (m *DownloadManager) fetch(fetcher core.Fetcher, name, version, location, output string) (string, error) {
-	err := fetcher.Fetch(location, output)
+	err := fetcher.Fetch(name, version, location, output)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to download %s", location)
 	}
@@ -108,6 +108,7 @@ func init() {
 		}
 
 		return NewDownloadManager(manager, []core.Fetcher{
+			fetcher.NewGoInstaller(),
 			fetcher.NewDefaultGoGetter(os.Stderr),
 		}), nil
 	})

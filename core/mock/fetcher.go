@@ -34,17 +34,17 @@ func (m *MockFetcher) EXPECT() *MockFetcherMockRecorder {
 }
 
 // Fetch mocks base method.
-func (m *MockFetcher) Fetch(uri, dir string) error {
+func (m *MockFetcher) Fetch(name, version, uri, dir string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Fetch", uri, dir)
+	ret := m.ctrl.Call(m, "Fetch", name, version, uri, dir)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Fetch indicates an expected call of Fetch.
-func (mr *MockFetcherMockRecorder) Fetch(uri, dir interface{}) *gomock.Call {
+func (mr *MockFetcherMockRecorder) Fetch(name, version, uri, dir interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fetch", reflect.TypeOf((*MockFetcher)(nil).Fetch), uri, dir)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fetch", reflect.TypeOf((*MockFetcher)(nil).Fetch), name, version, uri, dir)
 }
 
 // IsSupport mocks base method.
