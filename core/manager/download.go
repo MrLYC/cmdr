@@ -9,12 +9,13 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/fetcher"
 	"github.com/mrlyc/cmdr/core/utils"
 )
 
 type DownloadManager struct {
 	core.CommandManager
-	fetcher core.Fetcher
+	fetchers []core.Fetcher
 }
 
 func (m *DownloadManager) search(name, output string) (string, error) {
@@ -60,8 +61,8 @@ func (m *DownloadManager) search(name, output string) (string, error) {
 	return file.(string), nil
 }
 
-func (m *DownloadManager) fetch(name, version, location, output string) (string, error) {
-	err := m.fetcher.Fetch(location, output)
+func (m *DownloadManager) fetch(fetcher core.Fetcher, name, version, location, output string) (string, error) {
+	err := fetcher.Fetch(location, output)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to download %s", location)
 	}
@@ -69,29 +70,33 @@ func (m *DownloadManager) fetch(name, version, location, output string) (string,
 	return m.search(name, output)
 }
 
-func (m *DownloadManager) Define(name string, version string, uri string) (core.Command, error) {
-	if !m.fetcher.IsSupport(uri) {
-		return m.CommandManager.Define(name, version, uri)
+func (m *DownloadManager) Define(name string, version string, uriOrLocation string) (core.Command, error) {
+	for _, fetcher := range m.fetchers {
+		if !fetcher.IsSupport(uriOrLocation) {
+			continue
+		}
+
+		dst, err := os.MkdirTemp("", "")
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to create temp dir")
+		}
+		defer os.RemoveAll(dst)
+
+		location, err := m.fetch(fetcher, name, version, uriOrLocation, dst)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to fetch %s", location)
+		}
+
+		uriOrLocation = location
 	}
 
-	dst, err := os.MkdirTemp("", "")
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create temp dir")
-	}
-	defer os.RemoveAll(dst)
-
-	location, err := m.fetch(name, version, uri, dst)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to fetch %s", location)
-	}
-
-	return m.CommandManager.Define(name, version, location)
+	return m.CommandManager.Define(name, version, uriOrLocation)
 }
 
-func NewDownloadManager(manager core.CommandManager, fetcher core.Fetcher) *DownloadManager {
+func NewDownloadManager(manager core.CommandManager, fetchers []core.Fetcher) *DownloadManager {
 	return &DownloadManager{
 		CommandManager: manager,
-		fetcher:        fetcher,
+		fetchers:       fetchers,
 	}
 }
 
@@ -102,6 +107,8 @@ func init() {
 			utils.ExitOnError("Failed to create command manager", err)
 		}
 
-		return NewDownloadManager(manager, utils.NewDefaultDownloader(os.Stderr)), nil
+		return NewDownloadManager(manager, []core.Fetcher{
+			fetcher.NewDefaultGoGetter(os.Stderr),
+		}), nil
 	})
 }
