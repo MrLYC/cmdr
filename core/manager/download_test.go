@@ -64,7 +64,7 @@ var _ = Describe("Download", func() {
 			var targetPath string
 
 			fetcher.EXPECT().IsSupport(uri).Return(true)
-			fetcher.EXPECT().Fetch(gomock.Any(), gomock.Any()).DoAndReturn(func(uri, dir string) error {
+			fetcher.EXPECT().Fetch(name, version, gomock.Any(), gomock.Any()).DoAndReturn(func(name, version, uri, dir string) error {
 				targetPath = filepath.Join(dir, "cmdr")
 				Expect(ioutil.WriteFile(targetPath, []byte(""), 0755)).To(Succeed())
 
@@ -82,7 +82,7 @@ var _ = Describe("Download", func() {
 			var outputDir string
 
 			fetcher.EXPECT().IsSupport(uri).Return(true)
-			fetcher.EXPECT().Fetch(gomock.Any(), gomock.Any()).DoAndReturn(func(uri, dir string) error {
+			fetcher.EXPECT().Fetch(name, version, gomock.Any(), gomock.Any()).DoAndReturn(func(name, version, uri, dir string) error {
 				outputDir = dir
 
 				for path, mode := range files {
