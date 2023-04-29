@@ -1,33 +1,49 @@
 module github.com/mrlyc/cmdr
 
-go 1.17
+go 1.19
+
+require (
+	github.com/ahmetb/go-linq/v3 v3.2.0
+	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
+	github.com/asdine/storm/v3 v3.2.1
+	github.com/golang/mock v1.6.0
+	github.com/google/go-github/v39 v39.1.1-0.20211008144426-6b0f37fa430d
+	github.com/gookit/color v1.4.2
+	github.com/hashicorp/go-getter v1.5.11
+	github.com/hashicorp/go-multierror v1.1.1
+	github.com/hashicorp/go-version v1.4.0
+	github.com/homedepot/flop v0.1.6
+	github.com/mitchellh/go-ps v1.0.0
+	github.com/mmcdole/gofeed v1.1.3
+	github.com/muesli/termenv v0.9.0
+	github.com/onsi/ginkgo v1.16.5
+	github.com/onsi/gomega v1.17.0
+	github.com/pkg/errors v0.9.1
+	github.com/schollz/progressbar/v3 v3.8.6
+	github.com/spf13/cast v1.3.1
+	github.com/spf13/cobra v1.2.1
+	github.com/spf13/viper v1.8.1
+	gopkg.in/yaml.v2 v2.4.0
+	logur.dev/adapter/template v0.0.0-20200428192559-245bae87f59a
+	logur.dev/logur v0.17.0
+)
 
 require (
 	cloud.google.com/go v0.81.0 // indirect
 	cloud.google.com/go/storage v1.10.0 // indirect
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
-	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/andybalholm/cascadia v1.1.0 // indirect
-	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
-	github.com/asdine/storm/v3 v3.2.1
 	github.com/aws/aws-sdk-go v1.15.78 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
-	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/go-github/v39 v39.1.1-0.20211008144426-6b0f37fa430d
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
-	github.com/gookit/color v1.4.2
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-getter v1.5.11
-	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
-	github.com/hashicorp/go-version v1.4.0
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/homedepot/flop v0.1.6
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect
@@ -39,27 +55,17 @@ require (
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/go-homedir v1.0.0 // indirect
-	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
-	github.com/mmcdole/gofeed v1.1.3
 	github.com/mmcdole/goxpp v0.0.0-20181012175147-0068e33feabf // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
-	github.com/muesli/termenv v0.9.0
 	github.com/nxadm/tail v1.4.8 // indirect
-	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.17.0
 	github.com/pelletier/go-toml v1.9.3 // indirect
-	github.com/pkg/errors v0.9.1
 	github.com/rivo/uniseg v0.2.0 // indirect
-	github.com/schollz/progressbar/v3 v3.8.6
 	github.com/spf13/afero v1.6.0 // indirect
-	github.com/spf13/cast v1.3.1
-	github.com/spf13/cobra v1.2.1
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.8.1
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
@@ -82,7 +88,4 @@ require (
 	google.golang.org/protobuf v1.26.0 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
-	gopkg.in/yaml.v2 v2.4.0
-	logur.dev/adapter/template v0.0.0-20200428192559-245bae87f59a
-	logur.dev/logur v0.17.0
 )

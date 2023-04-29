@@ -2,9 +2,11 @@ ROOT_DIR ?= .
 BIN_DIR ?= ${ROOT_DIR}/bin
 TARGET ?= ${BIN_DIR}/cmdr
 
-.PHONY: build
-build:
+${TARGET}:
 	go build -o "${TARGET}" .
+
+.PHONY: build
+build: ${TARGET}
 
 .PHONY: goreleaser
 goreleaser:
@@ -17,3 +19,6 @@ test:
 .PHONY: generate
 generate:
 	go generate ./...
+
+usage-test.sh: ${TARGET}
+	bash usage-test.sh
