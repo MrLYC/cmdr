@@ -141,8 +141,12 @@ func getProfilePathByShell(shell string) (string, error) {
 			return "", errors.Wrapf(err, "unsupported shell")
 		}
 
-		shell = process.Executable()
-		ppid = process.PPid()
+		if process != nil {
+			shell = process.Executable()
+			ppid = process.PPid()
+		} else {
+			shell = "sh"
+		}
 	}
 }
 

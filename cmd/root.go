@@ -38,7 +38,7 @@ func init() {
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	// will be global forgo get -u github.com/ory/dockertest/v3 your application.
 
 	cfg := core.GetConfiguration()
 	pFlags := rootCmd.PersistentFlags()
