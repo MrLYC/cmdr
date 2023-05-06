@@ -2,7 +2,6 @@ package core
 
 import (
 	"errors"
-	"sync"
 
 	"github.com/asdine/storm/v3"
 )
@@ -38,9 +37,7 @@ func GetDatabaseModel(modelType ModelType) interface{} {
 }
 
 var (
-	database                 Database
 	databaseFactory          func() (Database, error)
-	databaseLock             sync.Mutex
 	ErrDatabaseFactoryNotSet = errors.New("database factory not set")
 )
 
@@ -53,30 +50,8 @@ func GetDatabaseFactory() func() (Database, error) {
 }
 
 func GetDatabase() (Database, error) {
-	databaseLock.Lock()
-	defer databaseLock.Unlock()
-
-	if database != nil {
-		return database, nil
-	}
-
-	var err error
-	database, err = databaseFactory()
+	database, err := databaseFactory()
 	return database, err
-}
-
-func CloseDatabase() error {
-	databaseLock.Lock()
-	defer databaseLock.Unlock()
-
-	if database == nil {
-		return nil
-	}
-
-	db := database
-	database = nil
-
-	return db.Close()
 }
 
 func init() {

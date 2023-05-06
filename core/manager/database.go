@@ -28,7 +28,7 @@ func (m *DatabaseManager) Close() error {
 		return errors.Wrapf(err, "close %v manager failed", m.manager.Provider())
 	}
 
-	return nil
+	return m.Client.Close()
 }
 
 func (m *DatabaseManager) Provider() core.CommandProvider {

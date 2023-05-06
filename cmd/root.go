@@ -136,10 +136,6 @@ func initDatabase() {
 	core.SetDatabaseFactory(func() (core.Database, error) {
 		logger := core.GetLogger()
 
-		core.SubscribeEventOnce(core.EventExit, func() {
-			utils.PanicOnError("closing database", core.CloseDatabase())
-		})
-
 		cfg := core.GetConfiguration()
 		dbPath := cfg.GetString(core.CfgKeyCmdrDatabasePath)
 		logger.Debug("opening database", map[string]interface{}{

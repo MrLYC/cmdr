@@ -121,7 +121,8 @@ var _ = Describe("Database", func() {
 		})
 
 		It("should close database", func() {
-			binaryMgr.EXPECT().Close().Return(nil)
+			binaryMgr.EXPECT().Close()
+			db.EXPECT().Close()
 
 			Expect(mgr.Close()).To(Succeed())
 		})
