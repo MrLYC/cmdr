@@ -93,12 +93,13 @@ func (p *PathHelper) SymbolLink(name, target string, mode os.FileMode) error {
 		return errors.Wrapf(err, "get abs target path %s failed", target)
 	}
 
-	err = os.Symlink(absTarget, p.Child(name).Path())
+	linkFile := p.Child(name).Path()
+	err = os.Symlink(absTarget, linkFile)
 	if err != nil {
 		return errors.Wrapf(err, "create symbol link failed")
 	}
 
-	return os.Chmod(target, os.ModeSymlink|mode)
+	return os.Chmod(linkFile, os.ModeSymlink|mode)
 }
 
 func (p *PathHelper) CopyFile(name, target string, mode os.FileMode) error {
@@ -116,7 +117,7 @@ func (p *PathHelper) CopyFile(name, target string, mode os.FileMode) error {
 		return errors.WithMessagef(err, "copy file failed")
 	}
 
-	return os.Chmod(target, mode)
+	return os.Chmod(path, mode)
 }
 
 func (p *PathHelper) RealPath(name string) (string, error) {
