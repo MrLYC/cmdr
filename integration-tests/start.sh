@@ -28,8 +28,8 @@ done
 cmdr command unset -n cmd
 cmd && false || true
 
-cmdr command uninstall -n cmd -v "1.0.0"
-cmdr command uninstall -n cmd -v "2.0.0"
-cmdr command undefine -n cmd -v "3.0.0"
+cmdr command remove -n cmd -v "1.0.0"
+cmdr command remove -n cmd -v "2.0.0"
+cmdr command remove -n cmd -v "3.0.0"
 
 cmdr upgrade
