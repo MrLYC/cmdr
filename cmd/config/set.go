@@ -19,6 +19,7 @@ var setCmd = &cobra.Command{
 		value := cfg.GetString(core.CfgKeyXConfigSetValue)
 
 		cfg.Set(key, value)
+		cfg.Set("_", nil)
 
 		logger.Info("writing configuration", map[string]interface{}{
 			"file": cfg.ConfigFileUsed(),

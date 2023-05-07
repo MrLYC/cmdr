@@ -6,13 +6,12 @@ set -e
 
 go build -o cmdr .
 
+./cmdr config set -k core.root_dir -v "$(pwd)/.cmdr"
 ./cmdr init
-./cmdr config set -k core.profile_dir -v "$(pwd)"
-source ./profile/cmdr_initializer.sh
+source ./.cmdr/profile/cmdr_initializer.sh
 
 set -x
 
-cmdr config set -k core.root_dir -v "$(pwd)/.cmdr"
 cmdr config list
 
 cmdr command install -a -n cmd -v "1.0.0" -l "$root_dir/cmd_v1.sh"
