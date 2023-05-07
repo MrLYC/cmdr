@@ -7,8 +7,7 @@ set -e
 go build -o cmdr .
 
 ./cmdr init
-cat ~/.bashrc
-source ~/.bashrc
+source ~/.cmdr/profile/cmdr_initializer.sh
 
 cmdr version
 cmdr config list
