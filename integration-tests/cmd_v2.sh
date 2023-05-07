@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-echo "v2"
+echo "v2.0.0"
