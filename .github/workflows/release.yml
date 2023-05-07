@@ -26,3 +26,5 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install
+        run: curl -o- https://raw.githubusercontent.com/MrLYC/cmdr/master/install.sh | bash
