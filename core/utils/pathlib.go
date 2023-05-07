@@ -8,6 +8,29 @@ import (
 	"github.com/pkg/errors"
 )
 
+func ensureNotExists(path string) error {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return nil
+	}
+
+	if err != nil {
+		return errors.Wrapf(err, "stat dir %s failed", path)
+	}
+
+	if info.IsDir() {
+		err = os.RemoveAll(path)
+	} else {
+		err = os.Remove(path)
+	}
+
+	if err != nil {
+		return errors.Wrapf(err, "remove dir %s failed", path)
+	}
+
+	return nil
+}
+
 type PathHelper struct {
 	path string
 }
@@ -36,26 +59,7 @@ func (p *PathHelper) Parent() *PathHelper {
 func (p *PathHelper) EnsureNotExists(name string) error {
 	path := filepath.Join(p.path, name)
 
-	info, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return nil
-	}
-
-	if err != nil {
-		return errors.Wrapf(err, "stat dir %s failed", path)
-	}
-
-	if info.IsDir() {
-		err = os.RemoveAll(path)
-	} else {
-		err = os.Remove(path)
-	}
-
-	if err != nil {
-		return errors.Wrapf(err, "remove dir %s failed", path)
-	}
-
-	return nil
+	return ensureNotExists(path)
 }
 
 func (p *PathHelper) Exists(name string) error {
@@ -84,13 +88,17 @@ func (p *PathHelper) SymbolLink(name, target string, mode os.FileMode) error {
 		return err
 	}
 
-	path := filepath.Join(p.path, name)
-	err = os.Symlink(target, path)
+	absTarget, err := filepath.Abs(target)
+	if err != nil {
+		return errors.Wrapf(err, "get abs target path %s failed", target)
+	}
+
+	err = os.Symlink(absTarget, p.Child(name).Path())
 	if err != nil {
 		return errors.Wrapf(err, "create symbol link failed")
 	}
 
-	return p.Chmod(name, mode)
+	return os.Chmod(target, os.ModeSymlink|mode)
 }
 
 func (p *PathHelper) CopyFile(name, target string, mode os.FileMode) error {
@@ -108,7 +116,7 @@ func (p *PathHelper) CopyFile(name, target string, mode os.FileMode) error {
 		return errors.WithMessagef(err, "copy file failed")
 	}
 
-	return p.Chmod(name, mode)
+	return os.Chmod(target, mode)
 }
 
 func (p *PathHelper) RealPath(name string) (string, error) {

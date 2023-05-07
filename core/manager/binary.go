@@ -9,7 +9,6 @@ import (
 
 	. "github.com/ahmetb/go-linq/v3"
 	ver "github.com/hashicorp/go-version"
-	"github.com/homedepot/flop"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
@@ -213,11 +212,6 @@ func (m *BinaryManager) Define(name string, version string, location string) (co
 		return nil, errors.WithMessagef(err, "link %s to %s failed", location, dstLocation)
 	}
 
-	err = os.Chmod(dstLocation, 0755)
-	if err != nil {
-		return nil, errors.Wrapf(err, "chmod %s failed", dstLocation)
-	}
-
 	return NewBinary(m.binDir, m.shimsDir, name, version, shimsName), nil
 }
 
@@ -290,15 +284,10 @@ func NewBinaryManagerWithCopy(
 	dirMode os.FileMode,
 ) *BinaryManager {
 	return NewBinaryManager(binDir, shimsDir, dirMode, func(src, dst string) error {
-		err := flop.Copy(src, dst, flop.Options{
-			MkdirAll:  true,
-			Recursive: true,
-		})
-		if err != nil {
-			return errors.WithMessagef(err, "copy %s to %s failed", src, dst)
-		}
+		srcDir, srcName := filepath.Split(src)
+		helper := utils.NewPathHelper(srcDir)
 
-		return nil
+		return helper.CopyFile(srcName, dst, 0755)
 	})
 }
 
@@ -307,12 +296,10 @@ func NewBinaryManagerWithLink(
 	dirMode os.FileMode,
 ) *BinaryManager {
 	return NewBinaryManager(binDir, shimsDir, dirMode, func(src, dst string) error {
-		location, err := filepath.Abs(src)
-		if err != nil {
-			return err
-		}
+		dstDir, dstName := filepath.Split(dst)
+		helper := utils.NewPathHelper(dstDir)
 
-		return os.Symlink(location, dst)
+		return helper.SymbolLink(dstName, src, 0755)
 	})
 }
 

@@ -17,31 +17,31 @@ curl -o- https://raw.githubusercontent.com/MrLYC/cmdr/master/install.sh | ${SHEL
 2. Make sure the download asset is executable;
 3. Run the following command to install the binary:
     ```shell
-    % /path/to/cmdr init
+    /path/to/cmdr init
     ```
 4. Restart your shell and run the following command to verify the installation:
     ```shell
-    % cmdr version
+    cmdr version
     ```
 
 ## Get Started
 To install a new command, run the following command:
 ```shell
-% cmdr command install -n <command-name> -v <version> -l <path-or-url>
+cmdr command install -n <command-name> -v <version> -l <path-or-url>
 ```
 
 Then you can list the installed commands by running the following command:
 ```shell
-% cmdr command list -n <command-name>
+cmdr command list -n <command-name>
 ```
 
 Use a specified command version:
 ```shell
-% cmdr command use -n <command-name> -v <version>
+cmdr command use -n <command-name> -v <version>
 ```
 
 ## Upgrade
 To upgrade the CMDR, just run:
 ```shell
-% cmdr upgrade
+cmdr upgrade
 ```

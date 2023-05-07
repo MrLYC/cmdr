@@ -180,13 +180,13 @@ var _ = Describe("Binary", func() {
 		}
 
 		BeforeEach(func() {
-			binDir, err = os.MkdirTemp("", "")
+			binDir, err = os.MkdirTemp("", "bin")
 			Expect(err).To(BeNil())
 
-			shimsDir, err = os.MkdirTemp("", "")
+			shimsDir, err = os.MkdirTemp("", "shims")
 			Expect(err).To(BeNil())
 
-			mgr = manager.NewBinaryManagerWithCopy(binDir, shimsDir, 0755)
+			mgr = manager.NewBinaryManagerWithLink(binDir, shimsDir, 0755)
 		})
 
 		JustBeforeEach(func() {
@@ -208,7 +208,7 @@ var _ = Describe("Binary", func() {
 			Expect(os.RemoveAll(binDir)).To(Succeed())
 			Expect(os.RemoveAll(shimsDir)).To(Succeed())
 
-			mgr = manager.NewBinaryManagerWithCopy(binDir, shimsDir, 0755)
+			mgr = manager.NewBinaryManagerWithLink(binDir, shimsDir, 0755)
 			Expect(mgr.Init()).To(Succeed())
 			Expect(binDir).To(BeADirectory())
 			Expect(shimsDir).To(BeADirectory())
@@ -244,9 +244,9 @@ var _ = Describe("Binary", func() {
 				shimsPath := getShimsPath(name)
 				Expect(shimsPath).To(BeARegularFile())
 
-				info, err := os.Stat(shimsPath)
+				info, err := os.Lstat(shimsPath)
 				Expect(err).To(BeNil())
-				Expect(info.Mode()).To(Equal(os.FileMode(0755)))
+				Expect(info.Mode() & os.FileMode(0755)).To(Equal(os.FileMode(0755)))
 			}
 
 			It("should define a command", func() {
