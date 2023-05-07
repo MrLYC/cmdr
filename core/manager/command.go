@@ -1,9 +1,13 @@
 package manager
 
 import (
+	"fmt"
+	"strconv"
+
 	. "github.com/ahmetb/go-linq/v3"
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
+	ver "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
@@ -22,7 +26,15 @@ func (c *Command) GetName() string {
 }
 
 func (c *Command) GetVersion() string {
-	return c.Version
+	semver := ver.Must(ver.NewVersion(c.Version))
+	segments := semver.Segments()
+	if segments[1] == 0 && segments[2] == 0 {
+		return strconv.Itoa(segments[0])
+	}
+	if segments[2] == 0 {
+		return fmt.Sprintf("%d.%d", segments[0], segments[1])
+	}
+	return fmt.Sprintf("%d.%d.%d", segments[0], segments[1], segments[2])
 }
 
 func (c *Command) GetActivated() bool {
@@ -49,8 +61,11 @@ func (f *CommandFilter) WithName(name string) core.CommandQuery {
 }
 
 func (f *CommandFilter) WithVersion(version string) core.CommandQuery {
+	semver := ver.Must(ver.NewVersion(version))
+
 	return f.Filter(func(b interface{}) bool {
-		return b.(*Command).Version == version
+		cmdVersion := ver.Must(ver.NewVersion(b.(*Command).GetVersion()))
+		return cmdVersion.Equal(semver)
 	})
 }
 
@@ -113,7 +128,7 @@ func (c *CommandQuery) WithName(name string) core.CommandQuery {
 }
 
 func (c *CommandQuery) WithVersion(version string) core.CommandQuery {
-	c.matchers = append(c.matchers, q.Eq("Version", version))
+	c.matchers = append(c.matchers, queryMatchVersion(version))
 	return c
 }
 
@@ -166,4 +181,8 @@ func NewCommandQuery(db storm.TypeStore) *CommandQuery {
 	return &CommandQuery{
 		Client: db,
 	}
+}
+
+func init() {
+	core.RegisterDatabaseModel(core.ModelTypeCommand, &Command{})
 }

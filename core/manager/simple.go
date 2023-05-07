@@ -2,29 +2,24 @@ package manager
 
 import (
 	"github.com/hashicorp/go-multierror"
+	ver "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
 )
 
 type SimpleManager struct {
-	main     core.CommandManager
-	recorder core.CommandManager
+	main      core.CommandManager
+	followers []core.CommandManager
 }
 
 func (m *SimpleManager) each(fn func(mgr core.CommandManager) error) error {
-	for _, mgr := range []core.CommandManager{m.main, m.recorder} {
-		err := fn(mgr)
-		if err != nil {
-			return err
-		}
+	err := fn(m.main)
+	if err != nil {
+		return err
 	}
 
-	return nil
-}
-
-func (m *SimpleManager) reverseEach(fn func(mgr core.CommandManager) error) error {
-	for _, mgr := range []core.CommandManager{m.recorder, m.main} {
+	for _, mgr := range m.followers {
 		err := fn(mgr)
 		if err != nil {
 			return err
@@ -36,7 +31,13 @@ func (m *SimpleManager) reverseEach(fn func(mgr core.CommandManager) error) erro
 
 func (m *SimpleManager) all(fn func(mgr core.CommandManager) error) error {
 	var errs error
-	for _, mgr := range []core.CommandManager{m.main, m.recorder} {
+
+	err := fn(m.main)
+	if err != nil {
+		errs = multierror.Append(errs, err)
+	}
+
+	for _, mgr := range m.followers {
 		err := fn(mgr)
 		if err != nil {
 			errs = multierror.Append(errs, err)
@@ -57,20 +58,41 @@ func (m *SimpleManager) Provider() core.CommandProvider {
 }
 
 func (m *SimpleManager) Query() (core.CommandQuery, error) {
-	return m.recorder.Query()
+	return m.main.Query()
+}
+
+func (m *SimpleManager) normalizeVersion(version string) (string, error) {
+	if version == "" {
+		return "", nil
+	}
+
+	v, err := ver.NewVersion(version)
+	if err != nil {
+		return "", errors.Wrapf(err, "invalid version %s", version)
+	}
+
+	return v.String(), nil
 }
 
 func (m *SimpleManager) Define(name, version, location string) (core.Command, error) {
-	binary, err := m.main.Define(name, version, location)
+	semver, err := m.normalizeVersion(version)
 	if err != nil {
 		return nil, err
 	}
 
-	return m.recorder.Define(name, version, binary.GetLocation())
+	var result core.Command
+	return result, m.each(func(mgr core.CommandManager) error {
+		command, err := mgr.Define(name, semver, location)
+		if command == nil {
+			result = command
+		}
+
+		return err
+	})
 }
 
 func (m *SimpleManager) Undefine(name, version string) error {
-	return m.reverseEach(func(mgr core.CommandManager) error {
+	return m.each(func(mgr core.CommandManager) error {
 		return mgr.Undefine(name, version)
 	})
 }
@@ -82,29 +104,34 @@ func (m *SimpleManager) Activate(name, version string) error {
 }
 
 func (m *SimpleManager) Deactivate(name string) error {
-	return m.reverseEach(func(mgr core.CommandManager) error {
+	return m.each(func(mgr core.CommandManager) error {
 		return mgr.Deactivate(name)
 	})
 }
 
-func NewSimpleManager(main core.CommandManager, recorder core.CommandManager) *SimpleManager {
-	return &SimpleManager{main: main, recorder: recorder}
+func NewSimpleManager(main core.CommandManager, followers []core.CommandManager) *SimpleManager {
+	return &SimpleManager{main: main, followers: followers}
 }
 
 func init() {
 	var _ core.CommandManager = (*SimpleManager)(nil)
 
 	core.RegisterCommandManagerFactory(core.CommandProviderDefault, func(cfg core.Configuration) (core.CommandManager, error) {
-		mainMgr, err := core.NewCommandManager(core.CommandProviderBinary, cfg)
+		mainMgr, err := core.NewCommandManager(core.CommandProviderDatabase, cfg)
 		if err != nil {
 			return nil, errors.Wrapf(err, "new main command manager failed")
 		}
 
-		recorderMgr, err := core.NewCommandManager(core.CommandProviderDatabase, cfg)
-		if err != nil {
-			return nil, errors.Wrapf(err, "new recorder command manager failed")
+		followers := make([]core.CommandManager, 0, 1)
+		for _, provider := range []core.CommandProvider{} {
+			mgr, err := core.NewCommandManager(provider, cfg)
+			if err != nil {
+				return nil, errors.Wrapf(err, "new manager %v failed", provider)
+			}
+
+			followers = append(followers, mgr)
 		}
 
-		return NewSimpleManager(mainMgr, recorderMgr), nil
+		return NewSimpleManager(mainMgr, followers), nil
 	})
 }

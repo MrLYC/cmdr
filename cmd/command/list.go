@@ -26,14 +26,19 @@ var listCmd = &cobra.Command{
 			return err
 		}
 
-		switch {
-		case name != "":
+		if name != "" {
 			query.WithName(name)
-		case version != "":
+		}
+
+		if version != "" {
 			query.WithVersion(version)
-		case location != "":
+		}
+
+		if location != "" {
 			query.WithLocation(location)
-		case activate:
+		}
+
+		if activate {
 			query.WithActivated(activate)
 		}
 

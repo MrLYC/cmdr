@@ -64,6 +64,10 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 
 	var errs error
 	for _, command := range commands {
+		if command.GetActivated() {
+			continue
+		}
+
 		version := command.GetVersion()
 		isSafe := false
 		for _, safeVersion := range safeVersions {
@@ -122,7 +126,7 @@ func init() {
 			return nil, errors.Wrapf(err, "failed to get executable location")
 		}
 
-		manager, err := core.NewCommandManager(core.CommandProviderDefault, cfg)
+		manager, err := core.NewCommandManager(core.CommandProviderDatabase, cfg)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to create command manager")
 		}

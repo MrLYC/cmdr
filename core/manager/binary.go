@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	. "github.com/ahmetb/go-linq/v3"
+	ver "github.com/hashicorp/go-version"
 	"github.com/homedepot/flop"
 	"github.com/pkg/errors"
 
@@ -74,8 +75,11 @@ func (f *BinariesFilter) WithName(name string) core.CommandQuery {
 }
 
 func (f *BinariesFilter) WithVersion(version string) core.CommandQuery {
+	semver := ver.Must(ver.NewVersion(version))
+
 	return f.Filter(func(b interface{}) bool {
-		return b.(*Binary).GetVersion() == version
+		binVer := ver.Must(ver.NewVersion(b.(*Binary).GetVersion()))
+		return semver.Equal(binVer)
 	})
 }
 
@@ -209,9 +213,9 @@ func (m *BinaryManager) Define(name string, version string, location string) (co
 		return nil, errors.WithMessagef(err, "link %s to %s failed", location, dstLocation)
 	}
 
-	err = helper.Chmod(shimsName, 0755)
+	err = os.Chmod(dstLocation, 0755)
 	if err != nil {
-		return nil, errors.WithMessagef(err, "chmod %s failed", dstLocation)
+		return nil, errors.Wrapf(err, "chmod %s failed", dstLocation)
 	}
 
 	return NewBinary(m.binDir, m.shimsDir, name, version, shimsName), nil
@@ -302,7 +306,14 @@ func NewBinaryManagerWithLink(
 	binDir, shimsDir string,
 	dirMode os.FileMode,
 ) *BinaryManager {
-	return NewBinaryManager(binDir, shimsDir, dirMode, os.Symlink)
+	return NewBinaryManager(binDir, shimsDir, dirMode, func(src, dst string) error {
+		location, err := filepath.Abs(src)
+		if err != nil {
+			return err
+		}
+
+		return os.Symlink(location, dst)
+	})
 }
 
 func newBinaryManagerByConfiguration(cfg core.Configuration) *BinaryManager {

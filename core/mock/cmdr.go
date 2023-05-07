@@ -35,17 +35,17 @@ func (m *MockCmdrSearcher) EXPECT() *MockCmdrSearcherMockRecorder {
 	return m.recorder
 }
 
-// GetLatestAsset mocks base method.
-func (m *MockCmdrSearcher) GetLatestAsset(ctx context.Context, releaseName, assetName string) (core.CmdrReleaseInfo, error) {
+// GetReleaseAsset mocks base method.
+func (m *MockCmdrSearcher) GetReleaseAsset(ctx context.Context, releaseName, assetName string) (core.CmdrReleaseAsset, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLatestAsset", ctx, releaseName, assetName)
-	ret0, _ := ret[0].(core.CmdrReleaseInfo)
+	ret := m.ctrl.Call(m, "GetReleaseAsset", ctx, releaseName, assetName)
+	ret0, _ := ret[0].(core.CmdrReleaseAsset)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetLatestAsset indicates an expected call of GetLatestAsset.
-func (mr *MockCmdrSearcherMockRecorder) GetLatestAsset(ctx, releaseName, assetName interface{}) *gomock.Call {
+// GetReleaseAsset indicates an expected call of GetReleaseAsset.
+func (mr *MockCmdrSearcherMockRecorder) GetReleaseAsset(ctx, releaseName, assetName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestAsset", reflect.TypeOf((*MockCmdrSearcher)(nil).GetLatestAsset), ctx, releaseName, assetName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReleaseAsset", reflect.TypeOf((*MockCmdrSearcher)(nil).GetReleaseAsset), ctx, releaseName, assetName)
 }

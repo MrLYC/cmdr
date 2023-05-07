@@ -1,25 +1,26 @@
-package utils
+package fetcher
 
 import (
 	"io"
 	"os"
 
 	"github.com/hashicorp/go-getter"
+	"github.com/mrlyc/cmdr/core/utils"
 	"github.com/pkg/errors"
 )
 
-type Downloader struct {
+type GoGetter struct {
 	progressListener getter.ProgressTracker
 	detectors        []getter.Detector
 	options          []getter.ClientOption
 }
 
-func (d *Downloader) IsSupport(uri string) bool {
+func (d *GoGetter) IsSupport(uri string) bool {
 	_, err := getter.Detect(uri, os.TempDir(), d.detectors)
 	return err == nil
 }
 
-func (d *Downloader) Fetch(uri, dst string) error {
+func (d *GoGetter) Fetch(name, version, uri, dst string) error {
 	client := getter.Client{
 		Src:              uri,
 		Dst:              dst,
@@ -38,16 +39,16 @@ func (d *Downloader) Fetch(uri, dst string) error {
 	return nil
 }
 
-func NewDownloader(progressListener getter.ProgressTracker, detectors []getter.Detector, options []getter.ClientOption) *Downloader {
-	return &Downloader{
+func NewGoGetter(progressListener getter.ProgressTracker, detectors []getter.Detector, options []getter.ClientOption) *GoGetter {
+	return &GoGetter{
 		progressListener: progressListener,
 		detectors:        detectors,
 		options:          options,
 	}
 }
 
-func NewDefaultDownloader(stream io.Writer, options ...getter.ClientOption) *Downloader {
-	tracker := NewProgressBarTracker("downloading", stream)
+func NewDefaultGoGetter(stream io.Writer, options ...getter.ClientOption) *GoGetter {
+	tracker := utils.NewProgressBarTracker("downloading", stream)
 	detectors := make([]getter.Detector, 0, len(getter.Detectors))
 	for _, d := range getter.Detectors {
 		switch d.(type) {
@@ -59,5 +60,5 @@ func NewDefaultDownloader(stream io.Writer, options ...getter.ClientOption) *Dow
 		detectors = append(detectors, d)
 	}
 
-	return NewDownloader(tracker, detectors, options)
+	return NewGoGetter(tracker, detectors, options)
 }

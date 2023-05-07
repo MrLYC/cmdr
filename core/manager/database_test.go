@@ -1,7 +1,6 @@
 package manager_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -14,31 +13,39 @@ import (
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/manager"
-	"github.com/mrlyc/cmdr/core/manager/mock"
+	"github.com/mrlyc/cmdr/core/mock"
 )
 
 var _ = Describe("Database", func() {
 	var (
-		ctrl    *gomock.Controller
-		db      *mock.MockDBClient
-		dbQuery *mock.MockQuery
+		ctrl      *gomock.Controller
+		db        *mock.MockDatabase
+		dbQuery   *mock.MockQuery
+		binaryMgr *mock.MockCommandManager
+		dbFactory func() (core.Database, error)
 	)
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
-		db = mock.NewMockDBClient(ctrl)
+		db = mock.NewMockDatabase(ctrl)
 		dbQuery = mock.NewMockQuery(ctrl)
+		binaryMgr = mock.NewMockCommandManager(ctrl)
+		core.SetDatabaseFactory(func() (core.Database, error) {
+			return db, nil
+		})
+		dbFactory = core.GetDatabaseFactory()
 	})
 
 	AfterEach(func() {
 		ctrl.Finish()
+		core.SetDatabaseFactory(dbFactory)
 	})
 
 	Context("DatabaseManager", func() {
 		var (
 			mgr           *manager.DatabaseManager
 			commandName   = "command"
-			version       = "1.0.0"
+			version       = "1.0"
 			location      = "location"
 			existsCommand = manager.Command{
 				ID: 1,
@@ -49,7 +56,10 @@ var _ = Describe("Database", func() {
 			db.EXPECT().
 				Select(
 					q.Eq("Name", commandName),
-					q.Eq("Version", version),
+					q.Or(
+						q.Eq("Version", "1.0"),
+						q.Eq("Version", "1.0.0"),
+					),
 				).
 				Return(dbQuery)
 
@@ -75,7 +85,10 @@ var _ = Describe("Database", func() {
 			db.EXPECT().
 				Select(
 					q.Eq("Name", commandName),
-					q.Eq("Version", version),
+					q.Or(
+						q.Eq("Version", "1.0"),
+						q.Eq("Version", "1.0.0"),
+					),
 				).
 				Return(dbQuery)
 
@@ -104,10 +117,11 @@ var _ = Describe("Database", func() {
 		}
 
 		BeforeEach(func() {
-			mgr = manager.NewDatabaseManager(db)
+			mgr = manager.NewDatabaseManager(db, binaryMgr)
 		})
 
 		It("should close database", func() {
+			binaryMgr.EXPECT().Close()
 			db.EXPECT().Close()
 
 			Expect(mgr.Close()).To(Succeed())
@@ -118,8 +132,19 @@ var _ = Describe("Database", func() {
 		})
 
 		Context("Define", func() {
+			var (
+				binaryCommand *mock.MockCommand
+			)
+
+			BeforeEach(func() {
+				binaryCommand = mock.NewMockCommand(ctrl)
+				binaryCommand.EXPECT().GetLocation().Return("binary").AnyTimes()
+			})
+
 			It("should create a command", func() {
 				makeCommandNotFound()
+
+				binaryMgr.EXPECT().Define(commandName, version, location).Return(binaryCommand, nil)
 
 				db.EXPECT().Save(gomock.Any()).DoAndReturn(func(data interface{}) error {
 					command, ok := data.(*manager.Command)
@@ -127,7 +152,7 @@ var _ = Describe("Database", func() {
 
 					Expect(command.Name).To(Equal(commandName))
 					Expect(command.Version).To(Equal(version))
-					Expect(command.Location).To(Equal(location))
+					Expect(command.Location).To(Equal(binaryCommand.GetLocation()))
 					return nil
 				})
 
@@ -138,6 +163,8 @@ var _ = Describe("Database", func() {
 			It("should update a command", func() {
 				makeCommandFound()
 
+				binaryMgr.EXPECT().Define(commandName, version, location).Return(binaryCommand, nil)
+
 				db.EXPECT().Save(gomock.Any()).DoAndReturn(func(data interface{}) error {
 					command, ok := data.(*manager.Command)
 					Expect(ok).To(BeTrue())
@@ -145,12 +172,13 @@ var _ = Describe("Database", func() {
 					Expect(command.ID).To(Equal(existsCommand.ID))
 					Expect(command.Name).To(Equal(commandName))
 					Expect(command.Version).To(Equal(version))
-					Expect(command.Location).To(Equal(location))
+					Expect(command.Location).To(Equal(binaryCommand.GetLocation()))
 					return nil
 				})
 
-				_, err := mgr.Define(commandName, version, location)
+				result, err := mgr.Define(commandName, version, location)
 				Expect(err).To(BeNil())
+				Expect(result.GetLocation()).To(Equal(binaryCommand.GetLocation()))
 			})
 		})
 
@@ -165,6 +193,8 @@ var _ = Describe("Database", func() {
 					Expect(command.Version).To(Equal(version))
 					return nil
 				})
+
+				binaryMgr.EXPECT().Undefine(commandName, version).Return(nil)
 
 				Expect(mgr.Undefine(commandName, version)).To(Succeed())
 			})
@@ -200,6 +230,8 @@ var _ = Describe("Database", func() {
 					return nil
 				})
 
+				binaryMgr.EXPECT().Activate(commandName, version).Return(nil)
+
 				Expect(mgr.Activate(commandName, version)).To(Succeed())
 			})
 
@@ -220,6 +252,9 @@ var _ = Describe("Database", func() {
 
 					return nil
 				})
+
+				binaryMgr.EXPECT().Deactivate(commandName).Return(nil)
+				binaryMgr.EXPECT().Activate(commandName, version).Return(nil)
 
 				Expect(mgr.Activate(commandName, version)).To(Succeed())
 			})
@@ -244,6 +279,8 @@ var _ = Describe("Database", func() {
 
 					return nil
 				})
+
+				binaryMgr.EXPECT().Deactivate(gomock.Any()).Return(nil)
 
 				Expect(mgr.Deactivate(commandName)).To(Succeed())
 			})
@@ -272,6 +309,8 @@ var _ = Describe("Database", func() {
 
 				db.EXPECT().Save(&command1).Return(nil)
 				db.EXPECT().Save(&command2).Return(nil)
+
+				binaryMgr.EXPECT().Deactivate(commandName).Return(nil)
 
 				Expect(mgr.Deactivate(commandName)).To(Succeed())
 			})
@@ -312,37 +351,6 @@ var _ = Describe("Database", func() {
 
 			_, ok := mgr.(*manager.DatabaseManager)
 			Expect(ok).To(BeTrue())
-		})
-	})
-
-	Context("DatabaseMigrator", func() {
-		var (
-			migrator *manager.DatabaseMigrator
-		)
-
-		BeforeEach(func() {
-			migrator = manager.NewDatabaseMigrator(func() (manager.DBClient, error) {
-				return db, nil
-			})
-		})
-
-		It("should migrate models", func() {
-			histories := make(map[string][]string)
-
-			db.EXPECT().Init(gomock.Any()).DoAndReturn(func(data interface{}) error {
-				key := fmt.Sprintf("%T", data)
-				histories[key] = append(histories[key], "Init")
-				return nil
-			}).AnyTimes()
-			db.EXPECT().ReIndex(gomock.Any()).DoAndReturn(func(data interface{}) error {
-				key := fmt.Sprintf("%T", data)
-				histories[key] = append(histories[key], "ReIndex")
-				return nil
-			}).AnyTimes()
-			db.EXPECT().Close().Return(nil)
-
-			Expect(migrator.Init()).To(Succeed())
-			Expect(histories["*manager.Command"]).To(Equal([]string{"Init", "ReIndex"}))
 		})
 	})
 })

@@ -2,21 +2,18 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/asdine/storm/v3"
 	"github.com/gookit/color"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"logur.dev/logur"
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/utils"
-)
-
-var (
-	exitCode int
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -32,17 +29,16 @@ var rootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func ExecuteContext(ctx context.Context) {
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
-		fmt.Println(err)
-		os.Exit(exitCode)
+		utils.ExitOnError("execute failed", err)
 	}
 }
 
 func init() {
-	cobra.OnInitialize(preInitConfig, initConfig, postInitConfig, initLogger)
+	cobra.OnInitialize(preInitConfig, initConfig, postInitConfig, initLogger, initDatabase)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	// will be global forgo get -u github.com/ory/dockertest/v3 your application.
 
 	cfg := core.GetConfiguration()
 	pFlags := rootCmd.PersistentFlags()
@@ -134,4 +130,23 @@ func initLogger() {
 	}
 
 	core.InitTerminalLogger(level, level < logur.Info, "error")
+}
+
+func initDatabase() {
+	core.SetDatabaseFactory(func() (core.Database, error) {
+		logger := core.GetLogger()
+
+		cfg := core.GetConfiguration()
+		dbPath := cfg.GetString(core.CfgKeyCmdrDatabasePath)
+		logger.Debug("opening database", map[string]interface{}{
+			"path": dbPath,
+		})
+
+		db, err := storm.Open(dbPath)
+		if err != nil {
+			return nil, errors.Wrapf(err, "open database failed")
+		}
+
+		return db, nil
+	})
 }

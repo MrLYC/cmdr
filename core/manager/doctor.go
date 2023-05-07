@@ -4,13 +4,49 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
 )
 
 type DoctorManager struct {
-	*SimpleManager
+	binaryMgr   core.CommandManager
+	databaseMgr core.CommandManager
+}
+
+func (m *DoctorManager) each(fn func(mgr core.CommandManager) error) error {
+	for _, mgr := range []core.CommandManager{m.binaryMgr, m.databaseMgr} {
+		err := fn(mgr)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *DoctorManager) reverseEach(fn func(mgr core.CommandManager) error) error {
+	for _, mgr := range []core.CommandManager{m.databaseMgr, m.binaryMgr} {
+		err := fn(mgr)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *DoctorManager) all(fn func(mgr core.CommandManager) error) error {
+	var errs error
+	for _, mgr := range []core.CommandManager{m.binaryMgr, m.databaseMgr} {
+		err := fn(mgr)
+		if err != nil {
+			errs = multierror.Append(errs, err)
+		}
+	}
+
+	return errs
 }
 
 func (d *DoctorManager) Define(name, version, location string) (core.Command, error) {
@@ -55,12 +91,12 @@ func (d *DoctorManager) Provider() core.CommandProvider {
 }
 
 func (d *DoctorManager) Query() (core.CommandQuery, error) {
-	mainQuery, mainErr := d.main.Query()
+	mainQuery, mainErr := d.binaryMgr.Query()
 	if mainErr != nil {
-		return d.recorder.Query()
+		return d.databaseMgr.Query()
 	}
 
-	recorderQuery, recorderErr := d.recorder.Query()
+	recorderQuery, recorderErr := d.databaseMgr.Query()
 	if recorderErr != nil {
 		return mainQuery, mainErr
 	}
@@ -104,9 +140,10 @@ func (d *DoctorManager) Query() (core.CommandQuery, error) {
 	return NewCommandFilter(merged), nil
 }
 
-func NewDoctorManager(main core.CommandManager, recorder core.CommandManager) *DoctorManager {
+func NewDoctorManager(binaryMgr core.CommandManager, databaseMgr core.CommandManager) *DoctorManager {
 	return &DoctorManager{
-		SimpleManager: NewSimpleManager(main, recorder),
+		binaryMgr:   binaryMgr,
+		databaseMgr: databaseMgr,
 	}
 }
 

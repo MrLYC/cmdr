@@ -201,5 +201,5 @@ func NewCobraCommandCompleteHelper(cmd *cobra.Command, provider core.CommandProv
 }
 
 func NewDefaultCobraCommandCompleteHelper(cmd *cobra.Command) *CobraCommandCompleteHelper {
-	return NewCobraCommandCompleteHelper(cmd, core.CommandProviderDefault)
+	return NewCobraCommandCompleteHelper(cmd, core.CommandProviderDatabase)
 }

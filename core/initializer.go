@@ -11,7 +11,7 @@ type Initializer interface {
 type factoryInitializer func(cfg Configuration) (Initializer, error)
 
 var (
-	ErrInitializerFactoryeNotFound = fmt.Errorf("factory not found")
+	ErrInitializerFactoryeNotFound = fmt.Errorf("initializer factory not found")
 	factoriesInitializer           map[string]factoryInitializer
 )
 

@@ -5,7 +5,10 @@ import (
 	"fmt"
 )
 
-type CmdrReleaseInfo struct {
+//go:generate stringer -type=CmdrSearcherProvider
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock CmdrSearcher
+
+type CmdrReleaseAsset struct {
 	Name    string
 	Version string
 	Asset   string
@@ -13,11 +16,8 @@ type CmdrReleaseInfo struct {
 }
 
 type CmdrSearcher interface {
-	GetLatestAsset(ctx context.Context, releaseName, assetName string) (CmdrReleaseInfo, error)
+	GetReleaseAsset(ctx context.Context, releaseName, assetName string) (CmdrReleaseAsset, error)
 }
-
-//go:generate stringer -type=CmdrSearcherProvider
-//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock CmdrSearcher
 
 type CmdrSearcherProvider int
 
@@ -31,7 +31,7 @@ const (
 type factoryCmdrSearcher func(cfg Configuration) (CmdrSearcher, error)
 
 var (
-	ErrCmdrSearcherFactoryeNotFound = fmt.Errorf("factory not found")
+	ErrCmdrSearcherFactoryeNotFound = fmt.Errorf("cmdr searcher factory not found")
 	factoriesCmdrSearcher           map[CmdrSearcherProvider]factoryCmdrSearcher
 )
 

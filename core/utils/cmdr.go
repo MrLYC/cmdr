@@ -2,8 +2,8 @@ package utils
 
 import (
 	"context"
-	"strings"
 
+	ver "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
@@ -14,12 +14,13 @@ var (
 	ErrCmdrAlreadyLatestVersion  = errors.New("cmdr already latest version")
 )
 
-func normalizeVersion(version string) string {
-	return strings.TrimPrefix(version, "v")
-}
-
 func DefineCmdrCommand(manager core.CommandManager, name string, version string, location string, activate bool) (core.Command, error) {
-	version = normalizeVersion(version)
+	semver, err := ver.NewVersion(version)
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid version %s", version)
+	}
+
+	version = semver.String()
 	command, err := manager.Define(name, version, location)
 	if err != nil {
 		return nil, err
@@ -61,12 +62,14 @@ func GetCmdrCommand(manager core.CommandManager, name, version string) (core.Com
 }
 
 func UpgradeCmdr(ctx context.Context, cfg core.Configuration, url, version string, args []string) error {
-	if version == core.Version {
+	currentVersion := ver.Must(ver.NewVersion(core.Version))
+	targetVersion := ver.Must(ver.NewVersion(version))
+
+	if currentVersion.Equal(targetVersion) {
 		return errors.Wrapf(ErrCmdrAlreadyLatestVersion, core.Version)
 	}
 
 	name := core.Name
-	version = normalizeVersion(version)
 	manager, err := core.NewCommandManager(core.CommandProviderDownload, cfg)
 	if err != nil {
 		return errors.Wrapf(err, "create command manager %v failed", core.CommandProviderDownload)

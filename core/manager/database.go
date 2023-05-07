@@ -3,31 +3,32 @@ package manager
 import (
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
+	ver "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
-	"github.com/mrlyc/cmdr/core/utils"
 )
 
-//go:generate mockgen -destination=mock/storm.go -package=mock github.com/asdine/storm/v3 Query
-//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock DBClient
-
-type DBClient interface {
-	storm.TypeStore
-	Close() error
+func queryMatchVersion(version string) q.Matcher {
+	semver := ver.Must(ver.NewVersion(version))
+	return q.Or(
+		q.Eq("Version", version),
+		q.Eq("Version", semver.String()),
+	)
 }
 
 type DatabaseManager struct {
-	Client DBClient
+	Client  core.Database
+	manager core.CommandManager
 }
 
 func (m *DatabaseManager) Close() error {
-	err := m.Client.Close()
+	err := m.manager.Close()
 	if err != nil {
-		return errors.Wrapf(err, "close database failed")
+		return errors.Wrapf(err, "close %v manager failed", m.manager.Provider())
 	}
 
-	return nil
+	return m.Client.Close()
 }
 
 func (m *DatabaseManager) Provider() core.CommandProvider {
@@ -41,7 +42,7 @@ func (m *DatabaseManager) Query() (core.CommandQuery, error) {
 func (m *DatabaseManager) getOrNew(name string, version string) (*Command, bool, error) {
 	var found bool
 	var command Command
-	err := m.Client.Select(q.Eq("Name", name), q.Eq("Version", version)).First(&command)
+	err := m.Client.Select(q.Eq("Name", name), queryMatchVersion(version)).First(&command)
 	switch errors.Cause(err) {
 	case nil:
 		found = true
@@ -58,6 +59,13 @@ func (m *DatabaseManager) getOrNew(name string, version string) (*Command, bool,
 }
 
 func (m *DatabaseManager) Define(name string, version string, location string) (core.Command, error) {
+	defined, err := m.manager.Define(name, version, location)
+	if err != nil {
+		return nil, err
+	}
+
+	location = defined.GetLocation()
+
 	command, _, err := m.getOrNew(name, version)
 	if err != nil {
 		return nil, errors.Wrapf(err, "define command failed")
@@ -102,7 +110,7 @@ func (m *DatabaseManager) Undefine(name string, version string) error {
 		return errors.Wrapf(err, "delete command failed")
 	}
 
-	return nil
+	return m.manager.Undefine(name, version)
 }
 
 func (m *DatabaseManager) Activate(name string, version string) error {
@@ -132,7 +140,7 @@ func (m *DatabaseManager) Activate(name string, version string) error {
 		return errors.Wrapf(err, "save command failed")
 	}
 
-	return nil
+	return m.manager.Activate(name, version)
 }
 
 func (m *DatabaseManager) Deactivate(name string) error {
@@ -161,78 +169,28 @@ func (m *DatabaseManager) Deactivate(name string) error {
 		}
 	}
 
-	return nil
+	return m.manager.Deactivate(name)
 }
 
-func NewDatabaseManager(db DBClient) *DatabaseManager {
+func NewDatabaseManager(db core.Database, manager core.CommandManager) *DatabaseManager {
 	return &DatabaseManager{
-		Client: db,
-	}
-}
-
-type DatabaseMigrator struct {
-	dbFactory func() (DBClient, error)
-}
-
-func (m *DatabaseMigrator) Init() error {
-	logger := core.GetLogger()
-
-	db, err := m.dbFactory()
-	if err != nil {
-		return errors.Wrapf(err, "open database failed")
-	}
-	defer utils.CallClose(db)
-
-	for name, model := range map[string]interface{}{
-		"command": &Command{},
-	} {
-		logger.Debug("initializing database model", map[string]interface{}{
-			"model": name,
-		})
-		err := db.Init(model)
-		if err != nil {
-			return errors.Wrapf(err, "init database failed")
-		}
-
-		logger.Debug("indexing database model", map[string]interface{}{
-			"model": name,
-		})
-		err = db.ReIndex(model)
-		if err != nil {
-			return errors.Wrapf(err, "reindex database failed")
-		}
-	}
-
-	return nil
-}
-
-func NewDatabaseMigrator(dbFactory func() (DBClient, error)) *DatabaseMigrator {
-	return &DatabaseMigrator{
-		dbFactory: dbFactory,
+		Client:  db,
+		manager: manager,
 	}
 }
 
 func init() {
-	var (
-		_ core.Command        = (*Command)(nil)
-		_ core.CommandQuery   = (*CommandQuery)(nil)
-		_ core.CommandManager = (*DatabaseManager)(nil)
-	)
-
 	core.RegisterCommandManagerFactory(core.CommandProviderDatabase, func(cfg core.Configuration) (core.CommandManager, error) {
-		dbPath := cfg.GetString(core.CfgKeyCmdrDatabasePath)
+		mgr, err := core.NewCommandManager(core.CommandProviderBinary, cfg)
+		if err != nil {
+			return nil, errors.Wrapf(err, "new manager binary failed")
+		}
 
-		db, err := storm.Open(dbPath)
+		db, err := core.GetDatabase()
 		if err != nil {
 			return nil, errors.Wrapf(err, "open database failed")
 		}
 
-		return NewDatabaseManager(db), nil
-	})
-
-	core.RegisterInitializerFactory("database-migrator", func(cfg core.Configuration) (core.Initializer, error) {
-		return NewDatabaseMigrator(func() (DBClient, error) {
-			return storm.Open(cfg.GetString(core.CfgKeyCmdrDatabasePath))
-		}), nil
+		return NewDatabaseManager(db, mgr), nil
 	})
 }
