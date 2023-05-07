@@ -75,7 +75,7 @@ func UpgradeCmdr(ctx context.Context, cfg core.Configuration, url, version strin
 		return errors.Wrapf(err, "create command manager %v failed", core.CommandProviderDownload)
 	}
 
-	_, err = DefineCmdrCommandNX(manager, name, version, url, false)
+	_, err = DefineCmdrCommandNX(manager, name, version, url, true)
 	if err != nil {
 		return errors.Wrapf(err, "define command %v failed", name)
 	}
