@@ -64,6 +64,10 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 
 	var errs error
 	for _, command := range commands {
+		if command.GetActivated() {
+			continue
+		}
+
 		version := command.GetVersion()
 		isSafe := false
 		for _, safeVersion := range safeVersions {

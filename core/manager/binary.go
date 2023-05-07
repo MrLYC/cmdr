@@ -284,10 +284,10 @@ func NewBinaryManagerWithCopy(
 	dirMode os.FileMode,
 ) *BinaryManager {
 	return NewBinaryManager(binDir, shimsDir, dirMode, func(src, dst string) error {
-		srcDir, srcName := filepath.Split(src)
-		helper := utils.NewPathHelper(srcDir)
+		dstDir, dstName := filepath.Split(dst)
+		helper := utils.NewPathHelper(dstDir)
 
-		return helper.CopyFile(srcName, dst, 0755)
+		return helper.CopyFile(dstName, src, 0755)
 	})
 }
 
