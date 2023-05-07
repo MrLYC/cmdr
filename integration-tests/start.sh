@@ -4,7 +4,7 @@ root_dir="$(dirname $0)"
 
 set -e
 
-go build . -o cmdr
+go build -o cmdr .
 
 ./cmdr init
 source ~/.bashrc
