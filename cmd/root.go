@@ -34,7 +34,7 @@ func ExecuteContext(ctx context.Context) {
 }
 
 func init() {
-	cobra.OnInitialize(preInitConfig, initConfig, postInitConfig, initLogger, initDatabase)
+	cobra.OnInitialize(preInitConfig, initConfig, postInitConfig, initLogger, initDatabase, initProxy)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
@@ -74,6 +74,9 @@ func preInitConfig() {
 
 	cfg.SetDefault(core.CfgKeyLogLevel, "info")
 	cfg.SetDefault(core.CfgKeyLogOutput, "stderr")
+
+	cfg.SetDefault(core.CfgKeyProxyHTTP, "")
+	cfg.SetDefault(core.CfgKeyProxyHTTPS, "")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -149,4 +152,18 @@ func initDatabase() {
 
 		return db, nil
 	})
+}
+
+func initProxy() {
+	cfg := core.GetConfiguration()
+
+	httpProxy := cfg.GetString(core.CfgKeyProxyHTTP)
+	if httpProxy == "" {
+		os.Setenv("HTTP_PROXY", httpProxy)
+	}
+
+	httpsProxy := cfg.GetString(core.CfgKeyProxyHTTPS)
+	if httpsProxy == "" {
+		os.Setenv("HTTPS_PROXY", httpsProxy)
+	}
 }
