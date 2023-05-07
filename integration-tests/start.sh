@@ -6,13 +6,16 @@ set -e
 
 go build -o cmdr .
 
+export CMDR_LOG_LEVEL=debug
 ./cmdr config set -k core.root_dir -v "$(pwd)/.cmdr"
+./cmdr config set -k core.profile_dir -v "$(pwd)/profile"
+
 ./cmdr init
-source ./.cmdr/profile/cmdr_initializer.sh
+source ./profile/cmdr_initializer.sh
 
 set -x
 
-cmdr config list
+zcmdr config list
 
 cmdr command install -a -n cmd -v "1.0.0" -l "$root_dir/cmd_v1.sh"
 cmdr command install -n cmd -v "2.0.0" -l "$root_dir/cmd_v2.sh"
@@ -28,7 +31,7 @@ done
 cmdr command unset -n cmd
 cmd && false || true
 
-rm -rf ".cmdr/shims/cmd/cmd_1.0.0"
+rm -rf "./.cmdr/shims/cmd/cmd_1.0.0"
 cmdr command list -n cmd -v "1.0.0"
 cmdr doctor
 cmdr command list -n cmd -v "1.0.0" && false || true
