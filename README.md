@@ -4,6 +4,15 @@
 CMDR is a simple command version management tool that helps you quickly switch from multiple command versions.
 
 ## Installation
+
+### Script
+Run one for the following command to install the latest version of CMDR:
+
+```shell
+curl -o- https://raw.githubusercontent.com/MrLYC/cmdr/master/install.sh | ${SHELL:-bash}
+```
+
+### Manual
 1. Download the latest release from [GitHub](https://github.com/MrLYC/cmdr/releases/latest);
 2. Make sure the download asset is executable;
 3. Run the following command to install the binary:
