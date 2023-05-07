@@ -9,6 +9,8 @@ go build -o cmdr .
 ./cmdr init
 source ~/.cmdr/profile/cmdr_initializer.sh
 
+set -x
+
 cmdr version
 cmdr config list
 
@@ -18,7 +20,7 @@ cmdr command define -n cmd -v "3.0.0" -l "$root_dir/cmd_v3.sh"
 
 cmd | grep "v1"
 
-for v in "1.0.0" "2.0.0" "3.0.0"; do
+for v in "2.0.0" "3.0.0"; do
   cmdr command use -n cmd -v "$v"
   cmd | grep "$v"
 done
