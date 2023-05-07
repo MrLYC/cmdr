@@ -6,7 +6,7 @@ set -e
 
 go build -o cmdr .
 
-export CMDR_LOG_LEVEL=debug
+export CMDR_LOG_LEVEL=debug CMDR_CORE_CONFIG_PATH=/tmp/cmdr.yaml
 ./cmdr config set -k core.root_dir -v "$(pwd)/.cmdr"
 ./cmdr config set -k core.profile_dir -v "$(pwd)/profile"
 
