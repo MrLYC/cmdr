@@ -15,7 +15,7 @@ source ./profile/cmdr_initializer.sh
 
 set -x
 
-zcmdr config list
+cmdr config list
 
 cmdr command install -a -n cmd -v "1.0.0" -l "$root_dir/cmd_v1.sh"
 cmdr command install -n cmd -v "2.0.0" -l "$root_dir/cmd_v2.sh"
