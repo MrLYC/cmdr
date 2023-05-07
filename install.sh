@@ -28,13 +28,14 @@ esac
 
 set -x
 target="/tmp/cmdr_${RANDOM}"
-download_url=$(curl https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep browser_download_url |  grep -o "https://.*/cmdr_${goos}_${goarch}")
+download_url=$(curl https://api.github.com/repos/MrLYC/cmdr/releases/latest 2>/dev/null | grep browser_download_url |  grep -o "https://.*/cmdr_${goos}_${goarch}")
 curl -L -o "${target}" "${download_url}"
 chmod +x "${target}"
+
 "${target}" init
+"${target}" command list -n cmdr
+
 rm -f "${target}"
 set +x
-
-"${target}" command list -n cmdr
 
 echo "restart your terminal to activate the cmdr command"
