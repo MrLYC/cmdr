@@ -21,6 +21,14 @@ type Command struct {
 	Location  string `storm:"" json:"location"`
 }
 
+func (c *Command) String() string {
+	flag := ""
+	if c.Activated {
+		flag = "*"
+	}
+	return fmt.Sprintf("%s%s(%s)", flag, c.Name, c.Version)
+}
+
 func (c *Command) GetName() string {
 	return c.Name
 }

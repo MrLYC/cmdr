@@ -23,6 +23,10 @@ type Binary struct {
 	shimsName string
 }
 
+func (b *Binary) String() string {
+	return b.GetLocation()
+}
+
 func (b *Binary) GetName() string {
 	return b.name
 }
@@ -123,7 +127,7 @@ type BinaryManager struct {
 	binDir   string
 	shimsDir string
 	dirMode  os.FileMode
-	linkFn   func(src, dst string) error
+	linkFn   func(shimsHelper *utils.PathHelper, source, shimsName string, mode os.FileMode) error
 }
 
 func (m *BinaryManager) Init() error {
@@ -190,26 +194,40 @@ func (m *BinaryManager) Query() (core.CommandQuery, error) {
 	return NewBinariesFilter(binaries), nil
 }
 
-func (m *BinaryManager) Define(name string, version string, location string) (core.Command, error) {
-	helper := utils.NewPathHelper(m.shimsDir).Child(name)
+func (m *BinaryManager) linkBinary(name string, version string, location string, shimsName string) error {
+	logger := core.GetLogger()
+	shimsHelper := utils.NewPathHelper(m.shimsDir).Child(name)
 
-	err := helper.MkdirAll(m.dirMode)
+	err := shimsHelper.MkdirAll(m.dirMode)
 	if err != nil {
-		return nil, errors.WithMessagef(err, "create dir %s failed", helper.Path())
+		return errors.WithMessagef(err, "create dir %s failed", shimsHelper.Path())
 	}
 
-	shimsName := m.ShimsName(name, version)
-	dstLocation := helper.Child(shimsName).Path()
-
-	core.GetLogger().Debug("defining binary", map[string]interface{}{
+	logger.Debug("defining binary", map[string]interface{}{
 		"name":     name,
 		"version":  version,
 		"location": location,
 	})
 
-	err = m.linkFn(location, dstLocation)
+	srcLocation, err := filepath.Abs(location)
 	if err != nil {
-		return nil, errors.WithMessagef(err, "link %s to %s failed", location, dstLocation)
+		return errors.Wrapf(err, "get source path of %s failed", location)
+	}
+
+	err = m.linkFn(shimsHelper, srcLocation, shimsName, 0755)
+	if err != nil {
+		return errors.WithMessagef(err, "link %s to %s failed", location, shimsName)
+	}
+
+	return nil
+}
+
+func (m *BinaryManager) Define(name string, version string, location string) (core.Command, error) {
+	shimsName := m.ShimsName(name, version)
+
+	err := m.linkBinary(name, version, location, shimsName)
+	if err != nil {
+		return nil, err
 	}
 
 	return NewBinary(m.binDir, m.shimsDir, name, version, shimsName), nil
@@ -274,7 +292,7 @@ func (m *BinaryManager) Deactivate(name string) error {
 func NewBinaryManager(
 	binDir, shimsDir string,
 	dirMode os.FileMode,
-	linkFn func(src, dst string) error,
+	linkFn func(shimsHelper *utils.PathHelper, source, shimsName string, mode os.FileMode) error,
 ) *BinaryManager {
 	return &BinaryManager{binDir, shimsDir, dirMode, linkFn}
 }
@@ -283,24 +301,24 @@ func NewBinaryManagerWithCopy(
 	binDir, shimsDir string,
 	dirMode os.FileMode,
 ) *BinaryManager {
-	return NewBinaryManager(binDir, shimsDir, dirMode, func(src, dst string) error {
-		dstDir, dstName := filepath.Split(dst)
-		helper := utils.NewPathHelper(dstDir)
-
-		return helper.CopyFile(dstName, src, 0755)
-	})
+	return NewBinaryManager(
+		binDir, shimsDir, dirMode,
+		func(shimsHelper *utils.PathHelper, source, shimsName string, mode os.FileMode) error {
+			return shimsHelper.CopyFile(shimsName, source, mode)
+		},
+	)
 }
 
 func NewBinaryManagerWithLink(
 	binDir, shimsDir string,
 	dirMode os.FileMode,
 ) *BinaryManager {
-	return NewBinaryManager(binDir, shimsDir, dirMode, func(src, dst string) error {
-		dstDir, dstName := filepath.Split(dst)
-		helper := utils.NewPathHelper(dstDir)
-
-		return helper.SymbolLink(dstName, src, 0755)
-	})
+	return NewBinaryManager(
+		binDir, shimsDir, dirMode,
+		func(shimsHelper *utils.PathHelper, source, shimsName string, mode os.FileMode) error {
+			return shimsHelper.SymbolLink(shimsName, source, mode)
+		},
+	)
 }
 
 func newBinaryManagerByConfiguration(cfg core.Configuration) *BinaryManager {
