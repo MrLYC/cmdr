@@ -16,6 +16,7 @@ import (
 type DownloadManager struct {
 	core.CommandManager
 	fetchers []core.Fetcher
+	retries  int
 }
 
 func (m *DownloadManager) search(name, output string) (string, error) {
@@ -62,7 +63,20 @@ func (m *DownloadManager) search(name, output string) (string, error) {
 }
 
 func (m *DownloadManager) fetch(fetcher core.Fetcher, name, version, location, output string) (string, error) {
-	err := fetcher.Fetch(name, version, location, output)
+	var err error
+	logger := core.GetLogger()
+
+	for i := 0; i < m.retries; i++ {
+		err = fetcher.Fetch(name, version, location, output)
+		if err == nil {
+			break
+		} else {
+			logger.Warn("failed to download %s, retrying...", map[string]interface{}{
+				"uri": location,
+			})
+		}
+	}
+
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to download %s", location)
 	}
@@ -93,10 +107,11 @@ func (m *DownloadManager) Define(name string, version string, uriOrLocation stri
 	return m.CommandManager.Define(name, version, uriOrLocation)
 }
 
-func NewDownloadManager(manager core.CommandManager, fetchers []core.Fetcher) *DownloadManager {
+func NewDownloadManager(manager core.CommandManager, fetchers []core.Fetcher, retries int) *DownloadManager {
 	return &DownloadManager{
 		CommandManager: manager,
 		fetchers:       fetchers,
+		retries:        retries,
 	}
 }
 
@@ -110,6 +125,6 @@ func init() {
 		return NewDownloadManager(manager, []core.Fetcher{
 			fetcher.NewGoInstaller(),
 			fetcher.NewDefaultGoGetter(os.Stderr),
-		}), nil
+		}, 3), nil
 	})
 }

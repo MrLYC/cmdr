@@ -50,7 +50,7 @@ var _ = Describe("Download", func() {
 		BeforeEach(func() {
 			fetcher = mock.NewMockFetcher(ctrl)
 			baseManager = mock.NewMockCommandManager(ctrl)
-			downloadManager = manager.NewDownloadManager(baseManager, []core.Fetcher{fetcher})
+			downloadManager = manager.NewDownloadManager(baseManager, []core.Fetcher{fetcher}, 1)
 		})
 
 		It("should call base manager", func() {
