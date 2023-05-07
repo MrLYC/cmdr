@@ -29,6 +29,7 @@ const (
 	CfgKeyCmdrLinkMode     = "core.link_mode"
 
 	// proxy
+	CfgKeyProxyGo    = "proxy.go"
 	CfgKeyProxyHTTP  = "proxy.http"
 	CfgKeyProxyHTTPS = "proxy.https"
 

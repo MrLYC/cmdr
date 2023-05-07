@@ -75,8 +75,13 @@ func preInitConfig() {
 	cfg.SetDefault(core.CfgKeyLogLevel, "info")
 	cfg.SetDefault(core.CfgKeyLogOutput, "stderr")
 
-	cfg.SetDefault(core.CfgKeyProxyHTTP, "")
-	cfg.SetDefault(core.CfgKeyProxyHTTPS, "")
+	for _, key := range []string{
+		core.CfgKeyProxyGo,
+		core.CfgKeyProxyHTTP,
+		core.CfgKeyProxyHTTPS,
+	} {
+		cfg.SetDefault(key, nil)
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -157,13 +162,14 @@ func initDatabase() {
 func initProxy() {
 	cfg := core.GetConfiguration()
 
-	httpProxy := cfg.GetString(core.CfgKeyProxyHTTP)
-	if httpProxy == "" {
-		os.Setenv("HTTP_PROXY", httpProxy)
-	}
-
-	httpsProxy := cfg.GetString(core.CfgKeyProxyHTTPS)
-	if httpsProxy == "" {
-		os.Setenv("HTTPS_PROXY", httpsProxy)
+	for cfgKey, envKey := range map[string]string{
+		core.CfgKeyProxyGo:    "GOPROXY",
+		core.CfgKeyProxyHTTP:  "HTTP_PROXY",
+		core.CfgKeyProxyHTTPS: "HTTPS_PROXY",
+	} {
+		value := cfg.GetString(cfgKey)
+		if value != "" {
+			os.Setenv(envKey, value)
+		}
 	}
 }
