@@ -35,4 +35,6 @@ chmod +x "${target}"
 rm -f "${target}"
 set +x
 
+"${target}" command list -n cmdr
+
 echo "restart your terminal to activate the cmdr command"
