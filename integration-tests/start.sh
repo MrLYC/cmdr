@@ -11,7 +11,6 @@ source ~/.cmdr/profile/cmdr_initializer.sh
 
 set -x
 
-cmdr version
 cmdr config list
 
 cmdr command install -a -n cmd -v "1.0.0" -l "$root_dir/cmd_v1.sh"
@@ -32,4 +31,8 @@ cmdr command remove -n cmd -v "1.0.0"
 cmdr command remove -n cmd -v "2.0.0"
 cmdr command remove -n cmd -v "3.0.0"
 
+version=$(cmdr version)
+
 cmdr upgrade
+
+cmdr version | grep -v "${version}"
