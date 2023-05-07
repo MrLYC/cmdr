@@ -7,6 +7,7 @@ set -e
 go build -o cmdr .
 
 ./cmdr init
+cat ~/.bashrc
 source ~/.bashrc
 
 cmdr version
