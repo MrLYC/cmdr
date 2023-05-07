@@ -1,6 +1,9 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
@@ -21,8 +24,12 @@ var setCmd = &cobra.Command{
 		cfg.Set(key, value)
 		cfg.Set("_", nil)
 
+		configFile := cfg.ConfigFileUsed()
+		configDir := filepath.Dir(configFile)
+		utils.PanicOnError("create config dir", os.MkdirAll(configDir, 0644))
+
 		logger.Info("writing configuration", map[string]interface{}{
-			"file": cfg.ConfigFileUsed(),
+			"file": configFile,
 		})
 		utils.PanicOnError("write config", cfg.WriteConfig())
 	},

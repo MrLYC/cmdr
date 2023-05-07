@@ -44,7 +44,7 @@ func init() {
 	pFlags := rootCmd.PersistentFlags()
 	pFlags.StringP(
 		"config", "c",
-		filepath.Join(cfg.GetString(core.CfgKeyCmdrRootDir), "config.yaml"),
+		filepath.Join(getDefaultCmdrRoot(), "config.yaml"),
 		"config file",
 	)
 
@@ -55,18 +55,22 @@ func init() {
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
+func getDefaultCmdrRoot() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		utils.PanicOnError("get user home dir", err)
+	}
+
+	return filepath.Join(homeDir, ".cmdr")
+}
+
 func preInitConfig() {
 	cfg := core.GetConfiguration()
 	cfg.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	cfg.SetEnvPrefix("cmdr")
 	cfg.AutomaticEnv() // read in environment variables that match
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
-	}
-
-	cfg.SetDefault(core.CfgKeyCmdrRootDir, filepath.Join(homeDir, ".cmdr"))
+	cfg.SetDefault(core.CfgKeyCmdrRootDir, getDefaultCmdrRoot())
 	cfg.SetDefault(core.CfgKeyCmdrBinDir, "bin")
 	cfg.SetDefault(core.CfgKeyCmdrShimsDir, "shims")
 	cfg.SetDefault(core.CfgKeyCmdrProfileDir, "profile")
