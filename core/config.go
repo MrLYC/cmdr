@@ -28,6 +28,11 @@ const (
 	CfgKeyCmdrConfigPath   = "core.config_path"
 	CfgKeyCmdrLinkMode     = "core.link_mode"
 
+	// proxy
+	CfgKeyProxyGo    = "proxy.go"
+	CfgKeyProxyHTTP  = "proxy.http"
+	CfgKeyProxyHTTPS = "proxy.https"
+
 	// log
 	CfgKeyLogLevel  = "log.level"
 	CfgKeyLogOutput = "log.output"

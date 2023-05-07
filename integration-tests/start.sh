@@ -6,8 +6,12 @@ set -e
 
 go build -o cmdr .
 
+export CMDR_LOG_LEVEL=debug
+./cmdr config set -k core.root_dir -v "$(pwd)/.cmdr"
+./cmdr config set -k core.profile_dir -v "$(pwd)/profile"
+
 ./cmdr init
-source ~/.cmdr/profile/cmdr_initializer.sh
+source ./profile/cmdr_initializer.sh
 
 set -x
 
@@ -27,7 +31,11 @@ done
 cmdr command unset -n cmd
 cmd && false || true
 
-cmdr command remove -n cmd -v "1.0.0"
+rm -rf "./.cmdr/shims/cmd/cmd_1.0.0"
+cmdr command list -n cmd -v "1.0.0"
+cmdr doctor
+cmdr command list -n cmd -v "1.0.0" && false || true
+
 cmdr command remove -n cmd -v "2.0.0"
 cmdr command remove -n cmd -v "3.0.0"
 
