@@ -75,6 +75,11 @@ func (c *CmdrUpdater) Init(isUpgrade bool) error {
 		if err != nil {
 			return errors.Wrapf(err, "failed to define command %s", c.name)
 		}
+	} else {
+		err := c.manager.Activate(c.name, c.version)
+		if err != nil {
+			return errors.WithMessagef(err, "failed to activate command %s", c.name)
+		}
 	}
 
 	err := c.manager.Activate(c.name, c.version)
