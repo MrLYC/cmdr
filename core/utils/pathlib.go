@@ -82,19 +82,19 @@ func (p *PathHelper) Chmod(name string, mode os.FileMode) error {
 	return nil
 }
 
-func (p *PathHelper) SymbolLink(name, target string, mode os.FileMode) error {
+func (p *PathHelper) SymbolLink(name, source string, mode os.FileMode) error {
 	err := p.EnsureNotExists(name)
 	if err != nil {
 		return err
 	}
 
-	absTarget, err := filepath.Abs(target)
+	absSource, err := filepath.Abs(source)
 	if err != nil {
-		return errors.Wrapf(err, "get abs target path %s failed", target)
+		return errors.Wrapf(err, "get abs target path %s failed", source)
 	}
 
 	linkFile := p.Child(name).Path()
-	err = os.Symlink(absTarget, linkFile)
+	err = os.Symlink(absSource, linkFile)
 	if err != nil {
 		return errors.Wrapf(err, "create symbol link failed")
 	}
@@ -102,14 +102,14 @@ func (p *PathHelper) SymbolLink(name, target string, mode os.FileMode) error {
 	return os.Chmod(linkFile, os.ModeSymlink|mode)
 }
 
-func (p *PathHelper) CopyFile(name, target string, mode os.FileMode) error {
+func (p *PathHelper) CopyFile(name, source string, mode os.FileMode) error {
 	err := p.EnsureNotExists(name)
 	if err != nil {
 		return err
 	}
 
 	path := filepath.Join(p.path, name)
-	err = flop.Copy(target, path, flop.Options{
+	err = flop.Copy(source, path, flop.Options{
 		MkdirAll:  true,
 		Recursive: true,
 	})

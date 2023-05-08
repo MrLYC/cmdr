@@ -12,7 +12,7 @@ type DatabaseMigrator struct {
 	models    map[core.ModelType]interface{}
 }
 
-func (m *DatabaseMigrator) Init() error {
+func (m *DatabaseMigrator) Init(isUpgrade bool) error {
 	logger := core.GetLogger()
 
 	db, err := m.dbFactory()

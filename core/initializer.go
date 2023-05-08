@@ -3,7 +3,7 @@ package core
 import "fmt"
 
 type Initializer interface {
-	Init() error
+	Init(isUpgrade bool) error
 }
 
 //go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock Initializer

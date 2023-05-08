@@ -49,6 +49,8 @@ func (c *CmdrUpdater) install() error {
 }
 
 func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
+	logger := core.GetLogger()
+
 	query, err := c.manager.Query()
 	if err != nil {
 		return errors.Wrapf(err, "failed to create command query")
@@ -64,6 +66,9 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 
 	var errs error
 	for _, command := range commands {
+		logger.Debug("checking legacy command", map[string]interface{}{
+			"command": command,
+		})
 		if command.GetActivated() {
 			continue
 		}
@@ -81,6 +86,9 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 			continue
 		}
 
+		logger.Info("removing legacy cmdr", map[string]interface{}{
+			"command": command,
+		})
 		err = c.manager.Undefine(c.name, version)
 		if err != nil {
 			errs = multierror.Append(errs, err)
@@ -90,7 +98,7 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 	return errs
 }
 
-func (c *CmdrUpdater) Init() error {
+func (c *CmdrUpdater) Init(isUpgrade bool) error {
 	logger := core.GetLogger()
 	safeVersion := []string{c.version}
 	version := c.getActivatedCmdrVersion()
@@ -102,9 +110,12 @@ func (c *CmdrUpdater) Init() error {
 		"name":    c.name,
 		"version": c.version,
 	})
-	err := c.install()
-	if err != nil {
-		return errors.WithMessagef(err, "failed to install command %s", c.name)
+
+	if !isUpgrade {
+		err := c.install()
+		if err != nil {
+			return errors.WithMessagef(err, "failed to install command %s", c.name)
+		}
 	}
 
 	return c.removeLegacies(safeVersion)

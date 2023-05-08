@@ -20,7 +20,10 @@ var initCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := core.GetLogger()
 		cfg := core.GetConfiguration()
+		flags := cmd.Flags()
 		var errs error
+
+		isUpgrade, _ := flags.GetBool("upgrade")
 
 		for _, step := range []string{
 			"profile-dir-backup",
@@ -40,7 +43,7 @@ var initCmd = &cobra.Command{
 				continue
 			}
 
-			err = handler.Init()
+			err = handler.Init(isUpgrade)
 			if err != nil {
 				errs = multierror.Append(errs, errors.WithMessagef(err, "failed to initialize %s", step))
 				continue

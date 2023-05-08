@@ -23,7 +23,7 @@ type FSBackup struct {
 	target string
 }
 
-func (b *FSBackup) Init() error {
+func (b *FSBackup) Init(isUpgrade bool) error {
 	logger := core.GetLogger()
 	dir, err := os.MkdirTemp("", fmt.Sprintf("%s-backup-%s-*", core.Name, filepath.Base(b.path)))
 	if err != nil {
@@ -116,7 +116,7 @@ func (e *EmbedFSExporter) exportDir(srcPath string, d fs.DirEntry, err error) er
 	return e.copyFile(srcPath, dstPath, e.fileMode)
 }
 
-func (e *EmbedFSExporter) Init() error {
+func (e *EmbedFSExporter) Init(isUpgrade bool) error {
 	logger := core.GetLogger()
 	err := os.MkdirAll(e.dstPath, 0755)
 	if err != nil {
@@ -247,7 +247,7 @@ func (r *DirRender) renderDir(path string, info os.FileInfo) error {
 	return nil
 }
 
-func (r *DirRender) Init() error {
+func (r *DirRender) Init(isUpgrade bool) error {
 	logger := core.GetLogger()
 	logger.Debug("rendering embedded filesystem", map[string]interface{}{
 		"src": r.srcPath,

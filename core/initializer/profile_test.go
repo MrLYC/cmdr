@@ -33,7 +33,7 @@ var _ = Describe("Profile", func() {
 
 		It("should inject when path not exists", func() {
 			injector := initializer.NewProfileInjector(scriptPath, filepath.Join(rootDir, "not_exists"))
-			Expect(injector.Init()).To(Succeed())
+			Expect(injector.Init(false)).To(Succeed())
 		})
 
 		DescribeTable("should inject profile", func(content, excepted string) {
@@ -41,7 +41,7 @@ var _ = Describe("Profile", func() {
 			Expect(os.WriteFile(profilePath, []byte(content), 0755)).To(Succeed())
 
 			injector := initializer.NewProfileInjector(scriptPath, profilePath)
-			Expect(injector.Init()).To(Succeed())
+			Expect(injector.Init(false)).To(Succeed())
 
 			profile, err := os.ReadFile(profilePath)
 			Expect(err).To(BeNil())
