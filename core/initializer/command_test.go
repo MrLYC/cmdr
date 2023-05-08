@@ -59,7 +59,7 @@ var _ = Describe("Command", func() {
 		manager.EXPECT().Activate(name, version)
 		manager.EXPECT().Undefine(name, legacyCommand.GetVersion())
 
-		Expect(updater.Init()).To(Succeed())
+		Expect(updater.Init(false)).To(Succeed())
 	})
 
 })

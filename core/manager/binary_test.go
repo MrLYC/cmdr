@@ -209,7 +209,7 @@ var _ = Describe("Binary", func() {
 			Expect(os.RemoveAll(shimsDir)).To(Succeed())
 
 			mgr = manager.NewBinaryManagerWithLink(binDir, shimsDir, 0755)
-			Expect(mgr.Init()).To(Succeed())
+			Expect(mgr.Init(false)).To(Succeed())
 			Expect(binDir).To(BeADirectory())
 			Expect(shimsDir).To(BeADirectory())
 		})

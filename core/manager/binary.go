@@ -130,7 +130,7 @@ type BinaryManager struct {
 	linkFn   func(shimsHelper *utils.PathHelper, source, shimsName string, mode os.FileMode) error
 }
 
-func (m *BinaryManager) Init() error {
+func (m *BinaryManager) Init(isUpgrade bool) error {
 	logger := core.GetLogger()
 	logger.Debug("creating directory", map[string]interface{}{
 		"bin_dir":   m.binDir,

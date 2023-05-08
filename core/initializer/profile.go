@@ -74,7 +74,7 @@ func (p *ProfileInjector) makeProfileScript() (io.Reader, error) {
 	return buffer, nil
 }
 
-func (p *ProfileInjector) Init() error {
+func (p *ProfileInjector) Init(isUpgrade bool) error {
 	var script io.Reader
 	logger := core.GetLogger()
 	logger.Debug("writing cmdr initializer script to profile", map[string]interface{}{

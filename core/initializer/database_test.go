@@ -61,7 +61,7 @@ var _ = Describe("Database", func() {
 			}).AnyTimes()
 			db.EXPECT().Close().Return(nil)
 
-			Expect(migrator.Init()).To(Succeed())
+			Expect(migrator.Init(false)).To(Succeed())
 			Expect(histories["initializer_test.TestModel"]).To(Equal([]string{"Init", "ReIndex"}))
 		})
 	})

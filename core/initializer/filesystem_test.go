@@ -63,7 +63,7 @@ var _ = Describe("Filesystem", func() {
 			}
 
 			exporter := initializer.NewEmbedFSExporter(embedFS, "root", filepath.Join(dstDir, "root"), 0644)
-			Expect(exporter.Init()).To(Succeed())
+			Expect(exporter.Init(false)).To(Succeed())
 
 			for _, path := range dirs {
 				info, err := os.Stat(filepath.Join(dstDir, path))
@@ -106,7 +106,7 @@ var _ = Describe("Filesystem", func() {
 
 		It("should backup a dir", func() {
 			backup := initializer.NewFSBackup(rootDir)
-			Expect(backup.Init()).To(Succeed())
+			Expect(backup.Init(false)).To(Succeed())
 
 			target := backup.Target()
 			Expect(filepath.Join(target, "dir", "a.txt")).To(BeAnExistingFile())
@@ -114,7 +114,7 @@ var _ = Describe("Filesystem", func() {
 
 		It("should backup a file", func() {
 			backup := initializer.NewFSBackup(path)
-			Expect(backup.Init()).To(Succeed())
+			Expect(backup.Init(false)).To(Succeed())
 
 			target := backup.Target()
 			Expect(filepath.Join(target, "a.txt")).To(BeAnExistingFile())
@@ -122,7 +122,7 @@ var _ = Describe("Filesystem", func() {
 
 		It("should ok when path not exists", func() {
 			backup := initializer.NewFSBackup(filepath.Join(rootDir, "not_exists"))
-			Expect(backup.Init()).To(Succeed())
+			Expect(backup.Init(false)).To(Succeed())
 		})
 	})
 
@@ -150,7 +150,7 @@ var _ = Describe("Filesystem", func() {
 			Expect(os.WriteFile(filepath.Join(rootDir, `{{.GetString "config.key"}}.txt.gotmpl`), []byte(`{{.GetString "config.key"}}`), 0644)).To(Succeed())
 
 			render := initializer.NewDirRender(rootDir, ".gotmpl", cfg)
-			Expect(render.Init()).To(Succeed())
+			Expect(render.Init(false)).To(Succeed())
 
 			Expect(filepath.Join(rootDir, "hello.txt")).To(BeAnExistingFile())
 			Expect(filepath.Join(rootDir, `{{.GetString "config.key"}}.txt.gotmpl`)).NotTo(BeARegularFile())
@@ -164,7 +164,7 @@ var _ = Describe("Filesystem", func() {
 			Expect(os.MkdirAll(filepath.Join(rootDir, `{{.GetString "config.key"}}.gotmpl`), 0755)).To(Succeed())
 
 			render := initializer.NewDirRender(rootDir, ".gotmpl", cfg)
-			Expect(render.Init()).To(Succeed())
+			Expect(render.Init(false)).To(Succeed())
 
 			Expect(filepath.Join(rootDir, "hello")).To(BeADirectory())
 		})
@@ -173,7 +173,7 @@ var _ = Describe("Filesystem", func() {
 			Expect(os.WriteFile(filepath.Join(rootDir, "a.txt"), []byte(`{{.GetString "config.key"}}`), 0644)).To(Succeed())
 
 			render := initializer.NewDirRender(rootDir, ".gotmpl", cfg)
-			Expect(render.Init()).To(Succeed())
+			Expect(render.Init(false)).To(Succeed())
 
 			Expect(filepath.Join(rootDir, "a.txt")).To(BeAnExistingFile())
 			Expect(filepath.Join(rootDir, "a.txt.gotmpl")).NotTo(BeARegularFile())
@@ -187,7 +187,7 @@ var _ = Describe("Filesystem", func() {
 			Expect(os.MkdirAll(filepath.Join(dir, `{{.GetString "config.key"}}.gotmpl`), 0755)).To(Succeed())
 
 			render := initializer.NewDirRender(rootDir, ".gotmpl", cfg)
-			Expect(render.Init()).To(Succeed())
+			Expect(render.Init(false)).To(Succeed())
 
 			Expect(filepath.Join(dir, "hello.txt")).To(BeAnExistingFile())
 			Expect(filepath.Join(dir, "hello")).To(BeADirectory())
