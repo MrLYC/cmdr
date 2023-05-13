@@ -62,4 +62,10 @@ var _ = Describe("Command", func() {
 		Expect(updater.Init(false)).To(Succeed())
 	})
 
+	It("should upgrade cmdr", func() {
+		manager.EXPECT().Activate(name, version)
+		manager.EXPECT().Undefine(name, legacyCommand.GetVersion())
+
+		Expect(updater.Init(true)).To(Succeed())
+	})
 })

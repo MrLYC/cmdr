@@ -34,20 +34,6 @@ func (c *CmdrUpdater) getActivatedCmdrVersion() string {
 	return command.GetVersion()
 }
 
-func (c *CmdrUpdater) install() error {
-	_, err := c.manager.Define(c.name, c.version, c.location)
-	if err != nil {
-		return errors.Wrapf(err, "failed to define command %s", c.name)
-	}
-
-	err = c.manager.Activate(c.name, c.version)
-	if err != nil {
-		return errors.Wrapf(err, "failed to activate command %s", c.name)
-	}
-
-	return nil
-}
-
 func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 	logger := core.GetLogger()
 
@@ -69,6 +55,7 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 		logger.Debug("checking legacy command", map[string]interface{}{
 			"command": command,
 		})
+
 		if command.GetActivated() {
 			continue
 		}
@@ -112,10 +99,15 @@ func (c *CmdrUpdater) Init(isUpgrade bool) error {
 	})
 
 	if !isUpgrade {
-		err := c.install()
+		_, err := c.manager.Define(c.name, c.version, c.location)
 		if err != nil {
-			return errors.WithMessagef(err, "failed to install command %s", c.name)
+			return errors.Wrapf(err, "failed to define command %s", c.name)
 		}
+	}
+
+	err := c.manager.Activate(c.name, c.version)
+	if err != nil {
+		return errors.Wrapf(err, "failed to activate command %s", c.name)
 	}
 
 	return c.removeLegacies(safeVersion)
