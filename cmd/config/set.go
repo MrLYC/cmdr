@@ -16,22 +16,25 @@ var setCmd = &cobra.Command{
 	Short: "Set configuration",
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := core.GetLogger()
-
 		cfg := core.GetConfiguration()
-		key := cfg.GetString(core.CfgKeyXConfigSetKey)
-		value := cfg.GetString(core.CfgKeyXConfigSetValue)
-
-		cfg.Set(key, value)
-		cfg.Set("_", nil)
 
 		configFile := cfg.ConfigFileUsed()
 		configDir := filepath.Dir(configFile)
 		utils.PanicOnError("create config dir", os.MkdirAll(configDir, 0644))
 
+		userCfg := core.NewConfiguration()
+		userCfg.SetConfigFile(configFile)
+		utils.PanicOnError("create config dir", userCfg.ReadInConfig())
+
+		key := cfg.GetString(core.CfgKeyXConfigSetKey)
+		value := cfg.GetString(core.CfgKeyXConfigSetValue)
+
+		userCfg.Set(key, value)
+
 		logger.Info("writing configuration", map[string]interface{}{
 			"file": configFile,
 		})
-		utils.PanicOnError("write config", cfg.WriteConfig())
+		utils.PanicOnError("write config", userCfg.WriteConfig())
 	},
 }
 
