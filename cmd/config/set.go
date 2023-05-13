@@ -16,22 +16,30 @@ var setCmd = &cobra.Command{
 	Short: "Set configuration",
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := core.GetLogger()
-
 		cfg := core.GetConfiguration()
+		configFile := cfg.ConfigFileUsed()
+
+		userCfg := core.NewConfiguration()
+		userCfg.SetConfigFile(configFile)
+		err := userCfg.ReadInConfig()
+		if err != nil {
+			logger.Warn("failed to read user configuration file", map[string]interface{}{
+				"file": configFile,
+			})
+
+			configDir := filepath.Dir(configFile)
+			utils.PanicOnError("create configuration dir", os.MkdirAll(configDir, 0644))
+		}
+
 		key := cfg.GetString(core.CfgKeyXConfigSetKey)
 		value := cfg.GetString(core.CfgKeyXConfigSetValue)
 
-		cfg.Set(key, value)
-		cfg.Set("_", nil)
+		userCfg.Set(key, value)
 
-		configFile := cfg.ConfigFileUsed()
-		configDir := filepath.Dir(configFile)
-		utils.PanicOnError("create config dir", os.MkdirAll(configDir, 0644))
-
-		logger.Info("writing configuration", map[string]interface{}{
+		logger.Info("writing user configuration", map[string]interface{}{
 			"file": configFile,
 		})
-		utils.PanicOnError("write config", cfg.WriteConfig())
+		utils.PanicOnError("write user configuration", userCfg.WriteConfig())
 	},
 }
 

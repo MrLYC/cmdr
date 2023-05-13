@@ -16,6 +16,10 @@ func SetConfiguration(cfg Configuration) {
 	globalConfiguration = cfg
 }
 
+func NewConfiguration() *viper.Viper {
+	return viper.New()
+}
+
 const (
 	// cmdr
 	CfgKeyCmdrRootDir      = "core.root_dir"
@@ -77,5 +81,5 @@ const (
 )
 
 func init() {
-	SetConfiguration(viper.GetViper())
+	SetConfiguration(NewConfiguration())
 }
