@@ -1,5 +1,5 @@
 # CMDR
-[![test](https://github.com/MrLYC/cmdr/actions/workflows/unittest.yml/badge.svg)](https://github.com/MrLYC/cmdr/actions/workflows/unittest.yml) [![codecov](https://codecov.io/gh/MrLYC/cmdr/branch/master/graph/badge.svg?token=mo4TJP4mQt)](https://codecov.io/gh/MrLYC/cmdr) ![Go version](https://img.shields.io/github/go-mod/go-version/mrlyc/cmdr) ![release](https://img.shields.io/github/v/release/mrlyc/cmdr?label=version)
+[![test](https://github.com/MrLYC/cmdr/actions/workflows/test.yml/badge.svg)](https://github.com/MrLYC/cmdr/actions/workflows/test.yml) [![codecov](https://codecov.io/gh/MrLYC/cmdr/branch/master/graph/badge.svg?token=mo4TJP4mQt)](https://codecov.io/gh/MrLYC/cmdr) ![Go version](https://img.shields.io/github/go-mod/go-version/mrlyc/cmdr) ![release](https://img.shields.io/github/v/release/mrlyc/cmdr?label=version)
 
 CMDR is a simple command version management tool that helps you quickly switch from multiple command versions.
 
