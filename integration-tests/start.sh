@@ -45,11 +45,11 @@ current_version=$(cmdr version)
 cmdr upgrade
 newest_version=$(cmdr version)
 
-./cmdr init
-
 # make sure cmdr has been upgraded
 test "${current_version}" != "${newest_version}"
 cmdr command list -n cmdr -a -v "${newest_version}"
+
+./cmdr init
 
 ./cmdr init --upgrade
 cmdr command list -n cmdr
