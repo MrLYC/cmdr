@@ -17,8 +17,6 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List commands",
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
-		logger := core.GetLogger()
-
 		commands, err := queryCommands(
 			manager,
 			cfg.GetBool(core.CfgKeyXCommandListActivate),
@@ -29,10 +27,6 @@ var listCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-
-		logger.Debug("query commands", map[string]interface{}{
-			"commands": commands,
-		})
 
 		fields := cfg.GetStringSlice(core.CfgKeyXCommandListFields)
 		rowMaker := func(activateFlag string, name string, version string, location string) []string {
