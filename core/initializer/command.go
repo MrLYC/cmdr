@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/hashicorp/go-multierror"
+	ver "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
@@ -34,7 +35,7 @@ func (c *CmdrUpdater) getActivatedCmdrVersion() string {
 	return command.GetVersion()
 }
 
-func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
+func (c *CmdrUpdater) removeLegacies(safeVersions []*ver.Version) error {
 	logger := core.GetLogger()
 
 	query, err := c.manager.Query()
@@ -60,10 +61,11 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 			continue
 		}
 
-		version := command.GetVersion()
+		definedVersion := command.GetVersion()
+		version := ver.Must(ver.NewVersion(definedVersion))
 		isSafe := false
 		for _, safeVersion := range safeVersions {
-			if safeVersion == version {
+			if safeVersion.Compare(version) == 0 {
 				isSafe = true
 				break
 			}
@@ -76,7 +78,7 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 		logger.Info("removing legacy cmdr", map[string]interface{}{
 			"command": command,
 		})
-		err = c.manager.Undefine(c.name, version)
+		err = c.manager.Undefine(c.name, definedVersion)
 		if err != nil {
 			errs = multierror.Append(errs, err)
 		}
@@ -87,10 +89,10 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 
 func (c *CmdrUpdater) Init(isUpgrade bool) error {
 	logger := core.GetLogger()
-	safeVersion := []string{c.version}
+	safeVersion := []*ver.Version{ver.Must(ver.NewVersion(c.version))}
 	version := c.getActivatedCmdrVersion()
 	if version != "" {
-		safeVersion = append(safeVersion, version)
+		safeVersion = append(safeVersion, ver.Must(ver.NewVersion(c.version)))
 	}
 
 	logger.Debug("update command", map[string]interface{}{
