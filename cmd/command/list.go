@@ -18,31 +18,14 @@ var listCmd = &cobra.Command{
 	Short: "List commands",
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
 		logger := core.GetLogger()
-		query, err := manager.Query()
-		if err != nil {
-			return err
-		}
 
-		activate := cfg.GetBool(core.CfgKeyXCommandListActivate)
-		if activate {
-			query.WithActivated(activate)
-		}
-
-		for _, opt := range []struct {
-			key string
-			fn  func(string) core.CommandQuery
-		}{
-			{core.CfgKeyXCommandListName, query.WithName},
-			{core.CfgKeyXCommandListVersion, query.WithVersion},
-			{core.CfgKeyXCommandListLocation, query.WithLocation},
-		} {
-			value := cfg.GetString(opt.key)
-			if value != "" {
-				opt.fn(value)
-			}
-		}
-
-		commands, err := query.All()
+		commands, err := queryCommands(
+			manager,
+			cfg.GetBool(core.CfgKeyXCommandListActivate),
+			cfg.GetString(core.CfgKeyXCommandListName),
+			cfg.GetString(core.CfgKeyXCommandListVersion),
+			cfg.GetString(core.CfgKeyXCommandListLocation),
+		)
 		if err != nil {
 			return err
 		}
@@ -50,7 +33,6 @@ var listCmd = &cobra.Command{
 		logger.Debug("query commands", map[string]interface{}{
 			"commands": commands,
 		})
-		utils.SortCommands(commands)
 
 		fields := cfg.GetStringSlice(core.CfgKeyXCommandListFields)
 		rowMaker := func(activateFlag string, name string, version string, location string) []string {

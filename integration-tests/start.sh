@@ -15,6 +15,8 @@ source ./profile/cmdr_initializer.sh
 
 set -x
 
+./cmdr init --upgrade
+
 cmdr config list
 
 cmdr command install -a -n cmd -v "1.0.0" -l "$root_dir/cmd_v1.sh"
@@ -43,4 +45,8 @@ version=$(cmdr version)
 
 cmdr upgrade
 
+# keep a least one legacy version
+cmdr command list -n cmdr -v "${version}"
+# make sure cmdr has been upgraded
+cmdr command list -n cmdr -a | grep -v "${version}"
 cmdr version | grep -v "${version}"
