@@ -17,26 +17,9 @@ type CmdrUpdater struct {
 	manager  core.CommandManager
 }
 
-func (c *CmdrUpdater) getActivatedCmdrVersion() string {
-	query, err := c.manager.Query()
-	if err != nil {
-		return ""
-	}
-
-	command, err := query.
-		WithName(c.name).
-		WithActivated(true).
-		One()
-
-	if err != nil {
-		return ""
-	}
-
-	return command.GetVersion()
-}
-
-func (c *CmdrUpdater) removeLegacies(safeVersions []*ver.Version) error {
+func (c *CmdrUpdater) removeLegacies() error {
 	logger := core.GetLogger()
+	currentVersion := ver.Must(ver.NewVersion(c.version))
 
 	query, err := c.manager.Query()
 	if err != nil {
@@ -62,16 +45,9 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []*ver.Version) error {
 		}
 
 		definedVersion := command.GetVersion()
-		version := ver.Must(ver.NewVersion(definedVersion))
-		isSafe := false
-		for _, safeVersion := range safeVersions {
-			if safeVersion.Compare(version) == 0 {
-				isSafe = true
-				break
-			}
-		}
+		semver := ver.Must(ver.NewVersion(definedVersion))
 
-		if isSafe {
+		if currentVersion.Compare(semver) <= 0 {
 			continue
 		}
 
@@ -89,12 +65,6 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []*ver.Version) error {
 
 func (c *CmdrUpdater) Init(isUpgrade bool) error {
 	logger := core.GetLogger()
-	safeVersion := []*ver.Version{ver.Must(ver.NewVersion(c.version))}
-	version := c.getActivatedCmdrVersion()
-	if version != "" {
-		safeVersion = append(safeVersion, ver.Must(ver.NewVersion(c.version)))
-	}
-
 	logger.Debug("update command", map[string]interface{}{
 		"name":    c.name,
 		"version": c.version,
@@ -112,7 +82,7 @@ func (c *CmdrUpdater) Init(isUpgrade bool) error {
 		return errors.Wrapf(err, "failed to activate command %s", c.name)
 	}
 
-	return c.removeLegacies(safeVersion)
+	return c.removeLegacies()
 }
 
 func NewCmdrUpdater(manager core.CommandManager, name, version, localtion string) *CmdrUpdater {
