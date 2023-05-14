@@ -52,7 +52,7 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 
 	var errs error
 	for _, command := range commands {
-		logger.Debug("checking legacy command", map[string]interface{}{
+		logger.Debug("checking command", map[string]interface{}{
 			"command": command,
 		})
 
