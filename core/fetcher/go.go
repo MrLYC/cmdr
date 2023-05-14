@@ -46,11 +46,14 @@ func (g *GoInstaller) Fetch(name, version, uri, dst string) error {
 	}
 
 	var err error
-	logger.Warn("version suffix not set, retry by version")
 	for _, detected := range []string{
 		fmt.Sprintf("%s@%s", location, version),
 		fmt.Sprintf("%s@v%s", location, version),
+		fmt.Sprintf("%s@latest", location),
 	} {
+		logger.Warn("version suffix not set, detecting", map[string]interface{}{
+			"suffix": detected,
+		})
 		err := g.install(detected, dst)
 		if err == nil {
 			break
