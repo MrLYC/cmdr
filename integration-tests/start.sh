@@ -40,16 +40,21 @@ cmdr command list -n cmd -v "1.0.0" && false || true
 cmdr command remove -n cmd -v "2.0.0"
 cmdr command remove -n cmd -v "3.0.0"
 
-version=$(cmdr version)
+current_version=$(cmdr version)
 
 cmdr upgrade
+newest_version=$(cmdr version)
+
+./cmdr init
 
 # make sure cmdr has been upgraded
-cmdr version | grep -v "${version}"
-./cmdr command list -n cmdr -a | grep -v "${version}"
+test "${current_version}" != "${newest_version}"
+cmdr command list -n cmdr -a -v "${newest_version}"
 
 ./cmdr init --upgrade
 cmdr command list -n cmdr
 
-cmdr version | grep "${version}"
-cmdr command list -n cmdr -a -v "${version}"
+activated_version=$(cmdr version)
+
+test "${current_version}" == "${activated_version}"
+cmdr command list -n cmdr -a -v "${current_version}"
