@@ -2,6 +2,7 @@ package command
 
 import (
 	"os"
+	"strings"
 
 	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
@@ -16,30 +17,29 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List commands",
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
-		name := cfg.GetString(core.CfgKeyXCommandListName)
-		version := cfg.GetString(core.CfgKeyXCommandListVersion)
-		location := cfg.GetString(core.CfgKeyXCommandListLocation)
-		activate := cfg.GetBool(core.CfgKeyXCommandListActivate)
-
+		logger := core.GetLogger()
 		query, err := manager.Query()
 		if err != nil {
 			return err
 		}
 
-		if name != "" {
-			query.WithName(name)
-		}
-
-		if version != "" {
-			query.WithVersion(version)
-		}
-
-		if location != "" {
-			query.WithLocation(location)
-		}
-
+		activate := cfg.GetBool(core.CfgKeyXCommandListActivate)
 		if activate {
 			query.WithActivated(activate)
+		}
+
+		for _, opt := range []struct {
+			key string
+			fn  func(string) core.CommandQuery
+		}{
+			{core.CfgKeyXCommandListName, query.WithName},
+			{core.CfgKeyXCommandListVersion, query.WithVersion},
+			{core.CfgKeyXCommandListLocation, query.WithLocation},
+		} {
+			value := cfg.GetString(opt.key)
+			if value != "" {
+				opt.fn(value)
+			}
 		}
 
 		commands, err := query.All()
@@ -47,23 +47,47 @@ var listCmd = &cobra.Command{
 			return err
 		}
 
-		tab := table.Table{
-			Headers: []string{"Activated", "Name", "Version", "Location"},
+		logger.Debug("query commands", map[string]interface{}{
+			"commands": commands,
+		})
+		utils.SortCommands(commands)
+
+		fields := cfg.GetStringSlice(core.CfgKeyXCommandListFields)
+		rowMaker := func(activateFlag string, name string, version string, location string) []string {
+			mappings := map[string]string{
+				"activated": activateFlag,
+				"name":      name,
+				"version":   version,
+				"location":  location,
+			}
+
+			results := make([]string, 0, len(fields))
+			for _, field := range fields {
+				result, ok := mappings[strings.ToLower(field)]
+				if ok {
+					results = append(results, result)
+				}
+			}
+
+			return results
 		}
 
-		utils.SortCommands(commands)
+		tab := table.Table{
+			Headers: rowMaker("Activated", "Name", "Version", "Location"),
+		}
+
 		for _, cmd := range commands {
 			activated := ""
 			if cmd.GetActivated() {
 				activated = "*"
 			}
 
-			tab.Rows = append(tab.Rows, []string{
+			tab.Rows = append(tab.Rows, rowMaker(
 				activated,
 				cmd.GetName(),
 				cmd.GetVersion(),
 				cmd.GetLocation(),
-			})
+			))
 		}
 
 		return tab.WriteTable(os.Stdout, &table.Config{
@@ -81,6 +105,7 @@ func init() {
 	flags.StringP("version", "v", "", "command version")
 	flags.StringP("location", "l", "", "command location")
 	flags.BoolP("activate", "a", false, "activate command")
+	flags.StringSliceP("fields", "f", []string{"Activated", "Name", "Version", "Location"}, "fields to display")
 
 	cfg := core.GetConfiguration()
 
@@ -89,6 +114,7 @@ func init() {
 		cfg.BindPFlag(core.CfgKeyXCommandListVersion, flags.Lookup("version")),
 		cfg.BindPFlag(core.CfgKeyXCommandListLocation, flags.Lookup("location")),
 		cfg.BindPFlag(core.CfgKeyXCommandListActivate, flags.Lookup("activate")),
+		cfg.BindPFlag(core.CfgKeyXCommandListFields, flags.Lookup("fields")),
 
 		utils.NewDefaultCobraCommandCompleteHelper(listCmd).RegisterAll(),
 	)
