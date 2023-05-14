@@ -1,14 +1,14 @@
 package command
 
 import (
-	"fmt"
 	"os"
-	"strings"
 
+	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/utils"
+	"github.com/tomlazar/table"
 )
 
 // listCmd represents the list command
@@ -47,21 +47,30 @@ var listCmd = &cobra.Command{
 			return err
 		}
 
-		utils.SortCommands(commands)
-		for _, command := range commands {
-			var parts []string
-			if command.GetActivated() {
-				parts = append(parts, "*")
-			} else {
-				parts = append(parts, " ")
-			}
-
-			parts = append(parts, command.GetName(), command.GetVersion())
-
-			_, _ = fmt.Fprintf(os.Stdout, "%s\n", strings.Join(parts, " "))
+		tab := table.Table{
+			Headers: []string{"Activated", "Name", "Version", "Location"},
 		}
 
-		return nil
+		utils.SortCommands(commands)
+		for _, cmd := range commands {
+			activated := ""
+			if cmd.GetActivated() {
+				activated = "*"
+			}
+
+			tab.Rows = append(tab.Rows, []string{
+				activated,
+				cmd.GetName(),
+				cmd.GetVersion(),
+				cmd.GetLocation(),
+			})
+		}
+
+		return tab.WriteTable(os.Stdout, &table.Config{
+			Color:           true,
+			AlternateColors: true,
+			TitleColorCode:  ansi.ColorCode("white+buf"),
+		})
 	}),
 }
 
