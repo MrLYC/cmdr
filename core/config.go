@@ -56,6 +56,7 @@ const (
 	CfgKeyXCommandListVersion  = "_.command.list.version"
 	CfgKeyXCommandListLocation = "_.command.list.location"
 	CfgKeyXCommandListActivate = "_.command.list.activate"
+	CfgKeyXCommandListFields   = "_.command.list.fields"
 	// cmd.command.remove
 	CfgKeyXCommandRemoveName    = "_.command.remove.name"
 	CfgKeyXCommandRemoveVersion = "_.command.remove.version"

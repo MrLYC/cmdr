@@ -1,14 +1,15 @@
 package command
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
+	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/utils"
+	"github.com/tomlazar/table"
 )
 
 // listCmd represents the list command
@@ -16,52 +17,60 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List commands",
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
-		name := cfg.GetString(core.CfgKeyXCommandListName)
-		version := cfg.GetString(core.CfgKeyXCommandListVersion)
-		location := cfg.GetString(core.CfgKeyXCommandListLocation)
-		activate := cfg.GetBool(core.CfgKeyXCommandListActivate)
-
-		query, err := manager.Query()
+		commands, err := queryCommands(
+			manager,
+			cfg.GetBool(core.CfgKeyXCommandListActivate),
+			cfg.GetString(core.CfgKeyXCommandListName),
+			cfg.GetString(core.CfgKeyXCommandListVersion),
+			cfg.GetString(core.CfgKeyXCommandListLocation),
+		)
 		if err != nil {
 			return err
 		}
 
-		if name != "" {
-			query.WithName(name)
-		}
-
-		if version != "" {
-			query.WithVersion(version)
-		}
-
-		if location != "" {
-			query.WithLocation(location)
-		}
-
-		if activate {
-			query.WithActivated(activate)
-		}
-
-		commands, err := query.All()
-		if err != nil {
-			return err
-		}
-
-		utils.SortCommands(commands)
-		for _, command := range commands {
-			var parts []string
-			if command.GetActivated() {
-				parts = append(parts, "*")
-			} else {
-				parts = append(parts, " ")
+		fields := cfg.GetStringSlice(core.CfgKeyXCommandListFields)
+		rowMaker := func(activateFlag string, name string, version string, location string) []string {
+			mappings := map[string]string{
+				"activated": activateFlag,
+				"name":      name,
+				"version":   version,
+				"location":  location,
 			}
 
-			parts = append(parts, command.GetName(), command.GetVersion())
+			results := make([]string, 0, len(fields))
+			for _, field := range fields {
+				result, ok := mappings[strings.ToLower(field)]
+				if ok {
+					results = append(results, result)
+				}
+			}
 
-			_, _ = fmt.Fprintf(os.Stdout, "%s\n", strings.Join(parts, " "))
+			return results
 		}
 
-		return nil
+		tab := table.Table{
+			Headers: rowMaker("Activated", "Name", "Version", "Location"),
+		}
+
+		for _, cmd := range commands {
+			activated := ""
+			if cmd.GetActivated() {
+				activated = "*"
+			}
+
+			tab.Rows = append(tab.Rows, rowMaker(
+				activated,
+				cmd.GetName(),
+				cmd.GetVersion(),
+				cmd.GetLocation(),
+			))
+		}
+
+		return tab.WriteTable(os.Stdout, &table.Config{
+			Color:           true,
+			AlternateColors: true,
+			TitleColorCode:  ansi.ColorCode("white+buf"),
+		})
 	}),
 }
 
@@ -72,6 +81,7 @@ func init() {
 	flags.StringP("version", "v", "", "command version")
 	flags.StringP("location", "l", "", "command location")
 	flags.BoolP("activate", "a", false, "activate command")
+	flags.StringSliceP("fields", "f", []string{"Activated", "Name", "Version", "Location"}, "fields to display")
 
 	cfg := core.GetConfiguration()
 
@@ -80,6 +90,7 @@ func init() {
 		cfg.BindPFlag(core.CfgKeyXCommandListVersion, flags.Lookup("version")),
 		cfg.BindPFlag(core.CfgKeyXCommandListLocation, flags.Lookup("location")),
 		cfg.BindPFlag(core.CfgKeyXCommandListActivate, flags.Lookup("activate")),
+		cfg.BindPFlag(core.CfgKeyXCommandListFields, flags.Lookup("fields")),
 
 		utils.NewDefaultCobraCommandCompleteHelper(listCmd).RegisterAll(),
 	)

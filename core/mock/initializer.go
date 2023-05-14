@@ -34,15 +34,15 @@ func (m *MockInitializer) EXPECT() *MockInitializerMockRecorder {
 }
 
 // Init mocks base method.
-func (m *MockInitializer) Init() error {
+func (m *MockInitializer) Init(isUpgrade bool) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Init")
+	ret := m.ctrl.Call(m, "Init", isUpgrade)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Init indicates an expected call of Init.
-func (mr *MockInitializerMockRecorder) Init() *gomock.Call {
+func (mr *MockInitializerMockRecorder) Init(isUpgrade interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockInitializer)(nil).Init))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockInitializer)(nil).Init), isUpgrade)
 }

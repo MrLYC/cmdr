@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/hashicorp/go-multierror"
+	ver "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
@@ -16,26 +17,9 @@ type CmdrUpdater struct {
 	manager  core.CommandManager
 }
 
-func (c *CmdrUpdater) getActivatedCmdrVersion() string {
-	query, err := c.manager.Query()
-	if err != nil {
-		return ""
-	}
-
-	command, err := query.
-		WithName(c.name).
-		WithActivated(true).
-		One()
-
-	if err != nil {
-		return ""
-	}
-
-	return command.GetVersion()
-}
-
-func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
+func (c *CmdrUpdater) removeLegacies() error {
 	logger := core.GetLogger()
+	currentVersion := ver.Must(ver.NewVersion(c.version))
 
 	query, err := c.manager.Query()
 	if err != nil {
@@ -52,7 +36,7 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 
 	var errs error
 	for _, command := range commands {
-		logger.Debug("checking legacy command", map[string]interface{}{
+		logger.Debug("checking command", map[string]interface{}{
 			"command": command,
 		})
 
@@ -60,23 +44,17 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 			continue
 		}
 
-		version := command.GetVersion()
-		isSafe := false
-		for _, safeVersion := range safeVersions {
-			if safeVersion == version {
-				isSafe = true
-				break
-			}
-		}
+		definedVersion := command.GetVersion()
+		semver := ver.Must(ver.NewVersion(definedVersion))
 
-		if isSafe {
+		if currentVersion.Compare(semver) <= 0 {
 			continue
 		}
 
 		logger.Info("removing legacy cmdr", map[string]interface{}{
 			"command": command,
 		})
-		err = c.manager.Undefine(c.name, version)
+		err = c.manager.Undefine(c.name, definedVersion)
 		if err != nil {
 			errs = multierror.Append(errs, err)
 		}
@@ -87,12 +65,6 @@ func (c *CmdrUpdater) removeLegacies(safeVersions []string) error {
 
 func (c *CmdrUpdater) Init(isUpgrade bool) error {
 	logger := core.GetLogger()
-	safeVersion := []string{c.version}
-	version := c.getActivatedCmdrVersion()
-	if version != "" {
-		safeVersion = append(safeVersion, version)
-	}
-
 	logger.Debug("update command", map[string]interface{}{
 		"name":    c.name,
 		"version": c.version,
@@ -110,7 +82,7 @@ func (c *CmdrUpdater) Init(isUpgrade bool) error {
 		return errors.Wrapf(err, "failed to activate command %s", c.name)
 	}
 
-	return c.removeLegacies(safeVersion)
+	return c.removeLegacies()
 }
 
 func NewCmdrUpdater(manager core.CommandManager, name, version, localtion string) *CmdrUpdater {

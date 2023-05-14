@@ -46,4 +46,18 @@ var _ = Describe("Utils", func() {
 
 		fn(&cmd, []string{})
 	})
+
+	It("should query commands", func() {
+		query := mock.NewMockCommandQuery(ctrl)
+		query.EXPECT().WithActivated(true).Return(query)
+		query.EXPECT().WithName("name").Return(query)
+		query.EXPECT().WithVersion("version").Return(query)
+		query.EXPECT().WithLocation("location").Return(query)
+		query.EXPECT().All().Return(nil, nil)
+
+		manager.EXPECT().Query().Return(query, nil)
+
+		_, err := queryCommands(manager, true, "name", "version", "location")
+		Expect(err).To(BeNil())
+	})
 })

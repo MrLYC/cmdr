@@ -71,7 +71,7 @@ func (m *DownloadManager) fetch(fetcher core.Fetcher, name, version, location, o
 		if err == nil {
 			break
 		} else {
-			logger.Warn("failed to download %s, retrying...", map[string]interface{}{
+			logger.Warn("download failed, retrying...", map[string]interface{}{
 				"uri": location,
 			})
 		}
