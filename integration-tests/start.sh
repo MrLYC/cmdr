@@ -11,6 +11,12 @@ source ./profile/cmdr_initializer.sh
 
 set -x
 
+newest_version=$(cmdr version)
+
+branch="$(git rev-parse --abbrev-ref HEAD)"
+cmdr command install -a -n cmdr -v "0.0.0" -l "go://github.com/mrlyc/cmdr@${branch}"
+cmdr init --upgrade
+
 cmdr command list -n cmdr
 cmdr config list
 
@@ -36,11 +42,6 @@ cmdr command list -n cmd -v "1.0.0" && false || true
 cmdr command remove -n cmd -v "2.0.0"
 cmdr command remove -n cmd -v "3.0.0"
 
-newest_version=$(cmdr version)
-
-branch="$(git rev-parse --abbrev-ref HEAD)"
-cmdr command install -a -n cmdr -v "0.0.0" -l "go://github.com/mrlyc/cmdr@${branch}"
-cmdr init --upgrade
 cmdr command remove -n cmdr -v "${newest_version}"
 
 cmdr upgrade
