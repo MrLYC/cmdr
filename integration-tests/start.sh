@@ -38,7 +38,7 @@ cmdr command remove -n cmd -v "3.0.0"
 
 newest_version=$(cmdr version)
 
-branch="${GITHUB_BRANCH:-${GITHUB_REF##*/}}"
+branch="$(git rev-parse --abbrev-ref HEAD)"
 cmdr command install -a -n cmdr -v "0.0.0" -l "go://github.com/mrlyc/cmdr@${branch}"
 cmdr init --upgrade
 cmdr command remove -n cmdr -v "${newest_version}"
