@@ -3,14 +3,10 @@
 root_dir="$(dirname $0)"
 
 set -e
+export CMDR_LOG_LEVEL=debug CMDR_CORE_CONFIG_PATH=/tmp/cmdr.yaml CMDR_CORE_ROOT_DIR=$(pwd)/.cmdr CMDR_CORE_PROFILE_DIR=$(pwd)/profile
 
 ./install.sh
 
-export CMDR_LOG_LEVEL=debug CMDR_CORE_CONFIG_PATH=/tmp/cmdr.yaml
-cmdr config set -k core.root_dir -v "$(pwd)/.cmdr"
-cmdr config set -k core.profile_dir -v "$(pwd)/profile"
-
-cmdr init
 source ./profile/cmdr_initializer.sh
 
 set -x
