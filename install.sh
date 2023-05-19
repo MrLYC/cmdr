@@ -40,12 +40,12 @@ case "${arch}" in
         ;;
 esac
 
-echo "Downloading cmdr ${os}(${goos}):${arch}(${goarch})..."
+echo "Downloading cmdr ${os}/${arch}..."
 
 set -ex
 target="/tmp/cmdr_${RANDOM}"
-download_url=$(curl --silent https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep browser_download_url |  grep -o "https://.*/cmdr_${goos}_${goarch}")
-curl -L -o "${target}" "${download_url}"
+tag_name="${curl --silent https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'}"
+curl -L -o "${target}" "https://github.com/MrLYC/cmdr/releases/download/${tag_name}/cmdr_${goos}_${goarch}"
 chmod +x "${target}"
 
 "${target}" init
