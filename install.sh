@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 os="$(uname -s)"
-case "${system}" in
+case "${os}" in
     Linux)
         goos=linux
         ;;
@@ -44,7 +44,7 @@ echo "Downloading cmdr ${os}(${goos}):${arch}(${goarch})..."
 
 set -ex
 target="/tmp/cmdr_${RANDOM}"
-download_url=$(curl --silent https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep browser_download_url |  grep -o "https://.*/cmdr_${goos}_${goarch}")
+download_url=$(curl --silentz https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep browser_download_url |  grep -o "https://.*/cmdr_${goos}_${goarch}")
 curl -L -o "${target}" "${download_url}"
 chmod +x "${target}"
 
