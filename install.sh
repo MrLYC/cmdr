@@ -14,11 +14,23 @@ case "$(uname -s)" in
 esac
 
 case "$(uname -m)" in
-    x86_64)
+    x86_64 | x64 | amd64)
         goarch=amd64
         ;;
-    arm64)
+    arm64 | aarch64 | armv8*)
         goarch=arm64
+        ;;
+    x86 | i686 | i386)
+        goarch=386
+        ;;
+    armv5*)
+        goarch=armv5
+        ;;
+    armv6*)
+        goarch=armv6
+        ;;
+    armv7*)
+        goarch=armv7
         ;;
     *)
         echo "Unsupported ARCH $(uname -a)"
@@ -26,7 +38,7 @@ case "$(uname -m)" in
         ;;
 esac
 
-set -x
+set -ex
 target="/tmp/cmdr_${RANDOM}"
 download_url=$(curl https://api.github.com/repos/MrLYC/cmdr/releases/latest 2>/dev/null | grep browser_download_url |  grep -o "https://.*/cmdr_${goos}_${goarch}")
 curl -L -o "${target}" "${download_url}"

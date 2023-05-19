@@ -4,13 +4,13 @@ root_dir="$(dirname $0)"
 
 set -e
 
-go build -o cmdr .
+./install.sh
 
 export CMDR_LOG_LEVEL=debug CMDR_CORE_CONFIG_PATH=/tmp/cmdr.yaml
-./cmdr config set -k core.root_dir -v "$(pwd)/.cmdr"
-./cmdr config set -k core.profile_dir -v "$(pwd)/profile"
+cmdr config set -k core.root_dir -v "$(pwd)/.cmdr"
+cmdr config set -k core.profile_dir -v "$(pwd)/profile"
 
-./cmdr init
+cmdr init
 source ./profile/cmdr_initializer.sh
 
 set -x
@@ -49,9 +49,11 @@ newest_version=$(cmdr version)
 test "${current_version}" != "${newest_version}"
 cmdr command list -n cmdr -a -v "${newest_version}"
 
-./cmdr init
+branch="${GITHUB_BRANCH:-${GITHUB_REF##*/}}"
+cmdr command install -a -n cmdr -v "0.0.0" -l "go://github.com/MrLYC/cmdr@${branch}"
+cmdr init
 
-./cmdr init --upgrade
+cmdr init --upgrade
 cmdr command list -n cmdr
 
 activated_version=$(cmdr version)
