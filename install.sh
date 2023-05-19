@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-case "$(uname -s)" in
+os="$(uname -s)"
+case "${system}" in
     Linux)
         goos=linux
         ;;
@@ -13,7 +14,8 @@ case "$(uname -s)" in
         ;;
 esac
 
-case "$(uname -m)" in
+arch="$(uname -m)"
+case "${arch}" in
     x86_64 | x64 | amd64)
         goarch=amd64
         ;;
@@ -38,9 +40,11 @@ case "$(uname -m)" in
         ;;
 esac
 
+echo "Downloading cmdr ${os}(${goos}):${arch}(${goarch})..."
+
 set -ex
 target="/tmp/cmdr_${RANDOM}"
-download_url=$(curl https://api.github.com/repos/MrLYC/cmdr/releases/latest 2>/dev/null | grep browser_download_url |  grep -o "https://.*/cmdr_${goos}_${goarch}")
+download_url=$(curl --silent https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep browser_download_url |  grep -o "https://.*/cmdr_${goos}_${goarch}")
 curl -L -o "${target}" "${download_url}"
 chmod +x "${target}"
 
