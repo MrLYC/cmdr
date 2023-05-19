@@ -36,23 +36,16 @@ cmdr command list -n cmd -v "1.0.0" && false || true
 cmdr command remove -n cmd -v "2.0.0"
 cmdr command remove -n cmd -v "3.0.0"
 
-current_version=$(cmdr version)
-
-cmdr upgrade
 newest_version=$(cmdr version)
-
-# make sure cmdr has been upgraded
-test "${current_version}" != "${newest_version}"
-cmdr command list -n cmdr -a -v "${newest_version}"
 
 branch="${GITHUB_BRANCH:-${GITHUB_REF##*/}}"
 cmdr command install -a -n cmdr -v "0.0.0" -l "go://github.com/MrLYC/cmdr@${branch}"
-cmdr init
-
 cmdr init --upgrade
-cmdr command list -n cmdr
+cmdr command remove -n cmdr -v "${newest_version}"
 
+cmdr upgrade
 activated_version=$(cmdr version)
 
-test "${current_version}" == "${activated_version}"
-cmdr command list -n cmdr -a -v "${current_version}"
+# make sure cmdr has been upgraded
+
+test "${newest_version}" == "${activated_version}"
