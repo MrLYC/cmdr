@@ -1,5 +1,18 @@
 #!/usr/bin/env bash
 
+set -e
+max_retry=3
+tag_name=""
+
+while getopts "r:t:" opt; do
+    case $opt in
+        r)  max_retry="${OPTARG}"  ;;
+        t)  tag_name="${OPTARG}"   ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
 os="$(uname -s)"
 case "${os}" in
     Linux)
@@ -40,18 +53,29 @@ case "${arch}" in
         ;;
 esac
 
-echo "Downloading cmdr ${os}/${arch}..."
+if [[ -z "${tag_name}" ]]; then
+    echo "Quering cmdr latest release for ${os}/${arch}..."
+    tag_name=$(curl --silent https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+fi
 
-set -ex
 target="/tmp/cmdr_${RANDOM}"
-tag_name=$(curl --silent https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-curl -L -o "${target}" "https://github.com/MrLYC/cmdr/releases/download/${tag_name}/cmdr_${goos}_${goarch}"
+download_url="https://github.com/MrLYC/cmdr/releases/download/${tag_name}/cmdr_${goos}_${goarch}"
+echo "Downloading cmdr ${tag_name} (${download_url})..."
+retry=0
+until curl -L -o "${target}" "${download_url}"; do
+    echo "Retry after 1 second..."
+    sleep 1
+    retry=$((retry + 1))
+    if [[ ${retry} -gt "${max_retry}" ]]; then
+        echo "Failed to download cmdr ${tag_name}"
+        exit 1
+    fi
+done
 chmod +x "${target}"
 
+echo "Initializing cmdr..."
 "${target}" init
 "${target}" command list -n cmdr
 
 rm -f "${target}"
-set +x
-
-echo "restart your terminal to activate the cmdr command"
+echo "Please restart your terminal to activate the cmdr command"
