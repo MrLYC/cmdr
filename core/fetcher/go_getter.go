@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+//go:generate mockgen -destination=mock/go_getter.go -package=mock github.com/hashicorp/go-getter Detector,ProgressTracker
+
 type GoGetter struct {
 	progressListener getter.ProgressTracker
 	detectors        []getter.Detector
