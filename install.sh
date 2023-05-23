@@ -3,14 +3,24 @@
 set -e
 
 max_retry=3
+retry_delay=1
 tag_name=""
+ghproxy=""
 
-while getopts "r:t:" opt; do
+while getopts "r:d:t:p" opt; do
     case $opt in
         r)  max_retry="${OPTARG}"  ;;
+        d)  retry_delay="${OPTARG}" ;;
         t)  tag_name="${OPTARG}"   ;;
+        p)  ghproxy="1"    ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 1
+            ;;
     esac
 done
+
+echo "${ghproxy}"
 
 shift $((OPTIND-1))
 
@@ -54,21 +64,43 @@ case "${arch}" in
         ;;
 esac
 
+function latest_tag_name() {
+    semver='v\d+\.\d+\.\d+'
+
+    query_by_api=$(curl -s https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep 'tag_name' | grep -o -E "${semver}" -m 1)
+    if [[ -n "${query_by_api}" ]]; then
+        echo "${query_by_api}"
+        return 0
+    fi
+
+    query_by_atom=$(curl -s https://github.com/MrLYC/cmdr/releases.atom | grep '<title>' | grep -o -E "${semver}" -m 1)
+    if [[ -n "${query_by_atom}" ]]; then
+        echo "${query_by_atom}"
+        return 0
+    fi
+
+    return 1
+}
+
 function download_cmdr() {
     if [[ -z "${tag_name}" ]]; then
         echo "Quering cmdr latest release for ${os}/${arch}..."
-        download_url=$(curl -s https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep browser_download_url | grep -o "https://.*/cmdr_${goos}_${goarch}")
-    else
-        download_url="https://github.com/MrLYC/cmdr/releases/download/${tag_name}/cmdr_${goos}_${goarch}"
+        tag_name="$(latest_tag_name)"
     fi
 
-    if [[ -z "${download_url}" ]]; then
-        echo "Failed to get cmdr download url"
+    if [[ -z "${tag_name}" ]]; then
+        echo "Failed to query cmdr latest release for ${os}/${arch}"
         return 1
     fi
 
+    download_url="https://github.com/MrLYC/cmdr/releases/download/${tag_name}/cmdr_${goos}_${goarch}"
+
+    if [[ "${ghproxy}" == "1" ]]; then
+        download_url="https://ghproxy.com/${download_url}"
+    fi
+
     target="$1"
-    echo "Downloading cmdr (${download_url})..."
+    echo "Downloading cmdr ${tag_name}..."
     curl -L -o "${target}" "${download_url}"
     chmod +x "${target}"
 }
@@ -84,7 +116,7 @@ until download_cmdr "${target}"; do
 
     echo "Failed to download cmdr, retry after 1 second"
     retry=$((retry+1))
-    sleep 1
+    sleep "${retry_delay}"
 done
 
 echo "Initializing cmdr..."
