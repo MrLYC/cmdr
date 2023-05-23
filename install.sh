@@ -57,7 +57,7 @@ esac
 function download_cmdr() {
     if [[ -z "${tag_name}" ]]; then
         echo "Quering cmdr latest release for ${os}/${arch}..."
-        download_url=$(curl -s https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep browser_download_url | grep -o "https://.*/cmdr_${goos}_${goarch})"
+        download_url=$(curl -s https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep browser_download_url | grep -o "https://.*/cmdr_${goos}_${goarch}")
     else
         download_url="https://github.com/MrLYC/cmdr/releases/download/${tag_name}/cmdr_${goos}_${goarch}"
     fi
