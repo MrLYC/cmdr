@@ -12,6 +12,11 @@ Run one for the following command to install the latest version of CMDR:
 curl -o- https://raw.githubusercontent.com/MrLYC/cmdr/master/install.sh | ${SHELL:-bash}
 ```
 
+For Chinese users, you can install the CMDR via a proxy:
+
+```shell
+curl -o- https://raw.githubusercontent.com/MrLYC/cmdr/master/install.sh | bash -s -p
+
 ### Manual
 1. Download the latest release from [GitHub](https://github.com/mrlyc/cmdr/releases/latest);
 2. Make sure the download asset is executable;

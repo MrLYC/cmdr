@@ -4,12 +4,19 @@ before:
   hooks:
     # You may remove this if you don't use go modules.
     - "go mod tidy"
+
 builds:
-  - env:
+  - id: "default"
+    env:
       - CGO_ENABLED=0
+    binary: |
+      cmdr_{{ .Os }}_{{ .Arch }}
+      {{- if .Arm -}}
+        v{{ .Arm }}
+      {{- end -}}
     goos:
-      - "linux"
       - "darwin"
+      - "linux"
     goarch:
       - "amd64"
       - "386"
@@ -24,10 +31,14 @@ builds:
       - "-X github.com/mrlyc/cmdr/core.Version={{.Version}}"
       - "-X github.com/mrlyc/cmdr/core.Commit={{.Commit}}"
       - "-X github.com/mrlyc/cmdr/core.BuildDate={{.Date}}"
-      - "-X github.com/mrlyc/cmdr/core.Asset={{ .Binary }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+      - "-X github.com/mrlyc/cmdr/core.Asset={{ .Binary }}"
+
 archives:
   - format: binary
-    name_template: "{{ .Binary }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    builds:
+      - default
+    name_template: "{{ .Binary }}"
+
 checksum:
   name_template: "checksums.txt"
 snapshot:
@@ -38,13 +49,3 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
-upx:
-  - # Whether to enable it or not.
-    enabled: true
-    # Compress argument.
-    # Valid options are from '1' (faster) to '9' (better), and 'best'.
-    compress: "1"
-    # Whether to try LZMA (slower).
-    lzma: false
-    # Whether to try all methods and filters (slow).
-    brute: false

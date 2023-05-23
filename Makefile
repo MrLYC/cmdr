@@ -8,7 +8,7 @@ build:
 
 .PHONY: goreleaser
 goreleaser:
-	goreleaser build --skip-validate --single-target --rm-dist --snapshot
+	goreleaser build --skip-validate --single-target --clean
 
 .PHONY: test
 test:
