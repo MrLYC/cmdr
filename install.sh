@@ -64,18 +64,16 @@ case "${arch}" in
         ;;
 esac
 
-function latest_tag_name() {
+function update_tag_name() {
     semver='v\d+\.\d+\.\d+'
 
-    query_by_api=$(curl -s https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep 'tag_name' | grep -o -E "${semver}" -m 1)
-    if [[ -n "${query_by_api}" ]]; then
-        echo "${query_by_api}"
+    tag_name=$(curl -s https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep 'tag_name' | grep -o -E "${semver}" -m 1)
+    if [[ -n "${tag_name}" ]]; then
         return 0
     fi
 
-    query_by_atom=$(curl -s https://github.com/MrLYC/cmdr/releases.atom | grep '<title>' | grep -o -E "${semver}" -m 1)
-    if [[ -n "${query_by_atom}" ]]; then
-        echo "${query_by_atom}"
+    tag_name=$(curl -s https://github.com/MrLYC/cmdr/releases.atom | grep '<title>' | grep -o -E "${semver}" -m 1)
+    if [[ -n "${tag_name}" ]]; then
         return 0
     fi
 
@@ -85,7 +83,7 @@ function latest_tag_name() {
 function download_cmdr() {
     if [[ -z "${tag_name}" ]]; then
         echo "Quering cmdr latest release for ${os}/${arch}..."
-        tag_name="$(latest_tag_name)"
+        update_tag_name
     fi
 
     if [[ -z "${tag_name}" ]]; then
@@ -112,9 +110,12 @@ until download_cmdr "${target}"; do
     if [[ "${retry}" -gt "${max_retry}" ]]; then
         echo "Failed to download cmdr"
         exit 1
+    elif [[ "${retry}" = "${max_retry}" ]]; then
+        echo "Activating proxy automaticly..."
+        ghproxy="1"
     fi
 
-    echo "Failed to download cmdr, retry after 1 second"
+    echo "Failed to download cmdr, retry after ${retry_delay} second"
     retry=$((retry+1))
     sleep "${retry_delay}"
 done
