@@ -38,3 +38,13 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+upx:
+  - # Whether to enable it or not.
+    enabled: true
+    # Compress argument.
+    # Valid options are from '1' (faster) to '9' (better), and 'best'.
+    compress: "1"
+    # Whether to try LZMA (slower).
+    lzma: true
+    # Whether to try all methods and filters (slow).
+    brute: true

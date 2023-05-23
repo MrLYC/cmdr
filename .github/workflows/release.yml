@@ -17,6 +17,10 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: 1.19.x
+      - name: Install UPX
+        uses: crazy-max/ghaction-upx@v2
+        with:
+          install-only: true
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -27,4 +31,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Install
-        run: curl -o- https://raw.githubusercontent.com/MrLYC/cmdr/master/install.sh | bash
+        run: curl -o- https://raw.githubusercontent.com/MrLYC/cmdr/master/install.sh | bash -s "$(git rev-parse --abbrev-ref HEAD)"
