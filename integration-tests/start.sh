@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 root_dir="$(dirname $0)"
-export CMDR_LOG_LEVEL=debug CMDR_CORE_CONFIG_PATH=/tmp/cmdr.yaml CMDR_CORE_ROOT_DIR=$(pwd)/.cmdr CMDR_CORE_PROFILE_DIR=$(pwd)/profile
 
 set -e
+export CMDR_LOG_LEVEL=debug CMDR_CORE_CONFIG_PATH=/tmp/cmdr.yaml CMDR_CORE_ROOT_DIR=$(pwd)/.cmdr CMDR_CORE_PROFILE_DIR=$(pwd)/profile
 
 ./install.sh -d 30
 
@@ -13,8 +13,8 @@ set -x
 
 newest_version=$(cmdr version)
 
-commit_hash="$(git rev-parse HEAD)"
-cmdr command install -a -n cmdr -v "0.0.0" -l "go://github.com/mrlyc/cmdr@${commit_hash}"
+branch="${cmdr_branch:-$(git rev-parse --abbrev-ref HEAD)}"
+cmdr command install -a -n cmdr -v "0.0.0" -l "go://github.com/mrlyc/cmdr@${branch}"
 cmdr init --upgrade
 
 cmdr command list -n cmdr

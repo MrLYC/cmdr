@@ -17,4 +17,6 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - name: Integration tests
-        run: integration-tests/start.sh
+        run: |
+          export cmdr_branch="${GITHUB_REF#refs/heads/}"
+          integration-tests/start.sh
