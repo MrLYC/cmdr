@@ -67,12 +67,12 @@ esac
 function update_tag_name() {
     semver='v\d+\.\d+\.\d+'
 
-    tag_name=$(curl -s https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep 'tag_name' | grep -o -E "${semver}" -m 1)
+    tag_name=$(curl -s https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep 'tag_name' | grep -o "v[^"]*")
     if [[ -n "${tag_name}" ]]; then
         return 0
     fi
 
-    tag_name=$(curl -s https://github.com/MrLYC/cmdr/releases.atom | grep '<title>' | grep -o -E "${semver}" -m 1)
+    tag_name=$(curl -s https://github.com/MrLYC/cmdr/releases.atom | grep '<title>' | grep -o 'v[^<]*' -m 1)
     if [[ -n "${tag_name}" ]]; then
         return 0
     fi
