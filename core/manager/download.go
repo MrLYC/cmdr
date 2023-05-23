@@ -123,7 +123,7 @@ func init() {
 		}
 
 		return NewDownloadManager(manager, []core.Fetcher{
-			fetcher.NewGoInstaller(),
+			fetcher.NewDefaultGoInstaller(),
 			fetcher.NewDefaultGoGetter(os.Stderr),
 		}, 3), nil
 	})

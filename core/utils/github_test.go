@@ -172,7 +172,7 @@ var _ = Describe("Github", func() {
 			Expect(info.Version).To(Equal("1.0.1"))
 			Expect(info.Asset).To(Equal("cmdr-goos-goarch"))
 			Expect(info.Url).To(Equal(
-				"https://github.com/MrLYC/cmdr/releases/download/v1.0.1/cmdr-goos-goarch",
+				"https://github.com/mrlyc/cmdr/releases/download/v1.0.1/cmdr-goos-goarch",
 			))
 		})
 
@@ -184,7 +184,7 @@ var _ = Describe("Github", func() {
 			Expect(info.Version).To(Equal("1.0.0"))
 			Expect(info.Asset).To(Equal("cmdr-goos-goarch"))
 			Expect(info.Url).To(Equal(
-				"https://github.com/MrLYC/cmdr/releases/download/v1.0.0/cmdr-goos-goarch",
+				"https://github.com/mrlyc/cmdr/releases/download/v1.0.0/cmdr-goos-goarch",
 			))
 		})
 	})

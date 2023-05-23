@@ -50,6 +50,7 @@ func (g *GoInstaller) Fetch(name, version, uri, dst string) error {
 		fmt.Sprintf("%s@%s", location, version),
 		fmt.Sprintf("%s@v%s", location, version),
 		fmt.Sprintf("%s@latest", location),
+		location,
 	} {
 		logger.Warn("version suffix not set, detecting", map[string]interface{}{
 			"suffix": detected,
@@ -63,9 +64,13 @@ func (g *GoInstaller) Fetch(name, version, uri, dst string) error {
 	return err
 }
 
-func NewGoInstaller() *GoInstaller {
+func NewGoInstaller(goPath string, schema string) *GoInstaller {
 	return &GoInstaller{
-		goPath: "go",
-		scheme: "go://",
+		goPath: goPath,
+		scheme: schema,
 	}
+}
+
+func NewDefaultGoInstaller() *GoInstaller {
+	return NewGoInstaller("go", "go://")
 }

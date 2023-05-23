@@ -16,7 +16,6 @@ import (
 	"github.com/mrlyc/cmdr/core"
 )
 
-//
 var (
 	ErrGithubReleaseAssetNotFound = errors.New("github release asset not found")
 )
@@ -195,7 +194,7 @@ func (s *CmdrFeedFetcher) GetReleaseAsset(ctx context.Context, releaseName, asse
 	result.Version = releaseVersion.String()
 	result.Asset = assetName
 	result.Url = fmt.Sprintf(
-		`https://github.com/MrLYC/cmdr/releases/download/%s/%s`,
+		`https://github.com/mrlyc/cmdr/releases/download/%s/%s`,
 		item.Title, assetName,
 	)
 

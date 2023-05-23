@@ -3,17 +3,19 @@
 root_dir="$(dirname $0)"
 
 set -e
+export CMDR_LOG_LEVEL=debug CMDR_CORE_CONFIG_PATH=/tmp/cmdr.yaml CMDR_CORE_ROOT_DIR=$(pwd)/.cmdr CMDR_CORE_PROFILE_DIR=$(pwd)/profile
 
-go build -o cmdr .
+./install.sh
 
-export CMDR_LOG_LEVEL=debug CMDR_CORE_CONFIG_PATH=/tmp/cmdr.yaml
-./cmdr config set -k core.root_dir -v "$(pwd)/.cmdr"
-./cmdr config set -k core.profile_dir -v "$(pwd)/profile"
-
-./cmdr init
 source ./profile/cmdr_initializer.sh
 
 set -x
+
+newest_version=$(cmdr version)
+
+branch="$(git rev-parse --abbrev-ref HEAD)"
+cmdr command install -a -n cmdr -v "0.0.0" -l "go://github.com/mrlyc/cmdr@${branch}"
+cmdr init --upgrade
 
 cmdr command list -n cmdr
 cmdr config list
@@ -40,21 +42,11 @@ cmdr command list -n cmd -v "1.0.0" && false || true
 cmdr command remove -n cmd -v "2.0.0"
 cmdr command remove -n cmd -v "3.0.0"
 
-current_version=$(cmdr version)
+cmdr command remove -n cmdr -v "${newest_version}"
 
 cmdr upgrade
-newest_version=$(cmdr version)
-
-# make sure cmdr has been upgraded
-test "${current_version}" != "${newest_version}"
-cmdr command list -n cmdr -a -v "${newest_version}"
-
-./cmdr init
-
-./cmdr init --upgrade
-cmdr command list -n cmdr
-
 activated_version=$(cmdr version)
 
-test "${current_version}" == "${activated_version}"
-cmdr command list -n cmdr -a -v "${current_version}"
+# make sure cmdr has been upgraded
+
+test "${newest_version}" == "${activated_version}"

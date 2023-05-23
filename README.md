@@ -1,5 +1,5 @@
 # CMDR
-[![test](https://github.com/MrLYC/cmdr/actions/workflows/test.yml/badge.svg)](https://github.com/MrLYC/cmdr/actions/workflows/test.yml) [![codecov](https://codecov.io/gh/MrLYC/cmdr/branch/master/graph/badge.svg?token=mo4TJP4mQt)](https://codecov.io/gh/MrLYC/cmdr) ![Go version](https://img.shields.io/github/go-mod/go-version/mrlyc/cmdr) ![release](https://img.shields.io/github/v/release/mrlyc/cmdr?label=version)
+[![unittest](https://github.com/mrlyc/cmdr/actions/workflows/unittest.yml/badge.svg)](https://github.com/mrlyc/cmdr/actions/workflows/unittest.yml) [![integration-test](https://github.com/mrlyc/cmdr/actions/workflows/integration-test.yml/badge.svg)](https://github.com/mrlyc/cmdr/actions/workflows/integration-test.yml) [![codecov](https://codecov.io/gh/MrLYC/cmdr/branch/master/graph/badge.svg?token=mo4TJP4mQt)](https://codecov.io/gh/MrLYC/cmdr) ![Go version](https://img.shields.io/github/go-mod/go-version/mrlyc/cmdr) ![release](https://img.shields.io/github/v/release/mrlyc/cmdr?label=version)
 
 CMDR is a simple command version management tool that helps you quickly switch from multiple command versions.
 
@@ -13,7 +13,7 @@ curl -o- https://raw.githubusercontent.com/MrLYC/cmdr/master/install.sh | ${SHEL
 ```
 
 ### Manual
-1. Download the latest release from [GitHub](https://github.com/MrLYC/cmdr/releases/latest);
+1. Download the latest release from [GitHub](https://github.com/mrlyc/cmdr/releases/latest);
 2. Make sure the download asset is executable;
 3. Run the following command to install the binary:
     ```shell
