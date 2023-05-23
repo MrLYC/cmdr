@@ -13,7 +13,7 @@ set -x
 
 newest_version=$(cmdr version)
 
-branch="${cmdr_branch:-$(git rev-parse --abbrev-ref HEAD)}"
+branch="$(git rev-parse --abbrev-ref HEAD)"
 cmdr command install -a -n cmdr -v "0.0.0" -l "go://github.com/mrlyc/cmdr@${branch}"
 cmdr init --upgrade
 

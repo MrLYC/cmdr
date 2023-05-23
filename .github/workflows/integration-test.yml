@@ -1,4 +1,4 @@
-on: [pull_request, release]
+on: [push, release]
 name: integration-test
 jobs:
   test:
@@ -17,6 +17,4 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - name: Integration tests
-        run: |
-          export cmdr_branch="${GITHUB_REF#refs/heads/}"
-          integration-tests/start.sh
+        run: integration-tests/start.sh
