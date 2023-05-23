@@ -67,7 +67,7 @@ esac
 function update_tag_name() {
     semver='v\d+\.\d+\.\d+'
 
-    tag_name=$(curl -s https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep 'tag_name' | grep -o "v[^"]*")
+    tag_name=$(curl -s https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep 'tag_name' | grep -o 'v[^"]*')
     if [[ -n "${tag_name}" ]]; then
         return 0
     fi
