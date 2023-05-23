@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
+
 max_retry=3
 tag_name=""
 
@@ -53,25 +54,38 @@ case "${arch}" in
         ;;
 esac
 
-if [[ -z "${tag_name}" ]]; then
-    echo "Quering cmdr latest release for ${os}/${arch}..."
-    tag_name=$(curl --silent https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-fi
+function download_cmdr() {
+    if [[ -z "${tag_name}" ]]; then
+        echo "Quering cmdr latest release for ${os}/${arch}..."
+        download_url=$(curl -s https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep browser_download_url | grep -o "https://.*/cmdr_${goos}_${goarch}"
+    else
+        download_url="https://github.com/MrLYC/cmdr/releases/download/${tag_name}/cmdr_${goos}_${goarch}"
+    fi
 
+    if [[ -z "${download_url}" ]]; then
+        echo "Failed to get cmdr download url"
+        return 1
+    fi
+
+    target="$1"
+    echo "Downloading cmdr (${download_url})..."
+    curl -L -o "${target}" "${download_url}"
+    chmod +x "${target}"
+}
+
+echo "Downloading cmdr..."
 target="/tmp/cmdr_${RANDOM}"
-download_url="https://github.com/MrLYC/cmdr/releases/download/${tag_name}/cmdr_${goos}_${goarch}"
-echo "Downloading cmdr ${tag_name} (${download_url})..."
 retry=0
-until curl -L -o "${target}" "${download_url}"; do
-    echo "Retry after 1 second..."
-    sleep 1
-    retry=$((retry + 1))
-    if [[ ${retry} -gt "${max_retry}" ]]; then
-        echo "Failed to download cmdr ${tag_name}"
+until download_cmdr "${target}"; do
+    if [[ "${retry}" -gt "${max_retry}" ]]; then
+        echo "Failed to download cmdr"
         exit 1
     fi
+
+    echo "Failed to download cmdr, retry after 1 second"
+    retry=$((retry+1))
+    sleep 1
 done
-chmod +x "${target}"
 
 echo "Initializing cmdr..."
 "${target}" init
