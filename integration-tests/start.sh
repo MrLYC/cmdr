@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 root_dir="$(dirname $0)"
+export CMDR_LOG_LEVEL=debug CMDR_CORE_CONFIG_PATH=/tmp/cmdr.yaml CMDR_CORE_ROOT_DIR=$(pwd)/.cmdr CMDR_CORE_PROFILE_DIR=$(pwd)/profile
 
 set -e
-export CMDR_LOG_LEVEL=debug CMDR_CORE_CONFIG_PATH=/tmp/cmdr.yaml CMDR_CORE_ROOT_DIR=$(pwd)/.cmdr CMDR_CORE_PROFILE_DIR=$(pwd)/profile
 
 ./install.sh -d 30
 
