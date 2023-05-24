@@ -3,7 +3,6 @@ package initializer
 import (
 	"os"
 
-	"github.com/hashicorp/go-multierror"
 	ver "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 
@@ -17,13 +16,13 @@ type CmdrUpdater struct {
 	manager  core.CommandManager
 }
 
-func (c *CmdrUpdater) removeLegacies() error {
+func (c *CmdrUpdater) collectLegacyVersions() ([]string, error) {
 	logger := core.GetLogger()
 	currentVersion := ver.Must(ver.NewVersion(c.version))
 
 	query, err := c.manager.Query()
 	if err != nil {
-		return errors.Wrapf(err, "failed to create command query")
+		return nil, errors.Wrapf(err, "failed to create command query")
 	}
 
 	commands, err := query.
@@ -31,10 +30,10 @@ func (c *CmdrUpdater) removeLegacies() error {
 		All()
 
 	if err != nil {
-		return errors.Wrapf(err, "failed to get commands")
+		return nil, errors.Wrapf(err, "failed to get commands")
 	}
 
-	var errs error
+	legacyVersions := make([]string, 0, len(commands))
 	for _, command := range commands {
 		logger.Debug("checking command", map[string]interface{}{
 			"command": command,
@@ -51,16 +50,13 @@ func (c *CmdrUpdater) removeLegacies() error {
 			continue
 		}
 
-		logger.Info("removing legacy cmdr", map[string]interface{}{
+		logger.Info("collected legacy cmdr", map[string]interface{}{
 			"command": command,
 		})
-		err = c.manager.Undefine(c.name, definedVersion)
-		if err != nil {
-			errs = multierror.Append(errs, err)
-		}
+		legacyVersions = append(legacyVersions, definedVersion)
 	}
 
-	return errs
+	return legacyVersions, nil
 }
 
 func (c *CmdrUpdater) Init(isUpgrade bool) error {
@@ -70,6 +66,11 @@ func (c *CmdrUpdater) Init(isUpgrade bool) error {
 		"version": c.version,
 	})
 
+	legacyVersions, err := c.collectLegacyVersions()
+	if err != nil {
+		return errors.Wrapf(err, "failed to collect legacy versions")
+	}
+
 	if !isUpgrade {
 		_, err := c.manager.Define(c.name, c.version, c.location)
 		if err != nil {
@@ -77,12 +78,19 @@ func (c *CmdrUpdater) Init(isUpgrade bool) error {
 		}
 	}
 
-	err := c.manager.Activate(c.name, c.version)
+	err = c.manager.Activate(c.name, c.version)
 	if err != nil {
 		return errors.Wrapf(err, "failed to activate command %s", c.name)
 	}
 
-	return c.removeLegacies()
+	for _, version := range legacyVersions {
+		err = c.manager.Undefine(c.name, version)
+		if err != nil {
+			return errors.Wrapf(err, "failed to undefine command %s", c.name)
+		}
+	}
+
+	return nil
 }
 
 func NewCmdrUpdater(manager core.CommandManager, name, version, localtion string) *CmdrUpdater {
