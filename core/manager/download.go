@@ -66,6 +66,9 @@ func (m *DownloadManager) search(name, output string) (string, error) {
 func (m *DownloadManager) fetch(fetcher core.Fetcher, name, version, location, output string) (string, error) {
 	var err error
 	logger := core.GetLogger()
+	logger.Info("fetching", map[string]interface{}{
+		"uri": location,
+	})
 
 	for i := 0; i < m.retries; i++ {
 		err = fetcher.Fetch(name, version, location, output)

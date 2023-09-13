@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"regexp"
 	"text/template"
+
+	"github.com/mrlyc/cmdr/core"
 )
 
 type Replacement struct {
@@ -12,6 +14,8 @@ type Replacement struct {
 }
 
 func (r *Replacement) ReplaceString(s string) (string, bool) {
+	logger := core.GetLogger()
+
 	regexp := regexp.MustCompile(r.Match)
 	if !regexp.MatchString(s) {
 		return s, false
@@ -26,7 +30,14 @@ func (r *Replacement) ReplaceString(s string) (string, bool) {
 		return s, false
 	}
 
-	return buf.String(), true
+	replaced := buf.String()
+	logger.Debug("replaced", map[string]interface{}{
+		"location": s,
+		"match":    r.Match,
+		"replaced": replaced,
+	})
+
+	return replaced, true
 }
 
 func NewReplacement(match, replacement string) *Replacement {

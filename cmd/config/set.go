@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/utils"
@@ -32,7 +33,10 @@ var setCmd = &cobra.Command{
 		}
 
 		key := cfg.GetString(core.CfgKeyXConfigSetKey)
-		value := cfg.GetString(core.CfgKeyXConfigSetValue)
+		yamlValue := cfg.GetString(core.CfgKeyXConfigSetValue)
+
+		var value interface{}
+		utils.PanicOnError("mark yaml value", yaml.Unmarshal([]byte(yamlValue), &value))
 
 		userCfg.Set(key, value)
 
