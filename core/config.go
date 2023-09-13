@@ -41,6 +41,9 @@ const (
 	CfgKeyLogLevel  = "log.level"
 	CfgKeyLogOutput = "log.output"
 
+	// download
+	CfgKeyDownloadReplace = "download.replace"
+
 	// cmd.command.define
 	CfgKeyXCommandDefineName     = "_.command.define.name"
 	CfgKeyXCommandDefineVersion  = "_.command.define.version"

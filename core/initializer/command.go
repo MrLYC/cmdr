@@ -25,9 +25,17 @@ func (c *CmdrUpdater) collectLegacyVersions() ([]string, error) {
 		return nil, errors.Wrapf(err, "failed to create command query")
 	}
 
-	commands, err := query.
-		WithName(c.name).
-		All()
+	query = query.WithName(c.name)
+	count, err := query.Count()
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to count commands")
+	}
+
+	if count == 0 {
+		return nil, nil
+	}
+
+	commands, err := query.All()
 
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get commands")
