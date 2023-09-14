@@ -64,34 +64,13 @@ case "${arch}" in
         ;;
 esac
 
-function update_tag_name() {
-    semver='v\d+\.\d+\.\d+'
-
-    tag_name=$(curl -s https://api.github.com/repos/MrLYC/cmdr/releases/latest | grep 'tag_name' | grep -o 'v[^"]*')
-    if [[ -n "${tag_name}" ]]; then
-        return 0
-    fi
-
-    tag_name=$(curl -s https://github.com/MrLYC/cmdr/releases.atom | grep '<title>' | grep -o 'v[^<]*' -m 1)
-    if [[ -n "${tag_name}" ]]; then
-        return 0
-    fi
-
-    return 1
-}
 
 function download_cmdr() {
     if [[ -z "${tag_name}" ]]; then
-        echo "Quering cmdr latest release for ${os}/${arch}..."
-        update_tag_name
+        download_url="https://github.com/MrLYC/cmdr/releases/latest/download/cmdr_${goos}_${goarch}"
+    else
+        download_url="https://github.com/MrLYC/cmdr/releases/download/${tag_name}/cmdr_${goos}_${goarch}"
     fi
-
-    if [[ -z "${tag_name}" ]]; then
-        echo "Failed to query cmdr latest release for ${os}/${arch}"
-        return 1
-    fi
-
-    download_url="https://github.com/MrLYC/cmdr/releases/download/${tag_name}/cmdr_${goos}_${goarch}"
 
     if [[ "${ghproxy}" == "1" ]]; then
         download_url="https://ghproxy.com/${download_url}"

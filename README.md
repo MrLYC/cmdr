@@ -16,6 +16,7 @@ For Chinese users, you can install the CMDR via a proxy:
 
 ```shell
 curl -o- https://raw.githubusercontent.com/MrLYC/cmdr/master/install.sh | bash -s -p
+```
 
 ### Manual
 1. Download the latest release from [GitHub](https://github.com/mrlyc/cmdr/releases/latest);
@@ -45,8 +46,17 @@ Use a specified command version:
 cmdr command use -n <command-name> -v <version>
 ```
 
-## Upgrade
+## Features
+
+### Upgrade
 To upgrade the CMDR, just run:
 ```shell
 cmdr upgrade
+```
+
+### Url replacement
+Speed up the download process by replacing the `url` to github proxy:
+```shell
+cmdr config set -k download.replace -v '{"match": "^https://raw.githubusercontent.com/.*$", "template": "https://ghproxy.com/{{ .input | urlquery }}"}'
+cmdr command install -n install.sh -v 0.0.0 -l https://raw.githubusercontent.com/MrLYC/cmdr/master/install.sh
 ```
