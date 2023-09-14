@@ -57,6 +57,6 @@ cmdr upgrade
 ### Url replacement
 Speed up the download process by replacing the `url` to github proxy:
 ```shell
-cmdr config set -k download.replace -v '{"match": "^https://raw.githubusercontent.com/.*$", "template": "https://ghproxy.com/{{ .location | urlquery }}"}'
+cmdr config set -k download.replace -v '{"match": "^https://raw.githubusercontent.com/.*$", "template": "https://ghproxy.com/{{ .input | urlquery }}"}'
 cmdr command install -n install.sh -v 0.0.0 -l https://raw.githubusercontent.com/MrLYC/cmdr/master/install.sh
 ```

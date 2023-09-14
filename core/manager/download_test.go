@@ -14,6 +14,7 @@ import (
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/manager"
 	"github.com/mrlyc/cmdr/core/mock"
+	"github.com/mrlyc/cmdr/core/utils"
 )
 
 var _ = Describe("Download", func() {
@@ -50,7 +51,7 @@ var _ = Describe("Download", func() {
 		BeforeEach(func() {
 			fetcher = mock.NewMockFetcher(ctrl)
 			baseManager = mock.NewMockCommandManager(ctrl)
-			downloadManager = manager.NewDownloadManager(baseManager, []core.Fetcher{fetcher}, 1)
+			downloadManager = manager.NewDownloadManager(baseManager, []core.Fetcher{fetcher}, 1, nil)
 		})
 
 		It("should call base manager", func() {
@@ -139,6 +140,23 @@ var _ = Describe("Download", func() {
 				"sub/dir/cmdr": 0755,
 			}, "cmdr"),
 		)
+
+		It("should replace url", func() {
+			input := "http://github.com/MrLYC/cmdr"
+			replaced := "mock://github.com/MrLYC/cmdr"
+
+			downloadManager.SetReplacements(utils.Replacements{
+				{
+					Match:    "http://(.*)",
+					Template: "mock://{{ index .group 1 }}",
+				},
+			})
+
+			fetcher.EXPECT().IsSupport(replaced).Return(false)
+			baseManager.EXPECT().Define(name, version, replaced)
+
+			Expect(downloadManager.Define(name, version, input)).To(Succeed())
+		})
 	})
 
 	Context("Factory", func() {

@@ -16,15 +16,17 @@ type Replacement struct {
 func (r *Replacement) ReplaceString(s string) (string, bool) {
 	logger := core.GetLogger()
 
-	regexp := regexp.MustCompile(r.Match)
-	if !regexp.MatchString(s) {
+	regex := regexp.MustCompile(r.Match)
+	group := regex.FindStringSubmatch(s)
+	if group == nil {
 		return s, false
 	}
 
 	tmpl := template.Must(template.New("").Parse(r.Template))
 	buf := &bytes.Buffer{}
 	err := tmpl.Execute(buf, map[string]interface{}{
-		"location": s,
+		"input": s,
+		"group": group,
 	})
 	if err != nil {
 		return s, false
@@ -40,17 +42,10 @@ func (r *Replacement) ReplaceString(s string) (string, bool) {
 	return replaced, true
 }
 
-func NewReplacement(match, replacement string) *Replacement {
-	return &Replacement{
-		Match:    match,
-		Template: replacement,
-	}
-}
-
 type Replacements []*Replacement
 
-func (r *Replacements) ReplaceString(s string) (string, bool) {
-	for _, r := range *r {
+func (r Replacements) ReplaceString(s string) (string, bool) {
+	for _, r := range r {
 		s, ok := r.ReplaceString(s)
 		if ok {
 			return s, ok

@@ -20,6 +20,10 @@ type DownloadManager struct {
 	replacements utils.Replacements
 }
 
+func (m *DownloadManager) SetReplacements(replacements utils.Replacements) {
+	m.replacements = replacements
+}
+
 func (m *DownloadManager) search(name, output string) (string, error) {
 	files := utils.NewSortedHeap(1)
 	nameLength := float64(len(name))
