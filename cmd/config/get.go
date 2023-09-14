@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/utils"
@@ -16,9 +17,12 @@ var getCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := core.GetConfiguration()
 		key := cfg.GetString(core.CfgKeyXConfigGetKey)
-		value := cfg.Get(key)
+		var dumps interface{}
+		utils.PanicOnError("unmarshal config failed", cfg.UnmarshalKey(key, &dumps))
 
-		fmt.Printf("key: %s, type: %T, value: %v\n", key, value, value)
+		out, err := yaml.Marshal(dumps)
+		utils.PanicOnError("marshal config failed", err)
+		fmt.Printf("%s", out)
 	},
 }
 

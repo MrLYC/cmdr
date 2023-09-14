@@ -15,8 +15,13 @@ import (
 
 type DownloadManager struct {
 	core.CommandManager
-	fetchers []core.Fetcher
-	retries  int
+	fetchers     []core.Fetcher
+	retries      int
+	replacements utils.Replacements
+}
+
+func (m *DownloadManager) SetReplacements(replacements utils.Replacements) {
+	m.replacements = replacements
 }
 
 func (m *DownloadManager) search(name, output string) (string, error) {
@@ -65,6 +70,9 @@ func (m *DownloadManager) search(name, output string) (string, error) {
 func (m *DownloadManager) fetch(fetcher core.Fetcher, name, version, location, output string) (string, error) {
 	var err error
 	logger := core.GetLogger()
+	logger.Info("fetching", map[string]interface{}{
+		"uri": location,
+	})
 
 	for i := 0; i < m.retries; i++ {
 		err = fetcher.Fetch(name, version, location, output)
@@ -85,6 +93,8 @@ func (m *DownloadManager) fetch(fetcher core.Fetcher, name, version, location, o
 }
 
 func (m *DownloadManager) Define(name string, version string, uriOrLocation string) (core.Command, error) {
+	uriOrLocation, _ = m.replacements.ReplaceString(uriOrLocation)
+
 	for _, fetcher := range m.fetchers {
 		if !fetcher.IsSupport(uriOrLocation) {
 			continue
@@ -107,11 +117,14 @@ func (m *DownloadManager) Define(name string, version string, uriOrLocation stri
 	return m.CommandManager.Define(name, version, uriOrLocation)
 }
 
-func NewDownloadManager(manager core.CommandManager, fetchers []core.Fetcher, retries int) *DownloadManager {
+func NewDownloadManager(
+	manager core.CommandManager, fetchers []core.Fetcher, retries int, replacements utils.Replacements,
+) *DownloadManager {
 	return &DownloadManager{
 		CommandManager: manager,
 		fetchers:       fetchers,
 		retries:        retries,
+		replacements:   replacements,
 	}
 }
 
@@ -122,9 +135,16 @@ func init() {
 			utils.ExitOnError("Failed to create command manager", err)
 		}
 
+		var replacements utils.Replacements
+
+		err = cfg.UnmarshalKey(core.CfgKeyDownloadReplace, &replacements)
+		if err != nil {
+			utils.ExitOnError("Failed to parse download replace config", err)
+		}
+
 		return NewDownloadManager(manager, []core.Fetcher{
 			fetcher.NewDefaultGoInstaller(),
 			fetcher.NewDefaultGoGetter(os.Stderr),
-		}, 3), nil
+		}, 3, replacements), nil
 	})
 }

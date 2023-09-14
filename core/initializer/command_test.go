@@ -41,6 +41,7 @@ var _ = Describe("Command", func() {
 		query.EXPECT().WithActivated(true).Return(query).AnyTimes()
 		query.EXPECT().All().Return([]core.Command{legacyCommand, activatedCommand}, nil).AnyTimes()
 		query.EXPECT().One().Return(activatedCommand, nil).AnyTimes()
+		query.EXPECT().Count().Return(2, nil).AnyTimes()
 
 		manager = mock.NewMockCommandManager(ctrl)
 		manager.EXPECT().Query().Return(query, nil).AnyTimes()
