@@ -26,7 +26,7 @@ func (m *DownloadManager) SetReplacements(replacements utils.Replacements) {
 
 func (m *DownloadManager) search(name, output string) (string, error) {
 	files := utils.NewSortedHeap(1)
-	nameLength := float64(len(name))
+	nameLower := strings.ToLower(name)
 
 	err := filepath.Walk(output, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
@@ -43,7 +43,7 @@ func (m *DownloadManager) search(name, output string) (string, error) {
 		}
 
 		file := filepath.Base(path)
-		if strings.Contains(file, name) {
+		if strings.Contains(strings.ToLower(file), nameLower) {
 			score += nameLength / float64(len(file))
 		}
 
