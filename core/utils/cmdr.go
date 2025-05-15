@@ -65,9 +65,9 @@ func UpgradeCmdr(ctx context.Context, cfg core.Configuration, url, version strin
 	currentVersion := ver.Must(ver.NewVersion(core.Version))
 	targetVersion := ver.Must(ver.NewVersion(version))
 
-	if currentVersion.Equal(targetVersion) {
-		return errors.Wrapf(ErrCmdrAlreadyLatestVersion, core.Version)
-	}
+   if currentVersion.Equal(targetVersion) {
+	   return errors.Wrapf(ErrCmdrAlreadyLatestVersion, "%s", core.Version)
+   }
 
 	name := core.Name
 	manager, err := core.NewCommandManager(core.CommandProviderDownload, cfg)
