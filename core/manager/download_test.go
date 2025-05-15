@@ -1,7 +1,7 @@
 package manager_test
 
+
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -67,7 +67,7 @@ var _ = Describe("Download", func() {
 			fetcher.EXPECT().IsSupport(uri).Return(true)
 			fetcher.EXPECT().Fetch(name, version, gomock.Any(), gomock.Any()).DoAndReturn(func(name, version, uri, dir string) error {
 				targetPath = filepath.Join(dir, "cmdr")
-				Expect(ioutil.WriteFile(targetPath, []byte(""), 0755)).To(Succeed())
+				Expect(os.WriteFile(targetPath, []byte(""), 0755)).To(Succeed())
 
 				return nil
 			})
@@ -89,7 +89,7 @@ var _ = Describe("Download", func() {
 				for path, mode := range files {
 					target := filepath.Join(dir, path)
 					Expect(os.MkdirAll(filepath.Dir(target), 0755)).To(Succeed())
-					Expect(ioutil.WriteFile(target, []byte(""), mode)).To(Succeed())
+					Expect(os.WriteFile(target, []byte(""), mode)).To(Succeed())
 				}
 
 				return nil

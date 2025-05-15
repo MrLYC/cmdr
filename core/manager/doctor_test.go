@@ -1,8 +1,8 @@
 package manager_test
 
+
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -177,7 +177,7 @@ var _ = Describe("Doctor", func() {
 			command = mock.NewMockCommand(ctrl)
 			doctor = manager.NewCommandDoctor(mgr)
 
-			rootDir, _ = ioutil.TempDir("", "")
+			rootDir, _ = os.MkdirTemp("", "")
 
 			command.EXPECT().GetName().Return("command").AnyTimes()
 			command.EXPECT().GetVersion().Return("1.0.1").AnyTimes()
@@ -227,7 +227,7 @@ var _ = Describe("Doctor", func() {
 			BeforeEach(func() {
 				mgr.EXPECT().Query().Return(query, nil)
 				query.EXPECT().All().Return([]core.Command{command}, nil)
-				Expect(ioutil.WriteFile(command.GetLocation(), []byte("command"), 0644)).To(Succeed())
+				Expect(os.WriteFile(command.GetLocation(), []byte("command"), 0644)).To(Succeed())
 			})
 
 			It("should re-define activated command", func() {

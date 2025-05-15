@@ -1,9 +1,9 @@
 package initializer_test
 
+
 import (
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -155,7 +155,7 @@ var _ = Describe("Filesystem", func() {
 			Expect(filepath.Join(rootDir, "hello.txt")).To(BeAnExistingFile())
 			Expect(filepath.Join(rootDir, `{{.GetString "config.key"}}.txt.gotmpl`)).NotTo(BeARegularFile())
 
-			content, err := ioutil.ReadFile(filepath.Join(rootDir, "hello.txt"))
+			content, err := os.ReadFile(filepath.Join(rootDir, "hello.txt"))
 			Expect(err).To(BeNil())
 			Expect(string(content)).To(Equal("hello"))
 		})

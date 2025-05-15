@@ -1,11 +1,11 @@
 package initializer
 
+
 import (
 	"fmt"
 	"html/template"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -217,7 +217,7 @@ func (r *DirRender) renderFile(path string, info os.FileInfo) error {
 	}
 	defer utils.CallClose(dstFile)
 
-	templateContent, err := ioutil.ReadFile(path)
+	templateContent, err := os.ReadFile(path)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read %s", path)
 	}
