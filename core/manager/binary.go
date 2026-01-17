@@ -279,6 +279,8 @@ func (m *BinaryManager) Define(name string, version string, location string) (co
 			} else {
 				shimsName = oldShimsName
 			}
+		} else if !os.IsNotExist(err) {
+			return nil, errors.Wrapf(err, "stat old path %s failed", oldPath)
 		} else {
 			shimsName = normalizedShimsName
 		}
