@@ -81,10 +81,7 @@ var _ = Describe("Binary", func() {
 				Expect(b.GetActivated()).To(BeTrue())
 			})
 		})
-
 	})
-
-})
 
 	Context("BinariesFilter", func() {
 		var (
