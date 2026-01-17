@@ -44,6 +44,18 @@ const (
 	// download
 	CfgKeyDownloadReplace = "download.replace"
 
+	// download.strategies
+	CfgKeyDownloadDirectTimeout    = "download.direct.timeout"
+	CfgKeyDownloadDirectMaxRetries = "download.direct.max_retries"
+
+	CfgKeyDownloadProxyEnabled    = "download.proxy.enabled"
+	CfgKeyDownloadProxyType       = "download.proxy.type"
+	CfgKeyDownloadProxyAddress    = "download.proxy.address"
+	CfgKeyDownloadProxyTimeout    = "download.proxy.timeout"
+	CfgKeyDownloadProxyMaxRetries = "download.proxy.max_retries"
+
+	CfgKeyDownloadRewriteRule = "download.rewrite.rule"
+
 	// cmd.command.define
 	CfgKeyXCommandDefineName     = "_.command.define.name"
 	CfgKeyXCommandDefineVersion  = "_.command.define.version"

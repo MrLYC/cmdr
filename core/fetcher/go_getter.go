@@ -3,6 +3,7 @@ package fetcher
 import (
 	"io"
 	"os"
+	"sync"
 
 	"github.com/hashicorp/go-getter"
 	"github.com/mrlyc/cmdr/core/utils"
@@ -15,6 +16,7 @@ type GoGetter struct {
 	progressListener getter.ProgressTracker
 	detectors        []getter.Detector
 	options          []getter.ClientOption
+	optionsMutex     sync.RWMutex
 }
 
 func (d *GoGetter) IsSupport(uri string) bool {
@@ -23,13 +25,17 @@ func (d *GoGetter) IsSupport(uri string) bool {
 }
 
 func (d *GoGetter) Fetch(name, version, uri, dst string) error {
+	d.optionsMutex.RLock()
+	options := d.options
+	d.optionsMutex.RUnlock()
+
 	client := getter.Client{
 		Src:              uri,
 		Dst:              dst,
 		Pwd:              os.TempDir(),
 		Mode:             getter.ClientModeAny,
 		Detectors:        d.detectors,
-		Options:          d.options,
+		Options:          options,
 		ProgressListener: d.progressListener,
 	}
 
@@ -39,6 +45,12 @@ func (d *GoGetter) Fetch(name, version, uri, dst string) error {
 	}
 
 	return nil
+}
+
+func (d *GoGetter) SetOptions(options []getter.ClientOption) {
+	d.optionsMutex.Lock()
+	defer d.optionsMutex.Unlock()
+	d.options = options
 }
 
 func NewGoGetter(progressListener getter.ProgressTracker, detectors []getter.Detector, options []getter.ClientOption) *GoGetter {
