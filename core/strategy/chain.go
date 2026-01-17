@@ -20,11 +20,35 @@ func (c *StrategyChain) AddStrategy(strategy DownloadStrategy) {
 	c.strategies = append(c.strategies, strategy)
 }
 
+func (c *StrategyChain) GetEnabledStrategies(uri string) []DownloadStrategy {
+	logger := core.GetLogger()
+	var enabled []DownloadStrategy
+
+	for _, strategy := range c.strategies {
+		if strategy.IsEnabled(uri) {
+			logger.Debug("strategy enabled for URI", map[string]interface{}{
+				"strategy": strategy.Name(),
+				"uri":      uri,
+			})
+			enabled = append(enabled, strategy)
+		}
+	}
+
+	return enabled
+}
+
 func (c *StrategyChain) Execute(uri string, downloadFunc func(string) error) error {
 	logger := core.GetLogger()
 	var lastErr error
 
-	for strategyIdx, strategy := range c.strategies {
+	// Get strategies that are enabled for this URI
+	enabledStrategies := c.GetEnabledStrategies(uri)
+	if len(enabledStrategies) == 0 {
+		// No strategy enabled, try all strategies (backward compatibility)
+		enabledStrategies = c.strategies
+	}
+
+	for strategyIdx, strategy := range enabledStrategies {
 		strategyName := strategy.Name()
 
 		// Prepare URI with strategy
@@ -88,8 +112,8 @@ func (c *StrategyChain) Execute(uri string, downloadFunc func(string) error) err
 		}
 
 		// If this is not the last strategy and we have error, continue to next
-		if strategyIdx < len(c.strategies)-1 {
-			nextStrategy := c.strategies[strategyIdx+1]
+		if strategyIdx < len(enabledStrategies)-1 {
+			nextStrategy := enabledStrategies[strategyIdx+1]
 			logger.Info("switching to next strategy", map[string]interface{}{
 				"current": strategyName,
 				"next":    nextStrategy.Name(),

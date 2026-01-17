@@ -45,6 +45,39 @@ var _ = Describe("DirectStrategy", func() {
 		Expect(options).NotTo(BeNil())
 		Expect(len(options)).To(BeNumerically(">", 0))
 	})
+
+	It("should be enabled by default", func() {
+		err := strategy.Configure(cfg)
+		Expect(err).To(BeNil())
+		Expect(strategy.IsEnabled("https://example.com/file")).To(BeTrue())
+	})
+
+	It("should be enabled when condition matches scheme", func() {
+		cfg.Set("download.direct.condition.schemes", []string{"https"})
+		err := strategy.Configure(cfg)
+		Expect(err).To(BeNil())
+
+		Expect(strategy.IsEnabled("https://example.com/file")).To(BeTrue())
+		Expect(strategy.IsEnabled("http://example.com/file")).To(BeFalse())
+	})
+
+	It("should be enabled when condition matches host", func() {
+		cfg.Set("download.direct.condition.hosts", []string{"github.com"})
+		err := strategy.Configure(cfg)
+		Expect(err).To(BeNil())
+
+		Expect(strategy.IsEnabled("https://github.com/file")).To(BeTrue())
+		Expect(strategy.IsEnabled("https://gitlab.com/file")).To(BeFalse())
+	})
+
+	It("should be enabled when condition matches pattern", func() {
+		cfg.Set("download.direct.condition.patterns", []string{"*.github.com"})
+		err := strategy.Configure(cfg)
+		Expect(err).To(BeNil())
+
+		Expect(strategy.IsEnabled("https://api.github.com/file")).To(BeTrue())
+		Expect(strategy.IsEnabled("https://example.com/file")).To(BeFalse())
+	})
 })
 
 var _ = Describe("ProxyStrategy", func() {
@@ -72,7 +105,7 @@ var _ = Describe("ProxyStrategy", func() {
 	It("should be disabled by default", func() {
 		err := strategy.Configure(cfg)
 		Expect(err).To(BeNil())
-		Expect(strategy.IsEnabled()).To(BeFalse())
+		Expect(strategy.IsEnabled("https://example.com/file")).To(BeFalse())
 	})
 
 	It("should configure with proxy settings", func() {
@@ -84,10 +117,36 @@ var _ = Describe("ProxyStrategy", func() {
 
 		err := strategy.Configure(cfg)
 		Expect(err).To(BeNil())
-		Expect(strategy.IsEnabled()).To(BeTrue())
+		Expect(strategy.IsEnabled("https://example.com/file")).To(BeTrue())
 
 		options := strategy.GetOptions()
 		Expect(options).NotTo(BeNil())
+	})
+
+	It("should be enabled only for configured schemes", func() {
+		cfg.Set("download.proxy.enabled", true)
+		cfg.Set("download.proxy.type", "http")
+		cfg.Set("download.proxy.address", "http://proxy:8080")
+		cfg.Set("download.proxy.condition.schemes", []string{"https"})
+
+		err := strategy.Configure(cfg)
+		Expect(err).To(BeNil())
+
+		Expect(strategy.IsEnabled("https://github.com/file")).To(BeTrue())
+		Expect(strategy.IsEnabled("http://github.com/file")).To(BeFalse())
+	})
+
+	It("should be enabled only for configured hosts", func() {
+		cfg.Set("download.proxy.enabled", true)
+		cfg.Set("download.proxy.type", "http")
+		cfg.Set("download.proxy.address", "http://proxy:8080")
+		cfg.Set("download.proxy.condition.hosts", []string{"github.com"})
+
+		err := strategy.Configure(cfg)
+		Expect(err).To(BeNil())
+
+		Expect(strategy.IsEnabled("https://github.com/file")).To(BeTrue())
+		Expect(strategy.IsEnabled("https://gitlab.com/file")).To(BeFalse())
 	})
 })
 
@@ -113,6 +172,12 @@ var _ = Describe("RewriteStrategy", func() {
 		Expect(result).To(Equal(uri))
 	})
 
+	It("should be disabled by default", func() {
+		err := strategy.Configure(cfg)
+		Expect(err).To(BeNil())
+		Expect(strategy.IsEnabled("https://example.com/file")).To(BeFalse())
+	})
+
 	It("should rewrite URI with template", func() {
 		cfg.Set("download.rewrite.rule", "https://mirror.example.com/{{.Path}}")
 
@@ -123,12 +188,29 @@ var _ = Describe("RewriteStrategy", func() {
 		result, err := strategy.Prepare(uri)
 		Expect(err).To(BeNil())
 		Expect(result).To(ContainSubstring("mirror.example.com"))
+		Expect(strategy.IsEnabled(uri)).To(BeTrue())
 	})
 
-	It("should be disabled by default", func() {
+	It("should be enabled only for configured schemes", func() {
+		cfg.Set("download.rewrite.rule", "https://mirror.com{{.Path}}")
+		cfg.Set("download.rewrite.condition.schemes", []string{"https"})
+
 		err := strategy.Configure(cfg)
 		Expect(err).To(BeNil())
-		Expect(strategy.IsEnabled()).To(BeFalse())
+
+		Expect(strategy.IsEnabled("https://github.com/file")).To(BeTrue())
+		Expect(strategy.IsEnabled("http://github.com/file")).To(BeFalse())
+	})
+
+	It("should be enabled only for configured hosts", func() {
+		cfg.Set("download.rewrite.rule", "https://mirror.com{{.Path}}")
+		cfg.Set("download.rewrite.condition.hosts", []string{"github.com"})
+
+		err := strategy.Configure(cfg)
+		Expect(err).To(BeNil())
+
+		Expect(strategy.IsEnabled("https://github.com/file")).To(BeTrue())
+		Expect(strategy.IsEnabled("https://gitlab.com/file")).To(BeFalse())
 	})
 })
 
@@ -167,5 +249,25 @@ var _ = Describe("StrategyChain", func() {
 
 		Expect(err).NotTo(BeNil())
 		Expect(attemptCount).To(BeNumerically(">", 1))
+	})
+
+	It("should use only enabled strategies", func() {
+		enabledCount := 0
+
+		proxy := NewProxyStrategy()
+		cfg := viper.New()
+		cfg.Set("download.proxy.enabled", false)
+
+		proxy.Configure(cfg)
+
+		chain := NewStrategyChain(proxy)
+
+		err := chain.Execute("https://example.com/file", func(uri string) error {
+			enabledCount++
+			return ErrNetworkError
+		})
+
+		Expect(enabledCount).To(Equal(0))
+		Expect(err).NotTo(BeNil())
 	})
 })
