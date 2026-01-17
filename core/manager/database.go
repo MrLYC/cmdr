@@ -53,7 +53,10 @@ func (m *DatabaseManager) getOrNew(name string, version string) (*Command, bool,
 	}
 
 	command.Name = name
-	command.Version = version
+	if !found {
+		semver := ver.Must(ver.NewVersion(version))
+		command.Version = semver.String()
+	}
 
 	return &command, found, nil
 }

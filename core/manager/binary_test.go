@@ -81,6 +81,23 @@ var _ = Describe("Binary", func() {
 				Expect(b.GetActivated()).To(BeTrue())
 			})
 		})
+
+		Context("Version normalization", func() {
+			It("should normalize version 1.4 to 1.4.0", func() {
+				b := manager.NewBinary(binDir, shimsDir, commandName, "1.4", "command_1.4.0")
+				Expect(b.GetVersion()).To(Equal("1.4.0"))
+			})
+
+			It("should normalize version 0 to 0.0.0", func() {
+				b := manager.NewBinary(binDir, shimsDir, commandName, "0", "command_0.0.0")
+				Expect(b.GetVersion()).To(Equal("0.0.0"))
+			})
+
+			It("should keep version 1.4.0 as is", func() {
+				b := manager.NewBinary(binDir, shimsDir, commandName, "1.4.0", "command_1.4.0")
+				Expect(b.GetVersion()).To(Equal("1.4.0"))
+			})
+		})
 	})
 
 	Context("BinariesFilter", func() {
@@ -338,6 +355,59 @@ var _ = Describe("Binary", func() {
 				Expect(command.GetName()).To(Equal(commandName))
 				Expect(command.GetVersion()).To(Equal(version))
 				Expect(command.GetLocation()).To(Equal(getShimsPath(command.GetName())))
+			})
+		})
+
+		Context("Version normalization", func() {
+			It("should define command with version 1.4 and create file 1.4.0", func() {
+				testCmd := "testcmd"
+				tempDir, _ := os.MkdirTemp("", "")
+				location := filepath.Join(tempDir, "location")
+				Expect(os.WriteFile(location, []byte(""), 0755)).To(Succeed())
+
+				_, err := mgr.Define(testCmd, "1.4", location)
+				Expect(err).To(Succeed())
+
+				shimsPath := filepath.Join(shimsDir, testCmd, "testcmd_1.4.0")
+				Expect(shimsPath).To(BeARegularFile())
+
+				cmd, err := mgr.Query().WithName(testCmd).One()
+				Expect(err).To(BeNil())
+				Expect(cmd.GetVersion()).To(Equal("1.4.0"))
+			})
+
+			It("should undefine command with version 1.4 when file is 1.4.0", func() {
+				testCmd := "testcmd"
+				cmdShimsDir := filepath.Join(shimsDir, testCmd)
+				Expect(os.MkdirAll(cmdShimsDir, 0755)).To(Succeed())
+				Expect(os.WriteFile(
+					filepath.Join(cmdShimsDir, "testcmd_1.4.0"),
+					[]byte(""),
+					0755,
+				)).To(Succeed())
+
+				err := mgr.Undefine(testCmd, "1.4")
+				Expect(err).To(Succeed())
+
+				shimsPath := filepath.Join(shimsDir, testCmd, "testcmd_1.4.0")
+				Expect(shimsPath).NotTo(BeAnExistingFile())
+			})
+
+			It("should handle version 0.0.0 correctly", func() {
+				testCmd := "testcmd"
+				cmdShimsDir := filepath.Join(shimsDir, testCmd)
+				Expect(os.MkdirAll(cmdShimsDir, 0755)).To(Succeed())
+				Expect(os.WriteFile(
+					filepath.Join(cmdShimsDir, "testcmd_0.0.0"),
+					[]byte(""),
+					0755,
+				)).To(Succeed())
+
+				err := mgr.Undefine(testCmd, "0")
+				Expect(err).To(Succeed())
+
+				shimsPath := filepath.Join(shimsDir, testCmd, "testcmd_0.0.0")
+				Expect(shimsPath).NotTo(BeAnExistingFile())
 			})
 		})
 

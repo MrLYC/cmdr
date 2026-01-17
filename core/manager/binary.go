@@ -32,7 +32,8 @@ func (b *Binary) GetName() string {
 }
 
 func (b *Binary) GetVersion() string {
-	return b.version
+	semver := ver.Must(ver.NewVersion(b.version))
+	return semver.String()
 }
 
 func (b *Binary) GetActivated() bool {
@@ -158,7 +159,8 @@ func (m *BinaryManager) Provider() core.CommandProvider {
 }
 
 func (m *BinaryManager) ShimsName(name, version string) string {
-	return fmt.Sprintf("%s_%s", name, version)
+	semver := ver.Must(ver.NewVersion(version))
+	return fmt.Sprintf("%s_%s", name, semver.String())
 }
 
 func (m *BinaryManager) Query() (core.CommandQuery, error) {
