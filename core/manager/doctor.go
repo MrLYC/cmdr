@@ -229,6 +229,7 @@ func (d *CommandDoctor) Fix() error {
 				"name":    name,
 				"version": version,
 			})
+
 			availableCommands = append(availableCommands, cmd)
 			continue
 		}
@@ -288,6 +289,15 @@ func (d *CommandDoctor) Fix() error {
 			}
 		}
 	}
+
+	return nil
+}
+
+func NewCommandDoctor(manager core.CommandManager) *CommandDoctor {
+	return &CommandDoctor{
+		CommandManager: manager,
+	}
+}
 
 	return nil
 }

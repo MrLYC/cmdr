@@ -82,23 +82,9 @@ var _ = Describe("Binary", func() {
 			})
 		})
 
-		Context("Version normalization", func() {
-			It("should normalize version 1.4 to 1.4.0", func() {
-				b := manager.NewBinary(binDir, shimsDir, commandName, "1.4", "command_1.4.0")
-				Expect(b.GetVersion()).To(Equal("1.4.0"))
-			})
-
-			It("should normalize version 0 to 0.0.0", func() {
-				b := manager.NewBinary(binDir, shimsDir, commandName, "0", "command_0.0.0")
-				Expect(b.GetVersion()).To(Equal("0.0.0"))
-			})
-
-			It("should keep version 1.4.0 as is", func() {
-				b := manager.NewBinary(binDir, shimsDir, commandName, "1.4.0", "command_1.4.0")
-				Expect(b.GetVersion()).To(Equal("1.4.0"))
-			})
-		})
 	})
+
+})
 
 	Context("BinariesFilter", func() {
 		var (
@@ -358,8 +344,8 @@ var _ = Describe("Binary", func() {
 			})
 		})
 
-		Context("Version normalization", func() {
-			It("should define command with version 1.4 and create file 1.4.0", func() {
+		Context("Version normalization and backward compatibility", func() {
+			It("should create new format (1.4.0) for new command", func() {
 				testCmd := "testcmd"
 				tempDir, _ := os.MkdirTemp("", "")
 				location := filepath.Join(tempDir, "location")
@@ -370,13 +356,48 @@ var _ = Describe("Binary", func() {
 
 				shimsPath := filepath.Join(shimsDir, testCmd, "testcmd_1.4.0")
 				Expect(shimsPath).To(BeARegularFile())
-
-				cmd, err := mgr.Query().WithName(testCmd).One()
-				Expect(err).To(BeNil())
-				Expect(cmd.GetVersion()).To(Equal("1.4.0"))
 			})
 
-			It("should undefine command with version 1.4 when file is 1.4.0", func() {
+			It("should keep old format (1.4) if file exists", func() {
+				testCmd := "testcmd"
+				cmdShimsDir := filepath.Join(shimsDir, testCmd)
+				Expect(os.MkdirAll(cmdShimsDir, 0755)).To(Succeed())
+				oldShimsPath := filepath.Join(cmdShimsDir, "testcmd_1.4")
+				Expect(os.WriteFile(oldShimsPath, []byte("old"), 0755)).To(Succeed())
+
+				tempDir, _ := os.MkdirTemp("", "")
+				location := filepath.Join(tempDir, "location")
+				Expect(os.WriteFile(location, []byte(""), 0755)).To(Succeed())
+
+				cmd, err := mgr.Define(testCmd, "1.4", location)
+				Expect(err).To(BeNil())
+				Expect(oldShimsPath).To(BeARegularFile())
+				Expect(cmd.GetVersion()).To(Equal("1.4"))
+			})
+
+			It("should migrate old format (1.4) to new format (1.4.0) on redefine", func() {
+				testCmd := "testcmd"
+				cmdShimsDir := filepath.Join(shimsDir, testCmd)
+				Expect(os.MkdirAll(cmdShimsDir, 0755)).To(Succeed())
+				oldShimsPath := filepath.Join(cmdShimsDir, "testcmd_1.4")
+				Expect(os.WriteFile(oldShimsPath, []byte("old"), 0755)).To(Succeed())
+
+				tempDir, _ := os.MkdirTemp("", "")
+				location := filepath.Join(tempDir, "location")
+				Expect(os.WriteFile(location, []byte(""), 0755)).To(Succeed())
+
+				_, err := mgr.Undefine(testCmd, "1.4")
+				Expect(err).To(Succeed())
+
+				_, err = mgr.Define(testCmd, "1.4", location)
+				Expect(err).To(Succeed())
+
+				newShimsPath := filepath.Join(shimsDir, testCmd, "testcmd_1.4.0")
+				Expect(oldShimsPath).NotTo(BeAnExistingFile())
+				Expect(newShimsPath).To(BeARegularFile())
+			})
+
+			It("should remove command with version 1.4 when file is 1.4.0", func() {
 				testCmd := "testcmd"
 				cmdShimsDir := filepath.Join(shimsDir, testCmd)
 				Expect(os.MkdirAll(cmdShimsDir, 0755)).To(Succeed())
@@ -408,6 +429,26 @@ var _ = Describe("Binary", func() {
 
 				shimsPath := filepath.Join(shimsDir, testCmd, "testcmd_0.0.0")
 				Expect(shimsPath).NotTo(BeAnExistingFile())
+			})
+
+			It("should activate command with version 1.4 when file is 1.4.0", func() {
+				testCmd := "testcmd"
+				cmdShimsDir := filepath.Join(shimsDir, testCmd)
+				Expect(os.MkdirAll(cmdShimsDir, 0755)).To(Succeed())
+				Expect(os.WriteFile(
+					filepath.Join(cmdShimsDir, "testcmd_1.4.0"),
+					[]byte(""),
+					0755,
+				)).To(Succeed())
+
+				err := mgr.Activate(testCmd, "1.4")
+				Expect(err).To(Succeed())
+
+				binPath := filepath.Join(binDir, testCmd)
+				Expect(binPath).To(BeAnExistingFile())
+
+				target, _ := os.Readlink(binPath)
+				Expect(target).To(Equal(filepath.Join(cmdShimsDir, "testcmd_1.4.0")))
 			})
 		})
 
