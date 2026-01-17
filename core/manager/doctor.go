@@ -3,6 +3,7 @@ package manager
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -49,9 +50,20 @@ func (m *DoctorManager) all(fn func(mgr core.CommandManager) error) error {
 	return errs
 }
 
+func (m *DoctorManager) eachStopOnError(fn func(mgr core.CommandManager) error) error {
+	for _, mgr := range []core.CommandManager{m.binaryMgr, m.databaseMgr} {
+		err := fn(mgr)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (d *DoctorManager) Define(name, version, location string) (core.Command, error) {
 	var command core.Command
-	err := d.all(func(mgr core.CommandManager) error {
+	err := d.eachStopOnError(func(mgr core.CommandManager) error {
 		cmd, err := mgr.Define(name, version, location)
 		if err != nil {
 			return err
@@ -63,19 +75,19 @@ func (d *DoctorManager) Define(name, version, location string) (core.Command, er
 }
 
 func (d *DoctorManager) Undefine(name, version string) error {
-	return d.all(func(mgr core.CommandManager) error {
+	return d.eachStopOnError(func(mgr core.CommandManager) error {
 		return mgr.Undefine(name, version)
 	})
 }
 
 func (d *DoctorManager) Activate(name, version string) error {
-	return d.all(func(mgr core.CommandManager) error {
+	return d.eachStopOnError(func(mgr core.CommandManager) error {
 		return mgr.Activate(name, version)
 	})
 }
 
 func (d *DoctorManager) Deactivate(name string) error {
-	return d.all(func(mgr core.CommandManager) error {
+	return d.eachStopOnError(func(mgr core.CommandManager) error {
 		return mgr.Deactivate(name)
 	})
 }
@@ -98,7 +110,7 @@ func (d *DoctorManager) Query() (core.CommandQuery, error) {
 
 	recorderQuery, recorderErr := d.databaseMgr.Query()
 	if recorderErr != nil {
-		return mainQuery, mainErr
+		return mainQuery, nil
 	}
 
 	var queriedCommands []core.Command
@@ -151,6 +163,31 @@ type CommandDoctor struct {
 	core.CommandManager
 }
 
+func checkFileAccessible(location string) (bool, error) {
+	info, err := os.Stat(location)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, errors.Wrapf(err, "stat file failed: %s", location)
+	}
+
+	if info.IsDir() {
+		return false, nil
+	}
+
+	absPath, err := filepath.Abs(location)
+	if err != nil {
+		return false, errors.Wrapf(err, "get abs path failed: %s", location)
+	}
+
+	if info.Mode()&0111 == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 func (d *CommandDoctor) Fix() error {
 	logger := core.GetLogger()
 
@@ -177,8 +214,17 @@ func (d *CommandDoctor) Fix() error {
 			"location": location,
 		})
 
-		_, err := os.Stat(location)
-		if err == nil {
+		accessible, err := checkFileAccessible(location)
+		if err != nil {
+			logger.Warn("check command accessibility failed, treat as unavailable", map[string]interface{}{
+				"name":     name,
+				"version":  version,
+				"location": location,
+				"error":    err.Error(),
+			})
+		}
+
+		if accessible {
 			logger.Debug("command is available", map[string]interface{}{
 				"name":    name,
 				"version": version,
@@ -210,7 +256,7 @@ func (d *CommandDoctor) Fix() error {
 		})
 		err = d.Undefine(name, version)
 		if err != nil {
-			logger.Error("remove command failed, aborted", map[string]interface{}{
+			logger.Error("remove command failed, continue", map[string]interface{}{
 				"name":    name,
 				"version": version,
 			})

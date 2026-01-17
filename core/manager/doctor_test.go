@@ -1,6 +1,5 @@
 package manager_test
 
-
 import (
 	"fmt"
 	"os"
@@ -159,6 +158,46 @@ var _ = Describe("Doctor", func() {
 				Expect(result.GetLocation()).To(Equal("/path/to/command"))
 				Expect(result.GetActivated()).To(BeTrue())
 			})
+
+			It("should handle multiple versions", func() {
+				mainCommand1 := mock.NewMockCommand(ctrl)
+				mainCommand1.EXPECT().GetName().Return("command").AnyTimes()
+				mainCommand1.EXPECT().GetVersion().Return("1.0.0").AnyTimes()
+				mainCommand1.EXPECT().GetLocation().Return("/path/to/command1").AnyTimes()
+				mainCommand1.EXPECT().GetActivated().Return(true).AnyTimes()
+
+				mainCommand2 := mock.NewMockCommand(ctrl)
+				mainCommand2.EXPECT().GetName().Return("command").AnyTimes()
+				mainCommand2.EXPECT().GetVersion().Return("2.0.0").AnyTimes()
+				mainCommand2.EXPECT().GetLocation().Return("/path/to/command2").AnyTimes()
+				mainCommand2.EXPECT().GetActivated().Return(false).AnyTimes()
+
+				recorderCommand1 := mock.NewMockCommand(ctrl)
+				recorderCommand1.EXPECT().GetName().Return("command").AnyTimes()
+				recorderCommand1.EXPECT().GetVersion().Return("1.0.0").AnyTimes()
+				recorderCommand1.EXPECT().GetLocation().Return("no_important1").AnyTimes()
+				recorderCommand1.EXPECT().GetActivated().Return(true).AnyTimes()
+
+				recorderCommand2 := mock.NewMockCommand(ctrl)
+				recorderCommand2.EXPECT().GetName().Return("command").AnyTimes()
+				recorderCommand2.EXPECT().GetVersion().Return("2.0.0").AnyTimes()
+				recorderCommand2.EXPECT().GetLocation().Return("no_important2").AnyTimes()
+				recorderCommand2.EXPECT().GetActivated().Return(false).AnyTimes()
+
+				gomock.InOrder(
+					mainManager.EXPECT().Query().Return(mainQuery, nil),
+					recorderManager.EXPECT().Query().Return(recorderQuery, nil),
+					mainQuery.EXPECT().All().Return([]core.Command{mainCommand1, mainCommand2}, nil),
+					recorderQuery.EXPECT().All().Return([]core.Command{recorderCommand1, recorderCommand2}, nil),
+				)
+
+				query, err := doctor.Query()
+				Expect(err).To(BeNil())
+
+				count, err := query.Count()
+				Expect(err).To(BeNil())
+				Expect(count).To(Equal(2))
+			})
 		})
 	})
 
@@ -227,7 +266,7 @@ var _ = Describe("Doctor", func() {
 			BeforeEach(func() {
 				mgr.EXPECT().Query().Return(query, nil)
 				query.EXPECT().All().Return([]core.Command{command}, nil)
-				Expect(os.WriteFile(command.GetLocation(), []byte("command"), 0644)).To(Succeed())
+				Expect(os.WriteFile(command.GetLocation(), []byte("command"), 0755)).To(Succeed())
 			})
 
 			It("should re-define activated command", func() {
@@ -242,6 +281,25 @@ var _ = Describe("Doctor", func() {
 				command.EXPECT().GetActivated().Return(false).AnyTimes()
 				mgr.EXPECT().Define(command.GetName(), command.GetVersion(), command.GetLocation())
 
+				Expect(doctor.Fix()).To(Succeed())
+			})
+
+			It("should treat non-executable file as unavailable", func() {
+				command.EXPECT().GetActivated().Return(true).AnyTimes()
+				mgr.EXPECT().Deactivate(command.GetName())
+				mgr.EXPECT().Undefine(command.GetName(), command.GetVersion())
+
+				Expect(os.Chmod(command.GetLocation(), 0644)).To(Succeed())
+				Expect(doctor.Fix()).To(Succeed())
+			})
+
+			It("should treat directory as unavailable", func() {
+				command.EXPECT().GetActivated().Return(true).AnyTimes()
+				mgr.EXPECT().Deactivate(command.GetName())
+				mgr.EXPECT().Undefine(command.GetName(), command.GetVersion())
+
+				Expect(os.Remove(command.GetLocation())).To(Succeed())
+				Expect(os.Mkdir(command.GetLocation(), 0755)).To(Succeed())
 				Expect(doctor.Fix()).To(Succeed())
 			})
 		})
