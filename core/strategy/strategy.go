@@ -134,36 +134,3 @@ func (c *StrategyConfig) Matches(uri string) bool {
 
 	return true
 }
-
-type StrategyConfig struct {
-	Timeout     int
-	MaxRetries  int
-	EnableProxy bool
-	ProxyType   string // "http" or "socks5"
-	ProxyAddr   string
-	RewriteRule string
-}
-
-func (c *StrategyConfig) Validate() error {
-	if c.Timeout < 0 {
-		return fmt.Errorf("invalid timeout: %d", c.Timeout)
-	}
-	if c.MaxRetries < 0 {
-		return fmt.Errorf("invalid max retries: %d", c.MaxRetries)
-	}
-	if c.EnableProxy {
-		if c.ProxyType == "" {
-			return fmt.Errorf("proxy type is required when proxy is enabled")
-		}
-		if c.ProxyType != "http" && c.ProxyType != "socks5" {
-			return fmt.Errorf("unsupported proxy type: %s (supported: http, socks5)", c.ProxyType)
-		}
-		if c.ProxyAddr == "" {
-			return fmt.Errorf("proxy address is required when proxy is enabled")
-		}
-		if _, err := url.Parse(c.ProxyAddr); err != nil {
-			return fmt.Errorf("invalid proxy address: %w", err)
-		}
-	}
-	return nil
-}

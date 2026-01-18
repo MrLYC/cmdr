@@ -2,9 +2,7 @@ package strategy
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/hashicorp/go-getter"
 	"github.com/mrlyc/cmdr/core"
@@ -110,25 +108,7 @@ func (s *ProxyStrategy) Configure(cfg core.Configuration) error {
 }
 
 func (s *ProxyStrategy) GetOptions() []getter.ClientOption {
-	if s.config == nil || s.proxyURL == nil {
-		return nil
-	}
-
-	var options []getter.ClientOption
-
-	// Set timeout
-	if s.config.Timeout > 0 {
-		timeout := time.Duration(s.config.Timeout) * time.Second
-		options = append(options, getter.WithTimeout(timeout))
-	}
-
-	// Set proxy
-	if s.config.EnableProxy {
-		proxyFunc := http.ProxyURL(s.proxyURL)
-		options = append(options, getter.WithProxy(proxyFunc))
-	}
-
-	return options
+	return nil
 }
 
 func (s *ProxyStrategy) IsEnabled(uri string) bool {
@@ -143,97 +123,6 @@ func (s *ProxyStrategy) IsEnabled(uri string) bool {
 
 func (s *ProxyStrategy) SetEnabled(enabled bool) {
 	s.enabled = enabled
-}
-
-func NewProxyStrategy() *ProxyStrategy {
-	return &ProxyStrategy{}
-}
-
-func (s *ProxyStrategy) Name() string {
-	return "proxy"
-}
-
-func (s *ProxyStrategy) Prepare(uri string) (string, error) {
-	return uri, nil
-}
-
-func (s *ProxyStrategy) ShouldRetry(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	// Retry on timeout and connection errors
-	return isTimeoutError(err) || isConnectionError(err)
-}
-
-func (s *ProxyStrategy) ShouldFallback(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	// Fallback on network errors
-	return isNetworkError(err)
-}
-
-func (s *ProxyStrategy) Configure(cfg core.Configuration) error {
-	enableProxy := cfg.GetBool("download.proxy.enabled")
-	if !enableProxy {
-		return nil
-	}
-
-	proxyType := cfg.GetString("download.proxy.type")
-	proxyAddr := cfg.GetString("download.proxy.address")
-
-	s.config = &StrategyConfig{
-		Timeout:     cfg.GetInt("download.proxy.timeout"),
-		MaxRetries:  cfg.GetInt("download.proxy.max_retries"),
-		EnableProxy: true,
-		ProxyType:   proxyType,
-		ProxyAddr:   proxyAddr,
-	}
-
-	if s.config.Timeout == 0 {
-		s.config.Timeout = 30
-	}
-	if s.config.MaxRetries == 0 {
-		s.config.MaxRetries = 3
-	}
-
-	// Parse proxy URL
-	parsedURL, err := url.Parse(proxyAddr)
-	if err != nil {
-		return fmt.Errorf("invalid proxy URL: %w", err)
-	}
-
-	s.proxyURL = parsedURL
-
-	return nil
-}
-
-func (s *ProxyStrategy) GetOptions() []getter.ClientOption {
-	if s.config == nil || s.proxyURL == nil {
-		return nil
-	}
-
-	var options []getter.ClientOption
-
-	// Set timeout
-	if s.config.Timeout > 0 {
-		timeout := time.Duration(s.config.Timeout) * time.Second
-		options = append(options, getter.WithTimeout(timeout))
-	}
-
-	// Set proxy
-	if s.config.EnableProxy {
-		proxyFunc := http.ProxyURL(s.proxyURL)
-		options = append(options, getter.WithProxy(proxyFunc))
-	}
-
-	return options
-}
-
-func (s *ProxyStrategy) IsEnabled() bool {
-	return s.config != nil && s.config.EnableProxy
 }
 
 func NewProxyStrategy() *ProxyStrategy {

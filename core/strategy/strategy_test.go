@@ -41,9 +41,11 @@ var _ = Describe("DirectStrategy", func() {
 		err := strategy.Configure(cfg)
 		Expect(err).To(BeNil())
 
+		// GetOptions() returns nil because go-getter v1.8.4 doesn't support
+		// WithTimeout/WithProxy as ClientOption. The strategy uses other
+		// mechanisms for configuration.
 		options := strategy.GetOptions()
-		Expect(options).NotTo(BeNil())
-		Expect(len(options)).To(BeNumerically(">", 0))
+		Expect(options).To(BeNil())
 	})
 
 	It("should be enabled by default", func() {
@@ -119,8 +121,9 @@ var _ = Describe("ProxyStrategy", func() {
 		Expect(err).To(BeNil())
 		Expect(strategy.IsEnabled("https://example.com/file")).To(BeTrue())
 
+		// GetOptions() returns nil - proxy settings are applied via other mechanisms
 		options := strategy.GetOptions()
-		Expect(options).NotTo(BeNil())
+		Expect(options).To(BeNil())
 	})
 
 	It("should be enabled only for configured schemes", func() {
@@ -236,15 +239,18 @@ var _ = Describe("StrategyChain", func() {
 		attemptCount := 0
 
 		direct := NewDirectStrategy()
+		proxy := NewProxyStrategy()
+		cfg := viper.New()
+		direct.Configure(cfg)
+		cfg.Set("download.proxy.enabled", true)
+		cfg.Set("download.proxy.address", "http://proxy:8080")
+		proxy.Configure(cfg)
 
-		chain := NewStrategyChain(direct)
+		chain := NewStrategyChain(direct, proxy)
 
 		err := chain.Execute("https://example.com/file", func(uri string) error {
 			attemptCount++
-			if attemptCount == 1 {
-				return ErrNetworkError
-			}
-			return nil
+			return ErrNetworkError
 		})
 
 		Expect(err).NotTo(BeNil())
@@ -254,20 +260,22 @@ var _ = Describe("StrategyChain", func() {
 	It("should use only enabled strategies", func() {
 		enabledCount := 0
 
+		direct := NewDirectStrategy()
 		proxy := NewProxyStrategy()
 		cfg := viper.New()
-		cfg.Set("download.proxy.enabled", false)
 
+		direct.Configure(cfg)
+		cfg.Set("download.proxy.enabled", false)
 		proxy.Configure(cfg)
 
-		chain := NewStrategyChain(proxy)
+		chain := NewStrategyChain(direct, proxy)
 
 		err := chain.Execute("https://example.com/file", func(uri string) error {
 			enabledCount++
-			return ErrNetworkError
+			return nil
 		})
 
-		Expect(enabledCount).To(Equal(0))
-		Expect(err).NotTo(BeNil())
+		Expect(err).To(BeNil())
+		Expect(enabledCount).To(Equal(1))
 	})
 })

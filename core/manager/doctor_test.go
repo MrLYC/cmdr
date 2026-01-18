@@ -230,14 +230,14 @@ var _ = Describe("Doctor", func() {
 		It("should return error when query failed", func() {
 			mgr.EXPECT().Query().Return(nil, fmt.Errorf("error"))
 
-			Expect(doctor.Fix()).NotTo(BeNil())
+			Expect(doctor.Fix(false)).NotTo(BeNil())
 		})
 
 		It("should return error when get commands failed", func() {
 			mgr.EXPECT().Query().Return(query, nil)
 			query.EXPECT().All().Return(nil, fmt.Errorf("error"))
 
-			Expect(doctor.Fix()).NotTo(BeNil())
+			Expect(doctor.Fix(false)).NotTo(BeNil())
 		})
 
 		Context("Command not available", func() {
@@ -251,14 +251,14 @@ var _ = Describe("Doctor", func() {
 				mgr.EXPECT().Deactivate(command.GetName())
 				mgr.EXPECT().Undefine(command.GetName(), command.GetVersion())
 
-				Expect(doctor.Fix()).To(Succeed())
+				Expect(doctor.Fix(false)).To(Succeed())
 			})
 
 			It("should remove non-activate command", func() {
 				command.EXPECT().GetActivated().Return(false).AnyTimes()
 				mgr.EXPECT().Undefine(command.GetName(), command.GetVersion())
 
-				Expect(doctor.Fix()).To(Succeed())
+				Expect(doctor.Fix(false)).To(Succeed())
 			})
 		})
 
@@ -274,14 +274,14 @@ var _ = Describe("Doctor", func() {
 				mgr.EXPECT().Define(command.GetName(), command.GetVersion(), command.GetLocation())
 				mgr.EXPECT().Activate(command.GetName(), command.GetVersion())
 
-				Expect(doctor.Fix()).To(Succeed())
+				Expect(doctor.Fix(false)).To(Succeed())
 			})
 
 			It("should re-define non-activate command", func() {
 				command.EXPECT().GetActivated().Return(false).AnyTimes()
 				mgr.EXPECT().Define(command.GetName(), command.GetVersion(), command.GetLocation())
 
-				Expect(doctor.Fix()).To(Succeed())
+				Expect(doctor.Fix(false)).To(Succeed())
 			})
 
 			It("should treat non-executable file as unavailable", func() {
@@ -290,7 +290,7 @@ var _ = Describe("Doctor", func() {
 				mgr.EXPECT().Undefine(command.GetName(), command.GetVersion())
 
 				Expect(os.Chmod(command.GetLocation(), 0644)).To(Succeed())
-				Expect(doctor.Fix()).To(Succeed())
+				Expect(doctor.Fix(false)).To(Succeed())
 			})
 
 			It("should treat directory as unavailable", func() {
@@ -300,7 +300,7 @@ var _ = Describe("Doctor", func() {
 
 				Expect(os.Remove(command.GetLocation())).To(Succeed())
 				Expect(os.Mkdir(command.GetLocation(), 0755)).To(Succeed())
-				Expect(doctor.Fix()).To(Succeed())
+				Expect(doctor.Fix(false)).To(Succeed())
 			})
 		})
 	})

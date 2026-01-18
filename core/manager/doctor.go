@@ -180,6 +180,7 @@ func checkFileAccessible(location string) (bool, error) {
 	if err != nil {
 		return false, errors.Wrapf(err, "get abs path failed: %s", location)
 	}
+	_ = absPath
 
 	if info.Mode()&0111 == 0 {
 		return false, nil
@@ -188,8 +189,12 @@ func checkFileAccessible(location string) (bool, error) {
 	return true, nil
 }
 
-func (d *CommandDoctor) Fix() error {
+func (d *CommandDoctor) Fix(dryRun bool) error {
 	logger := core.GetLogger()
+
+	if dryRun {
+		logger.Info("running in dry-run mode, no changes will be made", nil)
+	}
 
 	query, err := d.Query()
 	if err != nil {
@@ -240,27 +245,40 @@ func (d *CommandDoctor) Fix() error {
 		})
 
 		if activated {
-			logger.Info("deactivating command", map[string]interface{}{
-				"name": name,
-			})
-			err = d.Deactivate(name)
-			if err != nil {
-				logger.Warn("deactivate command failed, try to remove it", map[string]interface{}{
+			if dryRun {
+				logger.Info("[DRY-RUN] would deactivate command", map[string]interface{}{
 					"name": name,
 				})
+			} else {
+				logger.Info("deactivating command", map[string]interface{}{
+					"name": name,
+				})
+				err = d.Deactivate(name)
+				if err != nil {
+					logger.Warn("deactivate command failed, try to remove it", map[string]interface{}{
+						"name": name,
+					})
+				}
 			}
 		}
 
-		logger.Info("removing command", map[string]interface{}{
-			"name":    name,
-			"version": version,
-		})
-		err = d.Undefine(name, version)
-		if err != nil {
-			logger.Error("remove command failed, continue", map[string]interface{}{
+		if dryRun {
+			logger.Info("[DRY-RUN] would remove command", map[string]interface{}{
 				"name":    name,
 				"version": version,
 			})
+		} else {
+			logger.Info("removing command", map[string]interface{}{
+				"name":    name,
+				"version": version,
+			})
+			err = d.Undefine(name, version)
+			if err != nil {
+				logger.Error("remove command failed, continue", map[string]interface{}{
+					"name":    name,
+					"version": version,
+				})
+			}
 		}
 	}
 
@@ -270,34 +288,44 @@ func (d *CommandDoctor) Fix() error {
 		location := cmd.GetLocation()
 		activated := cmd.GetActivated()
 
-		_, err := d.Define(name, version, location)
-		if err != nil {
-			logger.Warn("re-define command failed, continue", map[string]interface{}{
+		if dryRun {
+			logger.Info("[DRY-RUN] would re-define command", map[string]interface{}{
 				"name":     name,
 				"version":  version,
 				"location": location,
 			})
+		} else {
+			_, err := d.Define(name, version, location)
+			if err != nil {
+				logger.Warn("re-define command failed, continue", map[string]interface{}{
+					"name":     name,
+					"version":  version,
+					"location": location,
+				})
+			}
 		}
 
 		if activated {
-			err = d.Activate(name, version)
-			if err != nil {
-				logger.Warn("re-activate command failed, continue", map[string]interface{}{
+			if dryRun {
+				logger.Info("[DRY-RUN] would re-activate command", map[string]interface{}{
 					"name":    name,
 					"version": version,
 				})
+			} else {
+				err = d.Activate(name, version)
+				if err != nil {
+					logger.Warn("re-activate command failed, continue", map[string]interface{}{
+						"name":    name,
+						"version": version,
+					})
+				}
 			}
 		}
 	}
 
-	return nil
-}
-
-func NewCommandDoctor(manager core.CommandManager) *CommandDoctor {
-	return &CommandDoctor{
-		CommandManager: manager,
+	if dryRun {
+		logger.Info("dry-run completed, no changes were made", nil)
 	}
-}
 
 	return nil
 }

@@ -355,7 +355,7 @@ var _ = Describe("Binary", func() {
 				Expect(shimsPath).To(BeARegularFile())
 			})
 
-			It("should keep old format (1.4) if file exists", func() {
+			It("should migrate old format (1.4) to new format (1.4.0) if file exists", func() {
 				testCmd := "testcmd"
 				cmdShimsDir := filepath.Join(shimsDir, testCmd)
 				Expect(os.MkdirAll(cmdShimsDir, 0755)).To(Succeed())
@@ -368,11 +368,13 @@ var _ = Describe("Binary", func() {
 
 				cmd, err := mgr.Define(testCmd, "1.4", location)
 				Expect(err).To(BeNil())
-				Expect(oldShimsPath).To(BeARegularFile())
+				newShimsPath := filepath.Join(cmdShimsDir, "testcmd_1.4.0")
+				Expect(newShimsPath).To(BeARegularFile())
+				Expect(oldShimsPath).NotTo(BeAnExistingFile())
 				Expect(cmd.GetVersion()).To(Equal("1.4"))
 			})
 
-			It("should migrate old format (1.4) to new format (1.4.0) on redefine", func() {
+			It("should migrate old format (1.4) to new format (1.4.0) on define after undefine", func() {
 				testCmd := "testcmd"
 				cmdShimsDir := filepath.Join(shimsDir, testCmd)
 				Expect(os.MkdirAll(cmdShimsDir, 0755)).To(Succeed())
@@ -383,14 +385,13 @@ var _ = Describe("Binary", func() {
 				location := filepath.Join(tempDir, "location")
 				Expect(os.WriteFile(location, []byte(""), 0755)).To(Succeed())
 
-				_, err := mgr.Undefine(testCmd, "1.4")
+				err := mgr.Undefine(testCmd, "1.4")
 				Expect(err).To(Succeed())
 
 				_, err = mgr.Define(testCmd, "1.4", location)
 				Expect(err).To(Succeed())
 
 				newShimsPath := filepath.Join(shimsDir, testCmd, "testcmd_1.4.0")
-				Expect(oldShimsPath).NotTo(BeAnExistingFile())
 				Expect(newShimsPath).To(BeARegularFile())
 			})
 
