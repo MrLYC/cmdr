@@ -1,0 +1,24 @@
+{
+  "baseline_commit": "ba8e9209f66b9401dba4a2262352046412fbade1",
+  "last_updated": "2026-01-19T00:33:00+08:00",
+  "page_mappings": {
+    "docs/index.md": ["README.md", "go.mod", "main.go", "cmd/root.go", "core/fetcher/go_getter.go"],
+    "docs/getting-started/installation.md": ["install.sh", "cmd/root.go"],
+    "docs/getting-started/quick-start.md": ["core/command.go", "core/strategy/"],
+    "docs/getting-started/configuration.md": ["core/config.go", "cmd/root.go"],
+    "docs/architecture/overview.md": ["main.go", "cmd/root.go", "core/cmdr.go", "core/command.go", "core/initializer.go", "core/database.go"],
+    "docs/architecture/data-flow.md": ["cmd/command/install.go", "cmd/command/use.go", "core/manager/"],
+    "docs/architecture/design-patterns.md": ["core/command.go", "core/strategy/", "core/bus.go"],
+    "docs/components/cli-commands.md": ["cmd/command/install.go", "cmd/command/use.go", "cmd/command/"],
+    "docs/components/command-manager.md": ["core/command.go", "core/manager/database.go", "core/manager/binary.go"],
+    "docs/components/initializers.md": ["core/initializer.go", "core/initializer/filesystem.go", "core/initializer/profile.go"],
+    "docs/components/strategies.md": ["core/strategy/direct.go", "core/strategy/proxy.go", "core/strategy/rewrite.go", "core/strategy/chain.go"],
+    "docs/components/fetchers.md": ["core/fetcher.go", "core/fetcher/go_getter.go", "core/fetcher/go.go"],
+    "docs/api/core-interfaces.md": ["core/command.go", "core/initializer.go", "core/fetcher.go", "core/config.go", "core/database.go", "core/cmdr.go"],
+    "docs/api/configuration-keys.md": ["core/config.go"],
+    "docs/operations/build-and-test.md": ["Makefile", "go.mod", "integration-tests/"],
+    "docs/operations/release.md": [".goreleaser.yml", ".github/workflows/release.yml", "cmd/upgrade.go"],
+    "docs/adr/index.md": []
+  },
+  "wiki_version": "1.0.0"
+}

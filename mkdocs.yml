@@ -1,0 +1,79 @@
+site_name: CMDR Documentation
+site_description: Documentation for CMDR - A Simple Command Version Management Tool
+site_author: MrLYC
+site_url: https://mrlyc.github.io/cmdr
+
+repo_name: mrlyc/cmdr
+repo_url: https://github.com/mrlyc/cmdr
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick-start.md
+      - Configuration: getting-started/configuration.md
+  - Architecture:
+      - Overview: architecture/overview.md
+      - Data Flow: architecture/data-flow.md
+      - Design Patterns: architecture/design-patterns.md
+  - Components:
+      - CLI Commands: components/cli-commands.md
+      - Command Manager: components/command-manager.md
+      - Initializers: components/initializers.md
+      - Strategies: components/strategies.md
+      - Fetchers: components/fetchers.md
+  - API:
+      - Core Interfaces: api/core-interfaces.md
+      - Configuration Keys: api/configuration-keys.md
+  - Operations:
+      - Build & Test: operations/build-and-test.md
+      - Release: operations/release.md
+  - ADR:
+      - Index: adr/index.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/mrlyc/cmdr
