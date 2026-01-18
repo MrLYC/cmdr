@@ -16,12 +16,13 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go-version }}
-      - name: Build and initialize cmdr
+      - name: Build cmdr
         run: |
           go build -o cmdr .
           chmod +x cmdr
-          ./cmdr init
       - name: Integration tests
         run: integration-tests/start.sh
         env:
           SKIP_INSTALL: "true"
+          CMDR_CORE_ROOT_DIR: $(pwd)/.cmdr
+          CMDR_CORE_PROFILE_DIR: $(pwd)/profile
