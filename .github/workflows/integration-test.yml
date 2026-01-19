@@ -29,9 +29,26 @@ jobs:
           go build -o cmdr .
           chmod +x cmdr
 
-      - name: Integration tests
+      - name: Integration tests (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
         run: integration-tests/start.sh
         env:
           SKIP_INSTALL: "true"
           CMDR_CORE_ROOT_DIR: $(pwd)/.cmdr
-          CMDR_CORE_PROFILE_DIR: $(pwd)/profile
+          CMDR_CORE_PROFILE_DIR: $(pwd)/.cmdr/profile
+          CMDR_LOG_LEVEL: debug
+
+      - name: Integration tests (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install expect || true
+          brew uninstall go || true
+          brew install go
+          go build -o cmdr .
+          chmod +x cmdr
+          ./install.sh -d 30
+          SKIP_INSTALL=true ./integration-tests/start.sh
+        env:
+          CMDR_CORE_ROOT_DIR: $(pwd)/.cmdr
+          CMDR_CORE_PROFILE_DIR: $(pwd)/.cmdr/profile
+          CMDR_LOG_LEVEL: debug
