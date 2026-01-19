@@ -1,5 +1,13 @@
-on: [push, release]
 name: integration-test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
 jobs:
   test:
     strategy:
@@ -9,17 +17,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@v4
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go-version }}
+
       - name: Build cmdr
         run: |
           go build -o cmdr .
           chmod +x cmdr
+
       - name: Integration tests
         run: integration-tests/start.sh
         env:
