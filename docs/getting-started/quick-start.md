@@ -20,7 +20,7 @@ cmdr command install -n hello -v 1.0.0 -l /usr/local/bin/hello
 |------|-----------|-------------|
 | `-n` | `--name` | Name of the command |
 | `-v` | `--version` | Version string (semantic versioning recommended) |
-| `-l` | `--location` | URL or file path to the command binary |
+| `-l` | `--location` | URL or file path to command binary |
 
 ## Listing Installed Commands
 

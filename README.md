@@ -3,6 +3,17 @@
 
 CMDR is a simple command version management tool that helps you quickly switch from multiple command versions.
 
+## Documentation
+
+Full documentation is available at [https://mrlyc.github.io/cmdr/](https://mrlyc.github.io/cmdr/)
+
+- [Installation Guide](https://mrlyc.github.io/cmdr/getting-started/installation/) - Get started with CMDR
+- [Quick Start](https://mrlyc.github.io/cmdr/getting-started/quick-start/) - First steps tutorial
+- [Configuration](https://mrlyc.github.io/cmdr/getting-started/configuration/) - Configuration reference
+- [Architecture](https://mrlyc.github.io/cmdr/architecture/overview/) - System design and internals
+- [API Reference](https://mrlyc.github.io/cmdr/api/core-interfaces/) - Interface documentation
+- [Development Guide](https://mrlyc.github.io/cmdr/operations/build-and-test/) - Build, test, and contribute
+
 ## Installation
 
 ### Script

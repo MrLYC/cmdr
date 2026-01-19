@@ -53,7 +53,7 @@ The installation script performs these steps[^1]:
 2. Downloads the appropriate binary from GitHub releases
 3. Places the binary in a configured location
 4. Runs `cmdr init` to set up the environment
-5. Configures shell profile for PATH integration
+5. Configures the shell profile for PATH integration
 
 ## Directory Structure
 

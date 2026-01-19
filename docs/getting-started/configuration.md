@@ -42,7 +42,7 @@ cmdr config set -k <key> -v <value>
 | `core.bin_dir` | `bin` | Directory for command binaries (relative to root) |
 | `core.shims_dir` | `shims` | Directory for shim scripts (relative to root) |
 | `core.profile_dir` | `profile` | Directory for shell profile scripts (relative to root) |
-| `core.database_path` | `cmdr.db` | Path to the command database (relative to root) |
+| `core.database_path` | `cmdr.db` | Path to command database (relative to root) |
 | `core.link_mode` | - | How to link commands (symlink vs copy) |
 
 ### Logging
@@ -73,7 +73,7 @@ cmdr config set -k <key> -v <value>
 
 ## Environment Variables
 
-All configuration keys can be set via environment variables using the `CMDR_` prefix and replacing `.` with `_`[^3]:
+All configuration keys can be set via environment variables using `CMDR_` prefix and replacing `.` with `_`[^3]:
 
 ```shell
 # Set log level via environment
