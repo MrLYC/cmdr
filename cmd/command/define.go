@@ -8,8 +8,8 @@ import (
 	"github.com/mrlyc/cmdr/core/utils"
 )
 
-// defineCmd represents the define command
-var defineCmd = &cobra.Command{
+// DefineCmd represents the define command
+var DefineCmd = &cobra.Command{
 	Use:   "define",
 	Short: "Define command into cmdr",
 	PreRun: func(cmd *cobra.Command, args []string) {
@@ -36,25 +36,25 @@ var defineCmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.AddCommand(defineCmd)
-	flags := defineCmd.Flags()
+	Cmd.AddCommand(DefineCmd)
+	flags := DefineCmd.Flags()
 	flags.StringP("name", "n", "", "command name")
 	flags.StringP("version", "v", "", "command version")
 	flags.StringP("location", "l", "", "command location")
 	flags.BoolP("activate", "a", false, "activate command")
 
-	helper := utils.NewDefaultCobraCommandCompleteHelper(defineCmd)
+	helper := utils.NewDefaultCobraCommandCompleteHelper(DefineCmd)
 	cfg := core.GetConfiguration()
 	utils.PanicOnError("binding flags",
 
 		cfg.BindPFlag(core.CfgKeyXCommandDefineName, flags.Lookup("name")),
-		defineCmd.MarkFlagRequired("name"),
+		DefineCmd.MarkFlagRequired("name"),
 
 		cfg.BindPFlag(core.CfgKeyXCommandDefineVersion, flags.Lookup("version")),
-		defineCmd.MarkFlagRequired("version"),
+		DefineCmd.MarkFlagRequired("version"),
 
 		cfg.BindPFlag(core.CfgKeyXCommandDefineLocation, flags.Lookup("location")),
-		defineCmd.MarkFlagRequired("location"),
+		DefineCmd.MarkFlagRequired("location"),
 
 		cfg.BindPFlag(core.CfgKeyXCommandDefineActivate, flags.Lookup("activate")),
 

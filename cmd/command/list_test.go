@@ -12,10 +12,10 @@ import (
 
 var _ = Describe("List", func() {
 	It("should check flags", func() {
-		testutils.CheckCommandFlag(listCmd, "name", "n", core.CfgKeyXCommandListName, "", false)
-		testutils.CheckCommandFlag(listCmd, "version", "v", core.CfgKeyXCommandListVersion, "", false)
-		testutils.CheckCommandFlag(listCmd, "location", "l", core.CfgKeyXCommandListLocation, "", false)
-		testutils.CheckCommandFlag(listCmd, "activate", "a", core.CfgKeyXCommandListActivate, "false", false)
+		testutils.CheckCommandFlag(ListCmd, "name", "n", core.CfgKeyXCommandListName, "", false)
+		testutils.CheckCommandFlag(ListCmd, "version", "v", core.CfgKeyXCommandListVersion, "", false)
+		testutils.CheckCommandFlag(ListCmd, "location", "l", core.CfgKeyXCommandListLocation, "", false)
+		testutils.CheckCommandFlag(ListCmd, "activate", "a", core.CfgKeyXCommandListActivate, "false", false)
 	})
 
 	Context("command", func() {
@@ -55,35 +55,35 @@ var _ = Describe("List", func() {
 		})
 
 		It("should list all commands", func() {
-			listCmd.Run(listCmd, []string{})
+			ListCmd.Run(ListCmd, []string{})
 		})
 
 		It("should filter by name", func() {
 			cfg.Set(core.CfgKeyXCommandListName, "cmdr")
 			query.EXPECT().WithName("cmdr").Return(nil)
 
-			listCmd.Run(listCmd, []string{})
+			ListCmd.Run(ListCmd, []string{})
 		})
 
 		It("should filter by version", func() {
 			cfg.Set(core.CfgKeyXCommandListVersion, "1.0.0")
 			query.EXPECT().WithVersion("1.0.0").Return(nil)
 
-			listCmd.Run(listCmd, []string{})
+			ListCmd.Run(ListCmd, []string{})
 		})
 
 		It("should filter by location", func() {
 			cfg.Set(core.CfgKeyXCommandListLocation, "/path/to/cmdr")
 			query.EXPECT().WithLocation("/path/to/cmdr").Return(nil)
 
-			listCmd.Run(listCmd, []string{})
+			ListCmd.Run(ListCmd, []string{})
 		})
 
 		It("should filter by activate", func() {
 			cfg.Set(core.CfgKeyXCommandListActivate, true)
 			query.EXPECT().WithActivated(true).Return(nil)
 
-			listCmd.Run(listCmd, []string{})
+			ListCmd.Run(ListCmd, []string{})
 		})
 	})
 })

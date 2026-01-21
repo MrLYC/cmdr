@@ -12,8 +12,8 @@ import (
 
 var _ = Describe("Use", func() {
 	It("should check flags", func() {
-		testutils.CheckCommandFlag(useCmd, "name", "n", core.CfgKeyXCommandUseName, "", true)
-		testutils.CheckCommandFlag(useCmd, "version", "v", core.CfgKeyXCommandUseVersion, "", true)
+		testutils.CheckCommandFlag(UseCmd, "name", "n", core.CfgKeyXCommandUseName, "", true)
+		testutils.CheckCommandFlag(UseCmd, "version", "v", core.CfgKeyXCommandUseVersion, "", true)
 	})
 
 	Context("command", func() {
@@ -52,7 +52,7 @@ var _ = Describe("Use", func() {
 			manager.EXPECT().Activate("cmdr", "1.0.0").Return(nil)
 			manager.EXPECT().Close().Return(nil)
 
-			useCmd.Run(unsetCmd, []string{})
+			UseCmd.Run(UnsetCmd, []string{})
 		})
 	})
 })

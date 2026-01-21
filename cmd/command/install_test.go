@@ -13,10 +13,10 @@ import (
 
 var _ = Describe("Install", func() {
 	It("should check flags", func() {
-		testutils.CheckCommandFlag(installCmd, "name", "n", core.CfgKeyXCommandInstallName, "", true)
-		testutils.CheckCommandFlag(installCmd, "version", "v", core.CfgKeyXCommandInstallVersion, "", true)
-		testutils.CheckCommandFlag(installCmd, "location", "l", core.CfgKeyXCommandInstallLocation, "", true)
-		testutils.CheckCommandFlag(installCmd, "activate", "a", core.CfgKeyXCommandInstallActivate, "false", false)
+		testutils.CheckCommandFlag(InstallCmd, "name", "n", core.CfgKeyXCommandInstallName, "", true)
+		testutils.CheckCommandFlag(InstallCmd, "version", "v", core.CfgKeyXCommandInstallVersion, "", true)
+		testutils.CheckCommandFlag(InstallCmd, "location", "l", core.CfgKeyXCommandInstallLocation, "", true)
+		testutils.CheckCommandFlag(InstallCmd, "activate", "a", core.CfgKeyXCommandInstallActivate, "false", false)
 	})
 
 	Context("command", func() {
@@ -59,7 +59,7 @@ var _ = Describe("Install", func() {
 			manager.EXPECT().Activate("cmdr", "1.0.0").Return(nil)
 			manager.EXPECT().Close().Return(nil)
 
-			installCmd.Run(installCmd, []string{})
+			InstallCmd.Run(InstallCmd, []string{})
 		})
 
 		It("should install a non-activated command", func() {
@@ -68,11 +68,11 @@ var _ = Describe("Install", func() {
 			manager.EXPECT().Define("cmdr", "1.0.0", "")
 			manager.EXPECT().Close().Return(nil)
 
-			installCmd.Run(installCmd, []string{})
+			InstallCmd.Run(InstallCmd, []string{})
 		})
 
 		It("should change link mode", func() {
-			installCmd.PreRun(defineCmd, []string{})
+			InstallCmd.PreRun(DefineCmd, []string{})
 
 			Expect(cfg.GetString(core.CfgKeyCmdrLinkMode)).To(Equal("default"))
 		})

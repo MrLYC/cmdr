@@ -12,8 +12,8 @@ import (
 	"github.com/tomlazar/table"
 )
 
-// listCmd represents the list command
-var listCmd = &cobra.Command{
+// ListCmd represents the list command
+var ListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List commands",
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
@@ -75,8 +75,8 @@ var listCmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.AddCommand(listCmd)
-	flags := listCmd.Flags()
+	Cmd.AddCommand(ListCmd)
+	flags := ListCmd.Flags()
 	flags.StringP("name", "n", "", "command name")
 	flags.StringP("version", "v", "", "command version")
 	flags.StringP("location", "l", "", "command location")
@@ -92,6 +92,6 @@ func init() {
 		cfg.BindPFlag(core.CfgKeyXCommandListActivate, flags.Lookup("activate")),
 		cfg.BindPFlag(core.CfgKeyXCommandListFields, flags.Lookup("fields")),
 
-		utils.NewDefaultCobraCommandCompleteHelper(listCmd).RegisterAll(),
+		utils.NewDefaultCobraCommandCompleteHelper(ListCmd).RegisterAll(),
 	)
 }

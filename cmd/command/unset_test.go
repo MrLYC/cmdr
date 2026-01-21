@@ -12,7 +12,7 @@ import (
 
 var _ = Describe("Unset", func() {
 	It("should check flags", func() {
-		testutils.CheckCommandFlag(unsetCmd, "name", "n", core.CfgKeyXCommandUnsetName, "", true)
+		testutils.CheckCommandFlag(UnsetCmd, "name", "n", core.CfgKeyXCommandUnsetName, "", true)
 	})
 
 	Context("command", func() {
@@ -50,14 +50,14 @@ var _ = Describe("Unset", func() {
 			manager.EXPECT().Deactivate("testing").Return(nil)
 			manager.EXPECT().Close().Return(nil)
 
-			unsetCmd.Run(unsetCmd, []string{})
+			UnsetCmd.Run(UnsetCmd, []string{})
 		})
 
 		It("should not unset a cmdr", func() {
 			cfg.Set(core.CfgKeyXCommandUnsetName, "cmdr")
 			manager.EXPECT().Close().Return(nil)
 
-			unsetCmd.Run(unsetCmd, []string{})
+			UnsetCmd.Run(UnsetCmd, []string{})
 		})
 	})
 })

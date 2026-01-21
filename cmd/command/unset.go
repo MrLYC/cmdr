@@ -8,8 +8,8 @@ import (
 	"github.com/mrlyc/cmdr/core/utils"
 )
 
-// unsetCmd represents the unset command
-var unsetCmd = &cobra.Command{
+// UnsetCmd represents the unset command
+var UnsetCmd = &cobra.Command{
 	Use:   "unset",
 	Short: "Deactivate a command",
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
@@ -34,16 +34,16 @@ var unsetCmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.AddCommand(unsetCmd)
-	flags := unsetCmd.Flags()
+	Cmd.AddCommand(UnsetCmd)
+	flags := UnsetCmd.Flags()
 	flags.StringP("name", "n", "", "command name")
 
 	cfg := core.GetConfiguration()
 
 	utils.PanicOnError("binding flags",
 		cfg.BindPFlag(core.CfgKeyXCommandUnsetName, flags.Lookup("name")),
-		unsetCmd.MarkFlagRequired("name"),
+		UnsetCmd.MarkFlagRequired("name"),
 
-		utils.NewDefaultCobraCommandCompleteHelper(unsetCmd).RegisterAll(),
+		utils.NewDefaultCobraCommandCompleteHelper(UnsetCmd).RegisterAll(),
 	)
 }

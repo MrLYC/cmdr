@@ -8,8 +8,8 @@ import (
 	"github.com/mrlyc/cmdr/core/utils"
 )
 
-// useCmd represents the use command
-var useCmd = &cobra.Command{
+// UseCmd represents the use command
+var UseCmd = &cobra.Command{
 	Use:   "use",
 	Short: "Activate a command",
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
@@ -32,8 +32,8 @@ var useCmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.AddCommand(useCmd)
-	flags := useCmd.Flags()
+	Cmd.AddCommand(UseCmd)
+	flags := UseCmd.Flags()
 	flags.StringP("name", "n", "", "command name")
 	flags.StringP("version", "v", "", "command version")
 
@@ -42,11 +42,11 @@ func init() {
 	utils.PanicOnError("binding flags",
 
 		cfg.BindPFlag(core.CfgKeyXCommandUseName, flags.Lookup("name")),
-		useCmd.MarkFlagRequired("name"),
+		UseCmd.MarkFlagRequired("name"),
 
 		cfg.BindPFlag(core.CfgKeyXCommandUseVersion, flags.Lookup("version")),
-		useCmd.MarkFlagRequired("version"),
+		UseCmd.MarkFlagRequired("version"),
 
-		utils.NewDefaultCobraCommandCompleteHelper(useCmd).RegisterAll(),
+		utils.NewDefaultCobraCommandCompleteHelper(UseCmd).RegisterAll(),
 	)
 }

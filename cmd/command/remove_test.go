@@ -12,8 +12,8 @@ import (
 
 var _ = Describe("Remove", func() {
 	It("should check flags", func() {
-		testutils.CheckCommandFlag(removeCmd, "name", "n", core.CfgKeyXCommandRemoveName, "", true)
-		testutils.CheckCommandFlag(removeCmd, "version", "v", core.CfgKeyXCommandRemoveVersion, "", true)
+		testutils.CheckCommandFlag(RemoveCmd, "name", "n", core.CfgKeyXCommandRemoveName, "", true)
+		testutils.CheckCommandFlag(RemoveCmd, "version", "v", core.CfgKeyXCommandRemoveVersion, "", true)
 	})
 
 	Context("command", func() {
@@ -52,7 +52,7 @@ var _ = Describe("Remove", func() {
 			manager.EXPECT().Undefine("cmdr", "1.0.0").Return(nil)
 			manager.EXPECT().Close().Return(nil)
 
-			removeCmd.Run(removeCmd, []string{})
+			RemoveCmd.Run(RemoveCmd, []string{})
 		})
 
 		It("should not undefine a activated command", func() {
@@ -62,7 +62,7 @@ var _ = Describe("Remove", func() {
 			manager.EXPECT().Undefine("cmdr", "1.0.0").Return(core.ErrCommandAlreadyActivated)
 			manager.EXPECT().Close().Return(nil)
 
-			removeCmd.Run(removeCmd, []string{})
+			RemoveCmd.Run(RemoveCmd, []string{})
 		})
 	})
 })

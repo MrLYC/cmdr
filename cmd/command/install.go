@@ -8,8 +8,8 @@ import (
 	"github.com/mrlyc/cmdr/core/utils"
 )
 
-// installCmd represents the install command
-var installCmd = &cobra.Command{
+// InstallCmd represents the install command
+var InstallCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install command into cmdr",
 	PreRun: func(cmd *cobra.Command, args []string) {
@@ -37,25 +37,25 @@ var installCmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.AddCommand(installCmd)
-	flags := installCmd.Flags()
+	Cmd.AddCommand(InstallCmd)
+	flags := InstallCmd.Flags()
 	flags.StringP("name", "n", "", "command name")
 	flags.StringP("version", "v", "", "command version")
 	flags.StringP("location", "l", "", "command location")
 	flags.BoolP("activate", "a", false, "activate command")
 
-	helper := utils.NewDefaultCobraCommandCompleteHelper(installCmd)
+	helper := utils.NewDefaultCobraCommandCompleteHelper(InstallCmd)
 	cfg := core.GetConfiguration()
 	utils.PanicOnError("binding flags",
 
 		cfg.BindPFlag(core.CfgKeyXCommandInstallName, flags.Lookup("name")),
-		installCmd.MarkFlagRequired("name"),
+		InstallCmd.MarkFlagRequired("name"),
 
 		cfg.BindPFlag(core.CfgKeyXCommandInstallVersion, flags.Lookup("version")),
-		installCmd.MarkFlagRequired("version"),
+		InstallCmd.MarkFlagRequired("version"),
 
 		cfg.BindPFlag(core.CfgKeyXCommandInstallLocation, flags.Lookup("location")),
-		installCmd.MarkFlagRequired("location"),
+		InstallCmd.MarkFlagRequired("location"),
 
 		cfg.BindPFlag(core.CfgKeyXCommandInstallActivate, flags.Lookup("activate")),
 

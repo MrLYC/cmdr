@@ -8,8 +8,8 @@ import (
 	"github.com/mrlyc/cmdr/core/utils"
 )
 
-// removeCmd represents the remove command
-var removeCmd = &cobra.Command{
+// RemoveCmd represents the remove command
+var RemoveCmd = &cobra.Command{
 	Use:   "remove",
 	Short: "Remove command from cmdr",
 	Run: runCommand(func(cfg core.Configuration, manager core.CommandManager) error {
@@ -41,8 +41,8 @@ var removeCmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.AddCommand(removeCmd)
-	flags := removeCmd.Flags()
+	Cmd.AddCommand(RemoveCmd)
+	flags := RemoveCmd.Flags()
 	flags.StringP("name", "n", "", "command name")
 	flags.StringP("version", "v", "", "command version")
 
@@ -50,11 +50,11 @@ func init() {
 
 	utils.PanicOnError("binding flags",
 		cfg.BindPFlag(core.CfgKeyXCommandRemoveName, flags.Lookup("name")),
-		removeCmd.MarkFlagRequired("name"),
+		RemoveCmd.MarkFlagRequired("name"),
 
 		cfg.BindPFlag(core.CfgKeyXCommandRemoveVersion, flags.Lookup("version")),
-		removeCmd.MarkFlagRequired("version"),
+		RemoveCmd.MarkFlagRequired("version"),
 
-		utils.NewDefaultCobraCommandCompleteHelper(removeCmd).RegisterAll(),
+		utils.NewDefaultCobraCommandCompleteHelper(RemoveCmd).RegisterAll(),
 	)
 }
