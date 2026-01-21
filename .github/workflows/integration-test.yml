@@ -31,11 +31,10 @@ jobs:
 
       - name: Integration tests (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
-        run: integration-tests/start.sh
+        run: |
+          ./install.sh -d 30
+          ./integration-tests/start.sh
         env:
-          SKIP_INSTALL: "true"
-          CMDR_CORE_ROOT_DIR: $(pwd)/.cmdr
-          CMDR_CORE_PROFILE_DIR: $(pwd)/.cmdr/profile
           CMDR_LOG_LEVEL: debug
 
       - name: Integration tests (macOS)
@@ -47,8 +46,6 @@ jobs:
           go build -o cmdr .
           chmod +x cmdr
           ./install.sh -d 30
-          SKIP_INSTALL=true ./integration-tests/start.sh
+          ./integration-tests/start.sh
         env:
-          CMDR_CORE_ROOT_DIR: $(pwd)/.cmdr
-          CMDR_CORE_PROFILE_DIR: $(pwd)/.cmdr/profile
           CMDR_LOG_LEVEL: debug
