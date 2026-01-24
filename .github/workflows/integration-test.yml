@@ -36,6 +36,9 @@ jobs:
           ./integration-tests/start.sh
         env:
           CMDR_LOG_LEVEL: debug
+          CMDR_CORE_ROOT_DIR: ${{ github.workspace }}/.cmdr
+          CMDR_CORE_PROFILE_DIR: ${{ github.workspace }}/profile
+          CMDR_CORE_CONFIG_PATH: /tmp/cmdr.yaml
 
       - name: Integration tests (macOS)
         if: matrix.os == 'macos-latest'
@@ -49,3 +52,6 @@ jobs:
           ./integration-tests/start.sh
         env:
           CMDR_LOG_LEVEL: debug
+          CMDR_CORE_ROOT_DIR: ${{ github.workspace }}/.cmdr
+          CMDR_CORE_PROFILE_DIR: ${{ github.workspace }}/profile
+          CMDR_CORE_CONFIG_PATH: /tmp/cmdr.yaml
