@@ -40,7 +40,8 @@ rm -rf "./.cmdr/shims/cmd/cmd_1.0.0"
 cmdr command list -n cmd -v "1.0.0"
 cmdr doctor
 # Re-activate cmdr after doctor to restore bin symlink
-cmdr command use -n cmdr -v "0.0.0"
+# Use direct shim path because doctor may have broken the bin symlink
+"$(pwd)/.cmdr/shims/cmdr/cmdr_0.0.0" command use -n cmdr -v "0.0.0"
 cmdr command list -n cmd -v "1.0.0" && false || true
 
 cmdr command remove -n cmd -v "2.0.0"
