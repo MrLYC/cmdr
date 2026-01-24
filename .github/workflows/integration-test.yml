@@ -32,26 +32,24 @@ jobs:
       - name: Integration tests (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
+          export CMDR_LOG_LEVEL=debug
+          export CMDR_CORE_ROOT_DIR="${{ github.workspace }}/.cmdr"
+          export CMDR_CORE_PROFILE_DIR="${{ github.workspace }}/profile"
+          export CMDR_CORE_CONFIG_PATH=/tmp/cmdr.yaml
           ./install.sh -d 30
           ./integration-tests/start.sh
         env:
           CMDR_LOG_LEVEL: debug
-          CMDR_CORE_ROOT_DIR: ${{ github.workspace }}/.cmdr
-          CMDR_CORE_PROFILE_DIR: ${{ github.workspace }}/profile
-          CMDR_CORE_CONFIG_PATH: /tmp/cmdr.yaml
 
       - name: Integration tests (macOS)
         if: matrix.os == 'macos-latest'
         run: |
           brew install expect || true
-          brew uninstall go || true
-          brew install go
-          go build -o cmdr .
-          chmod +x cmdr
+          export CMDR_LOG_LEVEL=debug
+          export CMDR_CORE_ROOT_DIR="${{ github.workspace }}/.cmdr"
+          export CMDR_CORE_PROFILE_DIR="${{ github.workspace }}/profile"
+          export CMDR_CORE_CONFIG_PATH=/tmp/cmdr.yaml
           ./install.sh -d 30
           ./integration-tests/start.sh
         env:
           CMDR_LOG_LEVEL: debug
-          CMDR_CORE_ROOT_DIR: ${{ github.workspace }}/.cmdr
-          CMDR_CORE_PROFILE_DIR: ${{ github.workspace }}/profile
-          CMDR_CORE_CONFIG_PATH: /tmp/cmdr.yaml
