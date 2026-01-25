@@ -9,7 +9,9 @@ import (
 )
 
 func ensureNotExists(path string) error {
-	info, err := os.Stat(path)
+	// Use Lstat instead of Stat to handle symlinks properly
+	// Stat follows symlinks, so a broken symlink would return "not exist"
+	info, err := os.Lstat(path)
 	if os.IsNotExist(err) {
 		return nil
 	}

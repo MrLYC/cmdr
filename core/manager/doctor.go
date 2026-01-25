@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/homedepot/flop"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
@@ -161,6 +163,7 @@ func NewDoctorManager(binaryMgr core.CommandManager, databaseMgr core.CommandMan
 
 type CommandDoctor struct {
 	core.CommandManager
+	rootDir string
 }
 
 func checkFileAccessible(location string) (bool, error) {
@@ -189,11 +192,58 @@ func checkFileAccessible(location string) (bool, error) {
 	return true, nil
 }
 
+func (d *CommandDoctor) backup() (string, error) {
+	if d.rootDir == "" {
+		return "", nil
+	}
+
+	info, err := os.Stat(d.rootDir)
+	if os.IsNotExist(err) {
+		return "", nil
+	}
+	if err != nil {
+		return "", errors.Wrapf(err, "stat root dir failed: %s", d.rootDir)
+	}
+	if !info.IsDir() {
+		return "", errors.Errorf("root dir is not a directory: %s", d.rootDir)
+	}
+
+	tmpDir := os.TempDir()
+	rootDirBase := filepath.Base(d.rootDir)
+	backupDir := filepath.Join(tmpDir, fmt.Sprintf("%s.backup.%s", rootDirBase, time.Now().Format("20060102-150405")))
+
+	err = flop.Copy(d.rootDir, backupDir, flop.Options{
+		MkdirAll:  true,
+		Recursive: true,
+	})
+	if err != nil {
+		return "", errors.Wrapf(err, "backup failed: %s -> %s", d.rootDir, backupDir)
+	}
+
+	return backupDir, nil
+}
+
 func (d *CommandDoctor) Fix(dryRun bool) error {
+	return d.FixWithOptions(dryRun, true)
+}
+
+func (d *CommandDoctor) FixWithOptions(dryRun bool, backup bool) error {
 	logger := core.GetLogger()
 
 	if dryRun {
 		logger.Info("running in dry-run mode, no changes will be made", nil)
+	}
+
+	if backup && !dryRun {
+		backupDir, err := d.backup()
+		if err != nil {
+			return errors.Wrapf(err, "backup failed")
+		}
+		if backupDir != "" {
+			logger.Info("backup created", map[string]interface{}{
+				"backup_dir": backupDir,
+			})
+		}
 	}
 
 	query, err := d.Query()
@@ -256,7 +306,8 @@ func (d *CommandDoctor) Fix(dryRun bool) error {
 				err = d.Deactivate(name)
 				if err != nil {
 					logger.Warn("deactivate command failed, try to remove it", map[string]interface{}{
-						"name": name,
+						"name":  name,
+						"error": err,
 					})
 				}
 			}
@@ -277,6 +328,7 @@ func (d *CommandDoctor) Fix(dryRun bool) error {
 				logger.Error("remove command failed, continue", map[string]interface{}{
 					"name":    name,
 					"version": version,
+					"error":   err,
 				})
 			}
 		}
@@ -288,22 +340,16 @@ func (d *CommandDoctor) Fix(dryRun bool) error {
 		location := cmd.GetLocation()
 		activated := cmd.GetActivated()
 
-		if dryRun {
-			logger.Info("[DRY-RUN] would re-define command", map[string]interface{}{
-				"name":     name,
-				"version":  version,
-				"location": location,
-			})
-		} else {
-			_, err := d.Define(name, version, location)
-			if err != nil {
-				logger.Warn("re-define command failed, continue", map[string]interface{}{
-					"name":     name,
-					"version":  version,
-					"location": location,
-				})
-			}
-		}
+		// Skip re-define if the shim file already exists at the expected location.
+		// The command is already available (checkFileAccessible passed), so calling
+		// Define with the shim path as source would be a no-op at best, or could
+		// fail when using copy mode (CopyFile deletes target before copying from source,
+		// but source == target in this case).
+		logger.Debug("skipping re-define for available command", map[string]interface{}{
+			"name":     name,
+			"version":  version,
+			"location": location,
+		})
 
 		if activated {
 			if dryRun {
@@ -330,9 +376,10 @@ func (d *CommandDoctor) Fix(dryRun bool) error {
 	return nil
 }
 
-func NewCommandDoctor(manager core.CommandManager) *CommandDoctor {
+func NewCommandDoctor(manager core.CommandManager, rootDir string) *CommandDoctor {
 	return &CommandDoctor{
 		CommandManager: manager,
+		rootDir:        rootDir,
 	}
 }
 

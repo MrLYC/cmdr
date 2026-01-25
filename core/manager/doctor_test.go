@@ -214,7 +214,7 @@ var _ = Describe("Doctor", func() {
 			query = mock.NewMockCommandQuery(ctrl)
 			mgr = mock.NewMockCommandManager(ctrl)
 			command = mock.NewMockCommand(ctrl)
-			doctor = manager.NewCommandDoctor(mgr)
+			doctor = manager.NewCommandDoctor(mgr, "")
 
 			rootDir, _ = os.MkdirTemp("", "")
 
@@ -269,17 +269,15 @@ var _ = Describe("Doctor", func() {
 				Expect(os.WriteFile(command.GetLocation(), []byte("command"), 0755)).To(Succeed())
 			})
 
-			It("should re-define activated command", func() {
+			It("should re-activate activated command without re-defining", func() {
 				command.EXPECT().GetActivated().Return(true).AnyTimes()
-				mgr.EXPECT().Define(command.GetName(), command.GetVersion(), command.GetLocation())
 				mgr.EXPECT().Activate(command.GetName(), command.GetVersion())
 
 				Expect(doctor.Fix(false)).To(Succeed())
 			})
 
-			It("should re-define non-activate command", func() {
+			It("should skip non-activated available command", func() {
 				command.EXPECT().GetActivated().Return(false).AnyTimes()
-				mgr.EXPECT().Define(command.GetName(), command.GetVersion(), command.GetLocation())
 
 				Expect(doctor.Fix(false)).To(Succeed())
 			})
@@ -301,6 +299,58 @@ var _ = Describe("Doctor", func() {
 				Expect(os.Remove(command.GetLocation())).To(Succeed())
 				Expect(os.Mkdir(command.GetLocation(), 0755)).To(Succeed())
 				Expect(doctor.Fix(false)).To(Succeed())
+			})
+		})
+
+		Context("Backup", func() {
+			var backupRootDir string
+
+			BeforeEach(func() {
+				backupRootDir, _ = os.MkdirTemp("", "cmdr-backup-test")
+				Expect(os.WriteFile(filepath.Join(backupRootDir, "testfile"), []byte("test"), 0644)).To(Succeed())
+				doctor = manager.NewCommandDoctor(mgr, backupRootDir)
+			})
+
+			AfterEach(func() {
+				matches, _ := filepath.Glob(backupRootDir + ".backup.*")
+				for _, m := range matches {
+					os.RemoveAll(m)
+				}
+				os.RemoveAll(backupRootDir)
+			})
+
+			It("should create backup before fix", func() {
+				mgr.EXPECT().Query().Return(query, nil)
+				query.EXPECT().All().Return([]core.Command{}, nil)
+
+				Expect(doctor.FixWithOptions(false, true)).To(Succeed())
+
+				matches, err := filepath.Glob(backupRootDir + ".backup.*")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(matches).To(HaveLen(1))
+
+				backupFile := filepath.Join(matches[0], "testfile")
+				Expect(backupFile).To(BeAnExistingFile())
+			})
+
+			It("should skip backup when no-backup is true", func() {
+				mgr.EXPECT().Query().Return(query, nil)
+				query.EXPECT().All().Return([]core.Command{}, nil)
+
+				Expect(doctor.FixWithOptions(false, false)).To(Succeed())
+
+				matches, _ := filepath.Glob(backupRootDir + ".backup.*")
+				Expect(matches).To(BeEmpty())
+			})
+
+			It("should skip backup in dry-run mode", func() {
+				mgr.EXPECT().Query().Return(query, nil)
+				query.EXPECT().All().Return([]core.Command{}, nil)
+
+				Expect(doctor.FixWithOptions(true, true)).To(Succeed())
+
+				matches, _ := filepath.Glob(backupRootDir + ".backup.*")
+				Expect(matches).To(BeEmpty())
 			})
 		})
 	})

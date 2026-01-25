@@ -9,20 +9,22 @@ import (
 )
 
 var (
-	doctorDryRun bool
+	doctorDryRun   bool
+	doctorNoBackup bool
 )
 
-// doctorCmd represents the doctor command
 var doctorCmd = &cobra.Command{
 	Use:   "doctor",
 	Short: "doctor to fix cmdr",
 	Run: utils.RunCobraCommandWith(core.CommandProviderDoctor, func(cfg core.Configuration, mgr core.CommandManager) error {
-		doctor := manager.NewCommandDoctor(mgr)
-		return doctor.Fix(doctorDryRun)
+		rootDir := cfg.GetString(core.CfgKeyCmdrRootDir)
+		doctor := manager.NewCommandDoctor(mgr, rootDir)
+		return doctor.FixWithOptions(doctorDryRun, !doctorNoBackup)
 	}),
 }
 
 func init() {
 	rootCmd.AddCommand(doctorCmd)
 	doctorCmd.Flags().BoolVar(&doctorDryRun, "dry-run", false, "show what would be done without making any changes")
+	doctorCmd.Flags().BoolVar(&doctorNoBackup, "no-backup", false, "skip backup before making changes")
 }
