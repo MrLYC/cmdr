@@ -116,3 +116,10 @@ $RECYCLE.BIN/
 /.vscode/
 dist/
 .envrc
+
+# Local CMDR state (should never be committed)
+/.cmdr/
+/.cmdr-*/
+
+# Local build output
+/cmdr
