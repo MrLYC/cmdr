@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-multierror"
@@ -12,6 +13,21 @@ import (
 
 	"github.com/mrlyc/cmdr/core"
 )
+
+func resolveVersionFromLocation(name, fallbackVersion, location string) string {
+	// Shims are named as: {name}_{version}
+	// For database-backed commands, GetVersion() may normalize/truncate the original
+	// version, while location still contains the exact version in the shim filename.
+	base := filepath.Base(location)
+	prefix := name + "_"
+	if strings.HasPrefix(base, prefix) {
+		v := strings.TrimPrefix(base, prefix)
+		if v != "" {
+			return v
+		}
+	}
+	return fallbackVersion
+}
 
 type DoctorManager struct {
 	binaryMgr   core.CommandManager
@@ -133,8 +149,12 @@ func (d *DoctorManager) Query() (core.CommandQuery, error) {
 	for i, cmd := range queriedCommands {
 		name := cmd.GetName()
 		version := cmd.GetVersion()
+		location := cmd.GetLocation()
+		realVersion := resolveVersionFromLocation(name, version, location)
 
-		key := fmt.Sprintf("%s-%s", name, version)
+		// Key by resolved version (from shim filename) to avoid collapsing distinct
+		// versions when GetVersion() normalizes/truncates.
+		key := fmt.Sprintf("%s-%s", name, realVersion)
 		index, ok := indexes[key]
 		if ok {
 			// update by recorder
@@ -147,7 +167,7 @@ func (d *DoctorManager) Query() (core.CommandQuery, error) {
 			Name:      name,
 			Version:   version,
 			Activated: cmd.GetActivated(),
-			Location:  cmd.GetLocation(),
+			Location:  location,
 		})
 	}
 
@@ -259,9 +279,9 @@ func (d *CommandDoctor) FixWithOptions(dryRun bool, backup bool) error {
 	var availableCommands []core.Command
 	for _, cmd := range commands {
 		name := cmd.GetName()
-		version := cmd.GetVersion()
 		location := cmd.GetLocation()
 		activated := cmd.GetActivated()
+		version := resolveVersionFromLocation(name, cmd.GetVersion(), location)
 
 		logger.Debug("checking command", map[string]interface{}{
 			"name":     name,
@@ -275,7 +295,7 @@ func (d *CommandDoctor) FixWithOptions(dryRun bool, backup bool) error {
 				"name":     name,
 				"version":  version,
 				"location": location,
-				"error":    err.Error(),
+				"error":    err,
 			})
 		}
 
@@ -336,9 +356,9 @@ func (d *CommandDoctor) FixWithOptions(dryRun bool, backup bool) error {
 
 	for _, cmd := range availableCommands {
 		name := cmd.GetName()
-		version := cmd.GetVersion()
 		location := cmd.GetLocation()
 		activated := cmd.GetActivated()
+		version := resolveVersionFromLocation(name, cmd.GetVersion(), location)
 
 		// Skip re-define if the shim file already exists at the expected location.
 		// The command is already available (checkFileAccessible passed), so calling

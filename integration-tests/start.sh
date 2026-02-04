@@ -54,6 +54,11 @@ cmdr command install -a -n cmd -v "1.0.0" -l "$root_dir/cmd_v1.sh"
 cmdr command install -n cmd -v "2.0.0" -l "$root_dir/cmd_v2.sh"
 cmdr command define -n cmd -v "3.0.0" -l "$root_dir/cmd_v3.sh"
 
+# Special version formats to ensure `cmdr doctor` can remove unavailable commands
+# even when DB-backed GetVersion() normalizes/truncates the version string.
+cmdr command install -n cmd -v "99.0.4844.51" -l "$root_dir/cmd_v1.sh"
+cmdr command install -n cmd -v "0.7.3-ce01615" -l "$root_dir/cmd_v2.sh"
+
 cmd | grep "v1.0.0"
 
 for v in "2.0.0" "3.0.0"; do
@@ -67,10 +72,16 @@ hash -r 2>/dev/null || true
 cmd && false || true
 
 rm -rf "./.cmdr/shims/cmd/cmd_1.0.0"
+rm -rf "./.cmdr/shims/cmd/cmd_99.0.4844.51"
+rm -rf "./.cmdr/shims/cmd/cmd_0.7.3-ce01615"
 cmdr command list -n cmd -v "1.0.0"
+cmdr command list -n cmd -v "99.0.4844.51"
+cmdr command list -n cmd -v "0.7.3-ce01615"
 
 cmdr doctor
 cmdr command list -n cmd -v "1.0.0" && false || true
+cmdr command list -n cmd -v "99.0.4844.51" && false || true
+cmdr command list -n cmd -v "0.7.3-ce01615" && false || true
 
 cmdr command list -n cmd -v "2.0.0"
 cmdr command list -n cmd -v "3.0.0"
