@@ -181,6 +181,34 @@ cmdr config set -k download.replace -v '{"match": "...", "template": "..."}'
 
 ## System Commands
 
+### `cmdr clean`
+
+Clean old **inactive** command versions.
+
+This command:
+- Groups versions by command name
+- Sorts **inactive** versions by added time (based on shim file mtime)
+- Keeps the newest inactive versions (default: 3)
+- Moves versions older than a threshold (default: 100 days) into a trash directory
+
+```shell
+cmdr clean [-n <name> ...] [--age <days>] [--keep <count>]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--name` / `-n` | No | Only clean specified command name(s). Can be repeated. If any specified name does not exist, the command fails. |
+| `--age` | No | Only clean versions older than this many days (default: 100) |
+| `--keep` | No | Keep this many newest inactive versions per command (default: 3) |
+
+**Trash directory:**
+- macOS: `~/.Trash/cmdr-cleaned`
+- Linux: `/tmp/cmdr-cleaned`
+
+**Source:** [`cmd/clean.go`](https://github.com/mrlyc/cmdr/blob/master/cmd/clean.go)
+
 ### `cmdr init`
 
 Initialize CMDR environment.
@@ -243,6 +271,7 @@ cmdr version
 
 ```
 cmdr
+├── clean         # Clean old inactive versions
 ├── command
 │   ├── define    # Define command from local path
 │   ├── install   # Install command from URL/path

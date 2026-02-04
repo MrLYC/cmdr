@@ -94,6 +94,11 @@ const (
 	CfgKeyXUpgradeRelease = "_.upgrade.release"
 	CfgKeyXUpgradeAsset   = "_.upgrade.asset"
 	CfgKeyXUpgradeArgs    = "_.upgrade.args"
+
+	// cmd.clean
+	CfgKeyXCleanAgeDays = "_.clean.age_days"
+	CfgKeyXCleanKeep    = "_.clean.keep"
+	CfgKeyXCleanName    = "_.clean.name"
 )
 
 func init() {

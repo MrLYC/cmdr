@@ -121,5 +121,8 @@ dist/
 /.cmdr/
 /.cmdr-*/
 
+# Local tooling cache
+/.litho/
+
 # Local build output
 /cmdr

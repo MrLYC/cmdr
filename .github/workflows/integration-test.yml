@@ -34,7 +34,7 @@ jobs:
         run: |
           export CMDR_LOG_LEVEL=debug
           export CMDR_CORE_ROOT_DIR="${{ github.workspace }}/.cmdr"
-          export CMDR_CORE_PROFILE_DIR="${{ github.workspace }}/profile"
+          export CMDR_CORE_PROFILE_DIR="${{ github.workspace }}/.cmdr/profile"
           export CMDR_CORE_CONFIG_PATH=/tmp/cmdr.yaml
           ./install.sh -d 30
           ./integration-tests/start.sh
@@ -47,7 +47,7 @@ jobs:
           brew install expect || true
           export CMDR_LOG_LEVEL=debug
           export CMDR_CORE_ROOT_DIR="${{ github.workspace }}/.cmdr"
-          export CMDR_CORE_PROFILE_DIR="${{ github.workspace }}/profile"
+          export CMDR_CORE_PROFILE_DIR="${{ github.workspace }}/.cmdr/profile"
           export CMDR_CORE_CONFIG_PATH=/tmp/cmdr.yaml
           ./install.sh -d 30
           ./integration-tests/start.sh
