@@ -2,70 +2,70 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://mrlyc.github.io/cmdr/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/adr/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/api/configuration-keys/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/api/core-interfaces/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/architecture/data-flow/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/architecture/design-patterns/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/architecture/overview/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/components/cli-commands/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/components/command-manager/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/components/fetchers/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/components/initializers/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/components/strategies/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/getting-started/configuration/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/getting-started/installation/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/getting-started/quick-start/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/operations/build-and-test/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
     <url>
          <loc>https://mrlyc.github.io/cmdr/operations/release/</loc>
-         <lastmod>2026-01-26</lastmod>
+         <lastmod>2026-02-04</lastmod>
     </url>
 </urlset>

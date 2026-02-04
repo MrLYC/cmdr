@@ -1021,6 +1021,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#cmdr-clean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cmdr clean
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cmdr-init" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1731,6 +1742,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#cmdr-clean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cmdr clean
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cmdr-init" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2026,9 +2048,49 @@
 <a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>cmdr<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>-k<span class="w"> </span>download.replace<span class="w"> </span>-v<span class="w"> </span><span class="s1">&#39;{&quot;match&quot;: &quot;...&quot;, &quot;template&quot;: &quot;...&quot;}&#39;</span>
 </code></pre></div>
 <h2 id="system-commands">System Commands<a class="headerlink" href="#system-commands" title="Permanent link">&para;</a></h2>
+<h3 id="cmdr-clean"><code>cmdr clean</code><a class="headerlink" href="#cmdr-clean" title="Permanent link">&para;</a></h3>
+<p>Clean old <strong>inactive</strong> command versions.</p>
+<p>This command:
+- Groups versions by command name
+- Sorts <strong>inactive</strong> versions by added time (based on shim file mtime)
+- Keeps the newest inactive versions (default: 3)
+- Moves versions older than a threshold (default: 100 days) into a trash directory</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>cmdr<span class="w"> </span>clean<span class="w"> </span><span class="o">[</span>-n<span class="w"> </span>&lt;name&gt;<span class="w"> </span>...<span class="o">]</span><span class="w"> </span><span class="o">[</span>--age<span class="w"> </span>&lt;days&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--keep<span class="w"> </span>&lt;count&gt;<span class="o">]</span>
+</code></pre></div>
+<p><strong>Flags:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--name</code> / <code>-n</code></td>
+<td>No</td>
+<td>Only clean specified command name(s). Can be repeated. If any specified name does not exist, the command fails.</td>
+</tr>
+<tr>
+<td><code>--age</code></td>
+<td>No</td>
+<td>Only clean versions older than this many days (default: 100)</td>
+</tr>
+<tr>
+<td><code>--keep</code></td>
+<td>No</td>
+<td>Keep this many newest inactive versions per command (default: 3)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Trash directory:</strong>
+- macOS: <code>~/.Trash/cmdr-cleaned</code>
+- Linux: <code>/tmp/cmdr-cleaned</code></p>
+<p><strong>Source:</strong> <a href="https://github.com/mrlyc/cmdr/blob/master/cmd/clean.go"><code>cmd/clean.go</code></a></p>
 <h3 id="cmdr-init"><code>cmdr init</code><a class="headerlink" href="#cmdr-init" title="Permanent link">&para;</a></h3>
 <p>Initialize CMDR environment.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>cmdr<span class="w"> </span>init
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cmdr<span class="w"> </span>init
 </code></pre></div>
 <p>This command:
 1. Creates directory structure (<code>bin/</code>, <code>shims/</code>, <code>profile/</code>)
@@ -2037,7 +2099,7 @@
 <p><strong>Source:</strong> <a href="https://github.com/mrlyc/cmdr/blob/master/cmd/init.go"><code>cmd/init.go</code></a></p>
 <h3 id="cmdr-upgrade"><code>cmdr upgrade</code><a class="headerlink" href="#cmdr-upgrade" title="Permanent link">&para;</a></h3>
 <p>Upgrade CMDR to the latest version.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cmdr<span class="w"> </span>upgrade<span class="w"> </span><span class="o">[</span>-r<span class="w"> </span>&lt;release&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>-a<span class="w"> </span>&lt;asset&gt;<span class="o">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>cmdr<span class="w"> </span>upgrade<span class="w"> </span><span class="o">[</span>-r<span class="w"> </span>&lt;release&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>-a<span class="w"> </span>&lt;asset&gt;<span class="o">]</span>
 </code></pre></div>
 <p><strong>Flags:</strong></p>
 <table>
@@ -2064,7 +2126,7 @@
 <p><strong>Source:</strong> <a href="https://github.com/mrlyc/cmdr/blob/master/cmd/upgrade.go"><code>cmd/upgrade.go</code></a></p>
 <h3 id="cmdr-doctor"><code>cmdr doctor</code><a class="headerlink" href="#cmdr-doctor" title="Permanent link">&para;</a></h3>
 <p>Diagnose CMDR installation issues.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>cmdr<span class="w"> </span>doctor
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>cmdr<span class="w"> </span>doctor
 </code></pre></div>
 <p>Checks for:
 - Directory structure integrity
@@ -2074,26 +2136,27 @@
 <p><strong>Source:</strong> <a href="https://github.com/mrlyc/cmdr/blob/master/cmd/doctor.go"><code>cmd/doctor.go</code></a></p>
 <h3 id="cmdr-version"><code>cmdr version</code><a class="headerlink" href="#cmdr-version" title="Permanent link">&para;</a></h3>
 <p>Display CMDR version information.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>cmdr<span class="w"> </span>version
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>cmdr<span class="w"> </span>version
 </code></pre></div>
 <p><strong>Source:</strong> <a href="https://github.com/mrlyc/cmdr/blob/master/cmd/version.go"><code>cmd/version.go</code></a></p>
 <h2 id="command-structure">Command Structure<a class="headerlink" href="#command-structure" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>cmdr
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>├── command
-<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>│   ├── define    # Define command from local path
-<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>│   ├── install   # Install command from URL/path
-<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>│   ├── list      # List installed commands
-<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>│   ├── remove    # Remove a command version
-<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>│   ├── unset     # Deactivate a command
-<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>│   └── use       # Activate a command version
-<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>├── config
-<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a>│   ├── get       # Get config value
-<a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>│   ├── list      # List all config
-<a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a>│   └── set       # Set config value
-<a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>├── doctor        # Diagnose issues
-<a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a>├── init          # Initialize CMDR
-<a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a>├── upgrade       # Upgrade CMDR
-<a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a>└── version       # Show version
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>cmdr
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>├── clean         # Clean old inactive versions
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>├── command
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>│   ├── define    # Define command from local path
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>│   ├── install   # Install command from URL/path
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>│   ├── list      # List installed commands
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>│   ├── remove    # Remove a command version
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>│   ├── unset     # Deactivate a command
+<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>│   └── use       # Activate a command version
+<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>├── config
+<a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>│   ├── get       # Get config value
+<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>│   ├── list      # List all config
+<a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>│   └── set       # Set config value
+<a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a>├── doctor        # Diagnose issues
+<a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a>├── init          # Initialize CMDR
+<a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a>├── upgrade       # Upgrade CMDR
+<a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a>└── version       # Show version
 </code></pre></div>
 <hr />
 <div class="footnote">
