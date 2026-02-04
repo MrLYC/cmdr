@@ -224,7 +224,7 @@ var cleanCmd = &cobra.Command{
 					"name":     cmd.GetName(),
 					"version":  cmd.GetVersion(),
 					"location": src,
-					"error":    err.Error(),
+					"error":    err,
 				})
 				continue
 			}
@@ -278,7 +278,7 @@ var cleanCmd = &cobra.Command{
 						logger.Warn("failed to rollback shim after undefine failure", map[string]interface{}{
 							"name":    name,
 							"version": c.version,
-							"error":   rbErr.Error(),
+							"error":   rbErr,
 						})
 					}
 					resultErr = multierror.Append(resultErr, errors.Wrapf(err, "undefine %s:%s failed", name, c.version))

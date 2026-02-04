@@ -34,7 +34,13 @@ func (l *terminalLogger) getFieldsMessages(fields []map[string]interface{}) []st
 		if k != l.errorKey {
 			messages = append(messages, fmt.Sprintf("%s=%s", k, cast.ToString(v)))
 		} else if v != nil {
-			errorValue = v.(error)
+			switch vv := v.(type) {
+			case error:
+				errorValue = vv
+			default:
+				// Be defensive: callers might pass a string (err.Error()) or other values.
+				messages = append(messages, fmt.Sprintf("%s=%s", k, cast.ToString(v)))
+			}
 		}
 	}
 
