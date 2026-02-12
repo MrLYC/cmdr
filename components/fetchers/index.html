@@ -1771,29 +1771,29 @@
 </table>
 <p><strong>Example:</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Downloads and extracts tar.gz automatically</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>install<span class="w"> </span>kubectl<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.28.0<span class="w"> </span>-l<span class="w"> </span>https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl.tar.gz
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>cmdr<span class="w"> </span>install<span class="w"> </span>kubectl<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.28.0<span class="w"> </span>-l<span class="w"> </span>https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl.tar.gz
 </code></pre></div>
 <h2 id="sub-directory-selection">Sub-Directory Selection<a class="headerlink" href="#sub-directory-selection" title="Permanent link">&para;</a></h2>
 <p>You can select a specific file from an archive:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Format: url//subpath</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>install<span class="w"> </span>node<span class="w"> </span>-v<span class="w"> </span><span class="m">18</span>.0.0<span class="w"> </span>-l<span class="w"> </span>https://nodejs.org/dist/v18.0.0/node-v18.0.0-linux-x64.tar.gz//node-v18.0.0-linux-x64/bin/node
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>cmdr<span class="w"> </span>install<span class="w"> </span>node<span class="w"> </span>-v<span class="w"> </span><span class="m">18</span>.0.0<span class="w"> </span>-l<span class="w"> </span>https://nodejs.org/dist/v18.0.0/node-v18.0.0-linux-x64.tar.gz//node-v18.0.0-linux-x64/bin/node
 </code></pre></div>
 <h2 id="git-repository-cloning">Git Repository Cloning<a class="headerlink" href="#git-repository-cloning" title="Permanent link">&para;</a></h2>
 <p>Fetch from Git repositories:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Clone repository</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>install<span class="w"> </span>script<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span>-l<span class="w"> </span>git::https://github.com/user/repo.git
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>cmdr<span class="w"> </span>install<span class="w"> </span>script<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span>-l<span class="w"> </span>git::https://github.com/user/repo.git
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Specific branch</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>install<span class="w"> </span>script<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span>-l<span class="w"> </span>git::https://github.com/user/repo.git?ref<span class="o">=</span>main
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>cmdr<span class="w"> </span>install<span class="w"> </span>script<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span>-l<span class="w"> </span>git::https://github.com/user/repo.git?ref<span class="o">=</span>main
 <a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
 <a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1"># Specific tag</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>install<span class="w"> </span>script<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span>-l<span class="w"> </span>git::https://github.com/user/repo.git?ref<span class="o">=</span>v1.0.0
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>cmdr<span class="w"> </span>install<span class="w"> </span>script<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span>-l<span class="w"> </span>git::https://github.com/user/repo.git?ref<span class="o">=</span>v1.0.0
 <a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
 <a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="c1"># Specific commit</span>
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>install<span class="w"> </span>script<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span>-l<span class="w"> </span>git::https://github.com/user/repo.git?ref<span class="o">=</span>abc123
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>cmdr<span class="w"> </span>install<span class="w"> </span>script<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span>-l<span class="w"> </span>git::https://github.com/user/repo.git?ref<span class="o">=</span>abc123
 <a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>
 <a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="c1"># Sub-path in repository</span>
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>install<span class="w"> </span>script<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span>-l<span class="w"> </span>git::https://github.com/user/repo.git//scripts/install.sh
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>cmdr<span class="w"> </span>install<span class="w"> </span>script<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span>-l<span class="w"> </span>git::https://github.com/user/repo.git//scripts/install.sh
 </code></pre></div>
 <h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
 <p>Fetchers propagate errors from underlying libraries. The DownloadManager's strategy chain provides retry logic:</p>
@@ -1804,7 +1804,7 @@
 <h2 id="checksum-verification">Checksum Verification<a class="headerlink" href="#checksum-verification" title="Permanent link">&para;</a></h2>
 <p>go-getter supports checksum verification:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Format: url?checksum=type:value</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>install<span class="w"> </span>kubectl<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.28.0<span class="w"> </span>-l<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>cmdr<span class="w"> </span>install<span class="w"> </span>kubectl<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.28.0<span class="w"> </span>-l<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="s2">&quot;https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl?checksum=sha256:abc123...&quot;</span>
 </code></pre></div>
 <h2 id="custom-fetcher-implementation">Custom Fetcher Implementation<a class="headerlink" href="#custom-fetcher-implementation" title="Permanent link">&para;</a></h2>

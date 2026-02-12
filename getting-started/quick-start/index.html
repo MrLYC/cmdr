@@ -1537,11 +1537,12 @@
 <h2 id="installing-your-first-command">Installing Your First Command<a class="headerlink" href="#installing-your-first-command" title="Permanent link">&para;</a></h2>
 <p>Let's install a command version. CMDR can download from URLs or use local files:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Install from URL</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>install<span class="w"> </span>-n<span class="w"> </span>&lt;command-name&gt;<span class="w"> </span>-v<span class="w"> </span>&lt;version&gt;<span class="w"> </span>-l<span class="w"> </span>&lt;url-or-path&gt;
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>cmdr<span class="w"> </span>install<span class="w"> </span>-n<span class="w"> </span>&lt;command-name&gt;<span class="w"> </span>-v<span class="w"> </span>&lt;version&gt;<span class="w"> </span>-l<span class="w"> </span>&lt;url-or-path&gt;
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Example: Install a specific script</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>install<span class="w"> </span>-n<span class="w"> </span>hello<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span>-l<span class="w"> </span>/usr/local/bin/hello
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>cmdr<span class="w"> </span>install<span class="w"> </span>-n<span class="w"> </span>hello<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span>-l<span class="w"> </span>/usr/local/bin/hello
 </code></pre></div>
+<p><strong>Note:</strong> The <code>cmdr command xxx</code> format is deprecated. Use <code>cmdr xxx</code> directly.</p>
 <h3 id="flags-explained">Flags Explained<a class="headerlink" href="#flags-explained" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -1571,45 +1572,45 @@
 </table>
 <h2 id="listing-installed-commands">Listing Installed Commands<a class="headerlink" href="#listing-installed-commands" title="Permanent link">&para;</a></h2>
 <p>View all versions of a specific command:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>list<span class="w"> </span>-n<span class="w"> </span>&lt;command-name&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cmdr<span class="w"> </span>list<span class="w"> </span>-n<span class="w"> </span>&lt;command-name&gt;
 </code></pre></div>
 <p>View all managed commands:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>list
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cmdr<span class="w"> </span>list
 </code></pre></div>
 <h2 id="switching-versions">Switching Versions<a class="headerlink" href="#switching-versions" title="Permanent link">&para;</a></h2>
 <p>Activate a specific version of a command:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>use<span class="w"> </span>-n<span class="w"> </span>&lt;command-name&gt;<span class="w"> </span>-v<span class="w"> </span>&lt;version&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cmdr<span class="w"> </span>use<span class="w"> </span>-n<span class="w"> </span>&lt;command-name&gt;<span class="w"> </span>-v<span class="w"> </span>&lt;version&gt;
 </code></pre></div>
 <p>After running this, the command will point to the specified version.</p>
 <h2 id="removing-commands">Removing Commands<a class="headerlink" href="#removing-commands" title="Permanent link">&para;</a></h2>
 <p>Remove a specific version:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>remove<span class="w"> </span>-n<span class="w"> </span>&lt;command-name&gt;<span class="w"> </span>-v<span class="w"> </span>&lt;version&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cmdr<span class="w"> </span>remove<span class="w"> </span>-n<span class="w"> </span>&lt;command-name&gt;<span class="w"> </span>-v<span class="w"> </span>&lt;version&gt;
 </code></pre></div>
 <h2 id="practical-example">Practical Example<a class="headerlink" href="#practical-example" title="Permanent link">&para;</a></h2>
 <p>Let's walk through managing multiple versions of a tool:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># 1. Install version 1.0.0</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>install<span class="w"> </span>-n<span class="w"> </span>mytool<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span>-l<span class="w"> </span>https://example.com/mytool-1.0.0
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>cmdr<span class="w"> </span>install<span class="w"> </span>-n<span class="w"> </span>mytool<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0<span class="w"> </span>-l<span class="w"> </span>https://example.com/mytool-1.0.0
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># 2. Install version 2.0.0</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>install<span class="w"> </span>-n<span class="w"> </span>mytool<span class="w"> </span>-v<span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>-l<span class="w"> </span>https://example.com/mytool-2.0.0
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>cmdr<span class="w"> </span>install<span class="w"> </span>-n<span class="w"> </span>mytool<span class="w"> </span>-v<span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>-l<span class="w"> </span>https://example.com/mytool-2.0.0
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># 3. List all installed versions</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>list<span class="w"> </span>-n<span class="w"> </span>mytool
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>cmdr<span class="w"> </span>list<span class="w"> </span>-n<span class="w"> </span>mytool
 <a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
 <a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="c1"># 4. Use version 1.0.0</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>use<span class="w"> </span>-n<span class="w"> </span>mytool<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>cmdr<span class="w"> </span>use<span class="w"> </span>-n<span class="w"> </span>mytool<span class="w"> </span>-v<span class="w"> </span><span class="m">1</span>.0.0
 <a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
 <a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="c1"># 5. Verify</span>
 <a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>mytool<span class="w"> </span>--version<span class="w">  </span><span class="c1"># Should show 1.0.0</span>
 <a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>
 <a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="c1"># 6. Switch to version 2.0.0</span>
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>cmdr<span class="w"> </span><span class="nb">command</span><span class="w"> </span>use<span class="w"> </span>-n<span class="w"> </span>mytool<span class="w"> </span>-v<span class="w"> </span><span class="m">2</span>.0.0
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>cmdr<span class="w"> </span>use<span class="w"> </span>-n<span class="w"> </span>mytool<span class="w"> </span>-v<span class="w"> </span><span class="m">2</span>.0.0
 <a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>
 <a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="c1"># 7. Verify again</span>
 <a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>mytool<span class="w"> </span>--version<span class="w">  </span><span class="c1"># Should show 2.0.0</span>
 </code></pre></div>
 <h2 id="how-version-switching-works">How Version Switching Works<a class="headerlink" href="#how-version-switching-works" title="Permanent link">&para;</a></h2>
-<p>When you run <code>cmdr command use</code>, CMDR:</p>
+<p>When you run <code>cmdr use</code>, CMDR:</p>
 <ol>
 <li>Looks up the command in its database<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup></li>
 <li>Creates or updates a shim script in <code>~/.cmdr/shims/</code><sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup></li>
