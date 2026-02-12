@@ -105,7 +105,7 @@ go-getter automatically handles archives:
 
 ```bash
 # Downloads and extracts tar.gz automatically
-cmdr command install kubectl -v 1.28.0 -l https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl.tar.gz
+cmdr install kubectl -v 1.28.0 -l https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl.tar.gz
 ```
 
 ## Sub-Directory Selection
@@ -114,7 +114,7 @@ You can select a specific file from an archive:
 
 ```bash
 # Format: url//subpath
-cmdr command install node -v 18.0.0 -l https://nodejs.org/dist/v18.0.0/node-v18.0.0-linux-x64.tar.gz//node-v18.0.0-linux-x64/bin/node
+cmdr install node -v 18.0.0 -l https://nodejs.org/dist/v18.0.0/node-v18.0.0-linux-x64.tar.gz//node-v18.0.0-linux-x64/bin/node
 ```
 
 ## Git Repository Cloning
@@ -123,19 +123,19 @@ Fetch from Git repositories:
 
 ```bash
 # Clone repository
-cmdr command install script -v 1.0.0 -l git::https://github.com/user/repo.git
+cmdr install script -v 1.0.0 -l git::https://github.com/user/repo.git
 
 # Specific branch
-cmdr command install script -v 1.0.0 -l git::https://github.com/user/repo.git?ref=main
+cmdr install script -v 1.0.0 -l git::https://github.com/user/repo.git?ref=main
 
 # Specific tag
-cmdr command install script -v 1.0.0 -l git::https://github.com/user/repo.git?ref=v1.0.0
+cmdr install script -v 1.0.0 -l git::https://github.com/user/repo.git?ref=v1.0.0
 
 # Specific commit
-cmdr command install script -v 1.0.0 -l git::https://github.com/user/repo.git?ref=abc123
+cmdr install script -v 1.0.0 -l git::https://github.com/user/repo.git?ref=abc123
 
 # Sub-path in repository
-cmdr command install script -v 1.0.0 -l git::https://github.com/user/repo.git//scripts/install.sh
+cmdr install script -v 1.0.0 -l git::https://github.com/user/repo.git//scripts/install.sh
 ```
 
 ## Error Handling
@@ -154,7 +154,7 @@ go-getter supports checksum verification:
 
 ```bash
 # Format: url?checksum=type:value
-cmdr command install kubectl -v 1.28.0 -l \
+cmdr install kubectl -v 1.28.0 -l \
   "https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl?checksum=sha256:abc123..."
 ```
 

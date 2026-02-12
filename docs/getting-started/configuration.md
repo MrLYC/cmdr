@@ -102,7 +102,7 @@ cmdr config set -k download.replace -v '{"match": "^https://raw.githubuserconten
 
 ```shell
 # After configuring URL replacement
-cmdr command install -n install.sh -v 0.0.0 -l https://raw.githubusercontent.com/MrLYC/cmdr/master/install.sh
+cmdr install -n install.sh -v 0.0.0 -l https://raw.githubusercontent.com/MrLYC/cmdr/master/install.sh
 # The URL is automatically rewritten to use the proxy
 ```
 

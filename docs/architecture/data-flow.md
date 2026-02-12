@@ -4,7 +4,7 @@ This document describes how data flows through CMDR during common operations.
 
 ## Command Installation Flow
 
-When a user runs `cmdr command install -n kubectl -v 1.28.0 -l <url>`:
+When a user runs `cmdr install -n kubectl -v 1.28.0 -l <url>`:
 
 ```
 ┌──────────────┐
@@ -52,7 +52,7 @@ When a user runs `cmdr command install -n kubectl -v 1.28.0 -l <url>`:
 
 ## Command Activation Flow
 
-When a user runs `cmdr command use -n kubectl -v 1.28.0`:
+When a user runs `cmdr use -n kubectl -v 1.28.0`:
 
 ```
 ┌──────────────┐

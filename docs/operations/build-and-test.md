@@ -252,7 +252,7 @@ go test ./... -race
 ```bash
 # Via environment variable
 export CMDR_LOG_LEVEL=debug
-cmdr command list
+cmdr list
 
 # Via config flag
 cmdr --config /path/to/debug-config.yaml command list

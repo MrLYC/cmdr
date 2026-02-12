@@ -29,9 +29,9 @@ echo "Initializing cmdr..."
 source ./profile-doctor-test/cmdr_initializer.sh
 
 echo "Installing test commands..."
-cmdr command install -a -n cmd -v "1.0.0" -l "$root_dir/cmd_v1.sh"
-cmdr command install -n cmd -v "2.0.0" -l "$root_dir/cmd_v2.sh"
-cmdr command define -n cmd -v "3.0.0" -l "$root_dir/cmd_v3.sh"
+cmdr install -a -n cmd -v "1.0.0" -l "$root_dir/cmd_v1.sh"
+cmdr install -n cmd -v "2.0.0" -l "$root_dir/cmd_v2.sh"
+cmdr define -n cmd -v "3.0.0" -l "$root_dir/cmd_v3.sh"
 
 echo "Verifying v1 works..."
 cmd | grep "v1.0.0"
@@ -43,18 +43,18 @@ echo "Running cmdr doctor..."
 cmdr doctor
 
 echo "Verifying v1 was removed..."
-cmdr command list -n cmd -v "1.0.0" 2>&1 && { echo "ERROR: v1 should not exist"; exit 1; } || echo "✓ v1 correctly removed"
+cmdr list -n cmd -v "1.0.0" 2>&1 && { echo "ERROR: v1 should not exist"; exit 1; } || echo "✓ v1 correctly removed"
 
 echo "Verifying v2 still exists..."
-cmdr command list -n cmd -v "2.0.0" > /dev/null || { echo "ERROR: v2 should exist"; exit 1; }
+cmdr list -n cmd -v "2.0.0" > /dev/null || { echo "ERROR: v2 should exist"; exit 1; }
 echo "✓ v2 still exists"
 
 echo "Verifying v3 still exists..."
-cmdr command list -n cmd -v "3.0.0" > /dev/null || { echo "ERROR: v3 should exist"; exit 1; }
+cmdr list -n cmd -v "3.0.0" > /dev/null || { echo "ERROR: v3 should exist"; exit 1; }
 echo "✓ v3 still exists"
 
 echo "Verifying v2 can be activated and used..."
-cmdr command use -n cmd -v "2.0.0"
+cmdr use -n cmd -v "2.0.0"
 cmd | grep "v2.0.0" || { echo "ERROR: v2 not working"; exit 1; }
 echo "✓ v2 works"
 
