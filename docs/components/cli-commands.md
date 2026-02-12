@@ -17,13 +17,15 @@ cmdr [flags] [command]
 
 ## Command Management
 
-### `cmdr command install`
+### `cmdr install`
 
 Install a new command version into CMDR.
 
 ```shell
-cmdr command install -n <name> -v <version> -l <location> [-a]
+cmdr install -n <name> -v <version> -l <location> [-a]
 ```
+
+**Note:** The old format `cmdr command install` is deprecated. Use `cmdr install` instead.
 
 **Flags:**
 
@@ -40,19 +42,21 @@ cmdr command install -n <name> -v <version> -l <location> [-a]
 
 ```shell
 # Install kubectl 1.28.0 from URL
-cmdr command install -n kubectl -v 1.28.0 -l https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl
+cmdr install -n kubectl -v 1.28.0 -l https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl
 
 # Install and activate immediately
-cmdr command install -n kubectl -v 1.28.0 -l /path/to/kubectl -a
+cmdr install -n kubectl -v 1.28.0 -l /path/to/kubectl -a
 ```
 
-### `cmdr command use`
+### `cmdr use`
 
 Activate a specific version of a command.
 
 ```shell
-cmdr command use -n <name> -v <version>
+cmdr use -n <name> -v <version>
 ```
+
+**Note:** The old format `cmdr command use` is deprecated. Use `cmdr use` instead.
 
 **Flags:**
 
@@ -66,16 +70,18 @@ cmdr command use -n <name> -v <version>
 **Example:**
 
 ```shell
-cmdr command use -n kubectl -v 1.28.0
+cmdr use -n kubectl -v 1.28.0
 ```
 
-### `cmdr command list`
+### `cmdr list`
 
 List installed command versions.
 
 ```shell
-cmdr command list [-n <name>] [-v <version>] [-a]
+cmdr list [-n <name>] [-v <version>] [-a]
 ```
+
+**Note:** The old format `cmdr command list` is deprecated. Use `cmdr list` instead.
 
 **Flags:**
 
@@ -91,22 +97,24 @@ cmdr command list [-n <name>] [-v <version>] [-a]
 
 ```shell
 # List all commands
-cmdr command list
+cmdr list
 
 # List all versions of kubectl
-cmdr command list -n kubectl
+cmdr list -n kubectl
 
 # List only activated commands
-cmdr command list -a
+cmdr list -a
 ```
 
-### `cmdr command remove`
+### `cmdr remove`
 
 Remove a command version.
 
 ```shell
-cmdr command remove -n <name> -v <version>
+cmdr remove -n <name> -v <version>
 ```
+
+**Note:** The old format `cmdr command remove` is deprecated. Use `cmdr remove` instead.
 
 **Flags:**
 
@@ -117,23 +125,27 @@ cmdr command remove -n <name> -v <version>
 
 **Source:** [`cmd/command/remove.go`](https://github.com/mrlyc/cmdr/blob/master/cmd/command/remove.go)
 
-### `cmdr command unset`
+### `cmdr unset`
 
 Deactivate a command (remove from shims).
 
 ```shell
-cmdr command unset -n <name>
+cmdr unset -n <name>
 ```
+
+**Note:** The old format `cmdr command unset` is deprecated. Use `cmdr unset` instead.
 
 **Source:** [`cmd/command/unset.go`](https://github.com/mrlyc/cmdr/blob/master/cmd/command/unset.go)
 
-### `cmdr command define`
+### `cmdr define`
 
 Define a command without downloading (for local binaries).
 
 ```shell
-cmdr command define -n <name> -v <version> -l <path> [-a]
+cmdr define -n <name> -v <version> -l <path> [-a]
 ```
+
+**Note:** The old format `cmdr command define` is deprecated. Use `cmdr define` instead.
 
 **Source:** [`cmd/command/define.go`](https://github.com/mrlyc/cmdr/blob/master/cmd/command/define.go)
 

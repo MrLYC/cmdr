@@ -21,13 +21,13 @@ CMDR (Command Manager) solves a common developer problem: managing multiple vers
 
 ```shell
 # Install a command version
-cmdr command install -n kubectl -v 1.28.0 -l https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl
+cmdr install -n kubectl -v 1.28.0 -l https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl
 
 # List installed versions
-cmdr command list -n kubectl
+cmdr list -n kubectl
 
 # Switch to a specific version
-cmdr command use -n kubectl -v 1.28.0
+cmdr use -n kubectl -v 1.28.0
 ```
 
 ## Key Features

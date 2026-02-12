@@ -8,11 +8,13 @@ Let's install a command version. CMDR can download from URLs or use local files:
 
 ```shell
 # Install from URL
-cmdr command install -n <command-name> -v <version> -l <url-or-path>
+cmdr install -n <command-name> -v <version> -l <url-or-path>
 
 # Example: Install a specific script
-cmdr command install -n hello -v 1.0.0 -l /usr/local/bin/hello
+cmdr install -n hello -v 1.0.0 -l /usr/local/bin/hello
 ```
+
+**Note:** The `cmdr command xxx` format is deprecated. Use `cmdr xxx` directly.
 
 ### Flags Explained
 
@@ -27,13 +29,13 @@ cmdr command install -n hello -v 1.0.0 -l /usr/local/bin/hello
 View all versions of a specific command:
 
 ```shell
-cmdr command list -n <command-name>
+cmdr list -n <command-name>
 ```
 
 View all managed commands:
 
 ```shell
-cmdr command list
+cmdr list
 ```
 
 ## Switching Versions
@@ -41,7 +43,7 @@ cmdr command list
 Activate a specific version of a command:
 
 ```shell
-cmdr command use -n <command-name> -v <version>
+cmdr use -n <command-name> -v <version>
 ```
 
 After running this, the command will point to the specified version.
@@ -51,7 +53,7 @@ After running this, the command will point to the specified version.
 Remove a specific version:
 
 ```shell
-cmdr command remove -n <command-name> -v <version>
+cmdr remove -n <command-name> -v <version>
 ```
 
 ## Practical Example
@@ -60,22 +62,22 @@ Let's walk through managing multiple versions of a tool:
 
 ```shell
 # 1. Install version 1.0.0
-cmdr command install -n mytool -v 1.0.0 -l https://example.com/mytool-1.0.0
+cmdr install -n mytool -v 1.0.0 -l https://example.com/mytool-1.0.0
 
 # 2. Install version 2.0.0
-cmdr command install -n mytool -v 2.0.0 -l https://example.com/mytool-2.0.0
+cmdr install -n mytool -v 2.0.0 -l https://example.com/mytool-2.0.0
 
 # 3. List all installed versions
-cmdr command list -n mytool
+cmdr list -n mytool
 
 # 4. Use version 1.0.0
-cmdr command use -n mytool -v 1.0.0
+cmdr use -n mytool -v 1.0.0
 
 # 5. Verify
 mytool --version  # Should show 1.0.0
 
 # 6. Switch to version 2.0.0
-cmdr command use -n mytool -v 2.0.0
+cmdr use -n mytool -v 2.0.0
 
 # 7. Verify again
 mytool --version  # Should show 2.0.0
@@ -83,7 +85,7 @@ mytool --version  # Should show 2.0.0
 
 ## How Version Switching Works
 
-When you run `cmdr command use`, CMDR:
+When you run `cmdr use`, CMDR:
 
 1. Looks up the command in its database[^1]
 2. Creates or updates a shim script in `~/.cmdr/shims/`[^2]

@@ -72,7 +72,7 @@ The CLI is built with [Cobra](https://github.com/spf13/cobra) and organized into
 | Command | Description | Source |
 |---------|-------------|--------|
 | `cmdr init` | Initialize CMDR environment | [`cmd/init.go`](https://github.com/mrlyc/cmdr/blob/master/cmd/init.go) |
-| `cmdr command` | Manage command versions | [`cmd/command/`](https://github.com/mrlyc/cmdr/blob/master/cmd/command/) |
+| `cmdr install/use/list/...` | Manage command versions (deprecated: `cmdr command xxx`) | [`cmd/command/`](https://github.com/mrlyc/cmdr/blob/master/cmd/command/) |
 | `cmdr config` | Manage configuration | [`cmd/config/`](https://github.com/mrlyc/cmdr/blob/master/cmd/config/) |
 | `cmdr upgrade` | Upgrade CMDR itself | [`cmd/upgrade.go`](https://github.com/mrlyc/cmdr/blob/master/cmd/upgrade.go) |
 | `cmdr doctor` | Diagnose issues | [`cmd/doctor.go`](https://github.com/mrlyc/cmdr/blob/master/cmd/doctor.go) |
