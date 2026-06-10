@@ -18,33 +18,42 @@ var setCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		logger := core.GetLogger()
 		cfg := core.GetConfiguration()
-		configFile := cfg.ConfigFileUsed()
-
-		userCfg := core.NewConfiguration()
-		userCfg.SetConfigFile(configFile)
-		err := userCfg.ReadInConfig()
-		if err != nil {
-			logger.Warn("failed to read user configuration file", map[string]interface{}{
-				"file": configFile,
-			})
-
-			configDir := filepath.Dir(configFile)
-			utils.PanicOnError("create configuration dir", os.MkdirAll(configDir, 0644))
-		}
-
 		key := cfg.GetString(core.CfgKeyXConfigSetKey)
 		yamlValue := cfg.GetString(core.CfgKeyXConfigSetValue)
 
-		var value interface{}
-		utils.PanicOnError("mark yaml value", yaml.Unmarshal([]byte(yamlValue), &value))
+		utils.PanicOnError("write user configuration", setConfigValue(cfg.ConfigFileUsed(), key, yamlValue, logger))
+	},
+}
 
-		userCfg.Set(key, value)
-
-		logger.Info("writing user configuration", map[string]interface{}{
+func setConfigValue(configFile, key, yamlValue string, logger interface {
+	Warn(string, ...map[string]interface{})
+	Info(string, ...map[string]interface{})
+}) error {
+	userCfg := core.NewConfiguration()
+	userCfg.SetConfigFile(configFile)
+	err := userCfg.ReadInConfig()
+	if err != nil {
+		logger.Warn("failed to read user configuration file", map[string]interface{}{
 			"file": configFile,
 		})
-		utils.PanicOnError("write user configuration", userCfg.WriteConfig())
-	},
+
+		configDir := filepath.Dir(configFile)
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			return err
+		}
+	}
+
+	var value interface{}
+	if err := yaml.Unmarshal([]byte(yamlValue), &value); err != nil {
+		return err
+	}
+
+	userCfg.Set(key, value)
+
+	logger.Info("writing user configuration", map[string]interface{}{
+		"file": configFile,
+	})
+	return userCfg.WriteConfig()
 }
 
 func init() {

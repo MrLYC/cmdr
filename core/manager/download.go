@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-getter"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
@@ -29,10 +28,6 @@ func (m *DownloadManager) SetReplacements(replacements utils.Replacements) {
 
 func (m *DownloadManager) SetStrategyChain(chain *strategy.StrategyChain) {
 	m.strategy = chain
-}
-
-func (m *DownloadManager) getFetcherOptions() []getter.ClientOption {
-	return nil
 }
 
 func (m *DownloadManager) search(name, output string) (string, error) {
@@ -95,20 +90,23 @@ func (m *DownloadManager) fetch(f core.Fetcher, name, version, location, output 
 				"uri": uri,
 			})
 
-			// Apply URL rewriting if enabled
-			for _, strat := range m.strategy.Strategies() {
-				if rewriteStrat, ok := strat.(*strategy.RewriteStrategy); ok && rewriteStrat.IsEnabledConfigured() {
-					rewritten, err := rewriteStrat.GetRewrittenURI(uri)
-					if err != nil {
-						logger.Warn("URL rewrite failed, using original", map[string]interface{}{
-							"error": err.Error(),
-						})
-					} else if rewritten != uri {
-						logger.Info("URL rewritten", map[string]interface{}{
-							"original":  uri,
-							"rewritten": rewritten,
-						})
-						uri = rewritten
+			// Apply URL rewriting for non-rewrite strategies. RewriteStrategy.Prepare
+			// has already rewritten the URI when it is the active strategy.
+			if uri == location {
+				for _, strat := range m.strategy.Strategies() {
+					if rewriteStrat, ok := strat.(*strategy.RewriteStrategy); ok && rewriteStrat.IsEnabledConfigured() {
+						rewritten, err := rewriteStrat.GetRewrittenURI(uri)
+						if err != nil {
+							logger.Warn("URL rewrite failed, using original", map[string]interface{}{
+								"error": err.Error(),
+							})
+						} else if rewritten != uri {
+							logger.Info("URL rewritten", map[string]interface{}{
+								"original":  uri,
+								"rewritten": rewritten,
+							})
+							uri = rewritten
+						}
 					}
 				}
 			}
@@ -118,8 +116,7 @@ func (m *DownloadManager) fetch(f core.Fetcher, name, version, location, output 
 
 			// Update fetcher options based on current strategy
 			if gg, ok := f.(*fetcher.GoGetter); ok {
-				options := m.getFetcherOptions()
-				gg.SetOptions(options)
+				gg.SetOptions(nil)
 			}
 
 			// Try download

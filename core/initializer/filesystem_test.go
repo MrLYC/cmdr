@@ -1,6 +1,5 @@
 package initializer_test
 
-
 import (
 	"fmt"
 	"io/fs"
@@ -191,6 +190,20 @@ var _ = Describe("Filesystem", func() {
 
 			Expect(filepath.Join(dir, "hello.txt")).To(BeAnExistingFile())
 			Expect(filepath.Join(dir, "hello")).To(BeADirectory())
+		})
+
+		It("should return template errors", func() {
+			Expect(os.WriteFile(filepath.Join(rootDir, "bad.txt.gotmpl"), []byte(`{{`), 0644)).To(Succeed())
+
+			render := initializer.NewDirRender(rootDir, ".gotmpl", cfg)
+			Expect(render.Init(false)).To(HaveOccurred())
+		})
+
+		It("should return path template errors", func() {
+			Expect(os.WriteFile(filepath.Join(rootDir, "{{.Missing.txt.gotmpl"), []byte(`ok`), 0644)).To(Succeed())
+
+			render := initializer.NewDirRender(rootDir, ".gotmpl", cfg)
+			Expect(render.Init(false)).To(HaveOccurred())
 		})
 	})
 })

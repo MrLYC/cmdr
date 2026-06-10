@@ -1,6 +1,8 @@
 package initializer_test
 
 import (
+	"fmt"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -68,5 +70,26 @@ var _ = Describe("Command", func() {
 		manager.EXPECT().Undefine(name, legacyCommand.GetVersion())
 
 		Expect(updater.Init(true)).To(Succeed())
+	})
+
+	It("should return define errors", func() {
+		manager.EXPECT().Define(name, version, location).Return(nil, fmt.Errorf("define failed"))
+
+		Expect(updater.Init(false)).To(HaveOccurred())
+	})
+
+	It("should return activate errors", func() {
+		manager.EXPECT().Define(name, version, location)
+		manager.EXPECT().Activate(name, version).Return(fmt.Errorf("activate failed"))
+
+		Expect(updater.Init(false)).To(HaveOccurred())
+	})
+
+	It("should return undefine errors", func() {
+		manager.EXPECT().Define(name, version, location)
+		manager.EXPECT().Activate(name, version)
+		manager.EXPECT().Undefine(name, legacyCommand.GetVersion()).Return(fmt.Errorf("undefine failed"))
+
+		Expect(updater.Init(false)).To(HaveOccurred())
 	})
 })

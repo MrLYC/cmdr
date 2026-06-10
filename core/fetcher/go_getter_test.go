@@ -2,6 +2,7 @@ package fetcher_test
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/golang/mock/gomock"
 	g "github.com/hashicorp/go-getter"
@@ -48,6 +49,11 @@ var _ = Describe("GoGetter", func() {
 			detector.EXPECT().Detect(gomock.Any(), gomock.Any()).Return("", false, fmt.Errorf("testing"))
 
 			Expect(getter.Fetch("name", "version", "uri", "dst")).To(HaveOccurred())
+		})
+
+		It("should set options and create default getter", func() {
+			getter.SetOptions(nil)
+			Expect(NewDefaultGoGetter(io.Discard)).NotTo(BeNil())
 		})
 	})
 })

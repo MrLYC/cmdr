@@ -1,6 +1,7 @@
 package manager_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -127,8 +128,21 @@ var _ = Describe("Database", func() {
 			Expect(mgr.Close()).To(Succeed())
 		})
 
+		It("should return close manager errors", func() {
+			binaryMgr.EXPECT().Close().Return(fmt.Errorf("close failed"))
+			binaryMgr.EXPECT().Provider().Return(core.CommandProviderBinary)
+
+			Expect(mgr.Close()).To(HaveOccurred())
+		})
+
 		It("should return provider", func() {
 			Expect(mgr.Provider()).To(Equal(core.CommandProviderDatabase))
+		})
+
+		It("should return query", func() {
+			query, err := mgr.Query()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(query).NotTo(BeNil())
 		})
 
 		Context("Define", func() {

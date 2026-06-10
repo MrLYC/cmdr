@@ -1,7 +1,7 @@
 package manager_test
 
-
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -14,6 +14,7 @@ import (
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/manager"
 	"github.com/mrlyc/cmdr/core/mock"
+	"github.com/mrlyc/cmdr/core/strategy"
 	"github.com/mrlyc/cmdr/core/utils"
 )
 
@@ -61,6 +62,14 @@ var _ = Describe("Download", func() {
 			Expect(downloadManager.Define(name, version, uri)).To(Succeed())
 		})
 
+		It("should return base manager errors", func() {
+			fetcher.EXPECT().IsSupport(uri).Return(false)
+			baseManager.EXPECT().Define(name, version, uri).Return(nil, errors.New("define failed"))
+
+			_, err := downloadManager.Define(name, version, uri)
+			Expect(err).To(MatchError("define failed"))
+		})
+
 		It("should call with downloaded file", func() {
 			var targetPath string
 
@@ -73,6 +82,48 @@ var _ = Describe("Download", func() {
 			})
 			baseManager.EXPECT().Define(name, version, gomock.Any()).DoAndReturn(func(name, version, location string) (core.Command, error) {
 				Expect(targetPath).To(Equal(location))
+				return nil, nil
+			})
+
+			Expect(downloadManager.Define(name, version, uri)).To(Succeed())
+		})
+
+		It("should return fetch errors after retries", func() {
+			downloadManager = manager.NewDownloadManager(baseManager, []core.Fetcher{fetcher}, 2, nil)
+			fetcher.EXPECT().IsSupport(uri).Return(true)
+			fetcher.EXPECT().Fetch(name, version, uri, gomock.Any()).Return(errors.New("download failed")).Times(2)
+
+			_, err := downloadManager.Define(name, version, uri)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("failed to fetch"))
+			Expect(err.Error()).To(ContainSubstring("failed to download"))
+		})
+
+		It("should return an error when downloaded output has no binary candidate", func() {
+			fetcher.EXPECT().IsSupport(uri).Return(true)
+			fetcher.EXPECT().Fetch(name, version, uri, gomock.Any()).DoAndReturn(func(name, version, uri, dir string) error {
+				Expect(os.MkdirAll(filepath.Join(dir, "empty-dir"), 0755)).To(Succeed())
+				return nil
+			})
+
+			_, err := downloadManager.Define(name, version, uri)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("binary cmdr not found"))
+		})
+
+		It("should download through a strategy chain", func() {
+			var targetPath string
+			chain := strategy.NewStrategyChain(strategy.NewDirectStrategy())
+			downloadManager.SetStrategyChain(chain)
+
+			fetcher.EXPECT().IsSupport(uri).Return(true)
+			fetcher.EXPECT().Fetch(name, version, uri, gomock.Any()).DoAndReturn(func(name, version, uri, dir string) error {
+				targetPath = filepath.Join(dir, "cmdr")
+				Expect(os.WriteFile(targetPath, []byte(""), 0755)).To(Succeed())
+				return nil
+			})
+			baseManager.EXPECT().Define(name, version, gomock.Any()).DoAndReturn(func(name, version, location string) (core.Command, error) {
+				Expect(location).To(Equal(targetPath))
 				return nil, nil
 			})
 

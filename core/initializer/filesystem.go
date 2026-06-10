@@ -1,6 +1,5 @@
 package initializer
 
-
 import (
 	"fmt"
 	"html/template"

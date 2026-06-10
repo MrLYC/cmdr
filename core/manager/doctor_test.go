@@ -42,6 +42,56 @@ var _ = Describe("Doctor", func() {
 			doctor = manager.NewDoctorManager(mainManager, recorderManager)
 		})
 
+		Context("Commands", func() {
+			It("should call both managers in order", func() {
+				firstCommand := mock.NewMockCommand(ctrl)
+				secondCommand := mock.NewMockCommand(ctrl)
+				gomock.InOrder(
+					mainManager.EXPECT().Define("cmdr", "1.0.0", "/tmp/cmdr").Return(firstCommand, nil),
+					recorderManager.EXPECT().Define("cmdr", "1.0.0", "/tmp/cmdr").Return(secondCommand, nil),
+					mainManager.EXPECT().Undefine("cmdr", "1.0.0").Return(nil),
+					recorderManager.EXPECT().Undefine("cmdr", "1.0.0").Return(nil),
+					mainManager.EXPECT().Activate("cmdr", "1.0.0").Return(nil),
+					recorderManager.EXPECT().Activate("cmdr", "1.0.0").Return(nil),
+					mainManager.EXPECT().Deactivate("cmdr").Return(nil),
+					recorderManager.EXPECT().Deactivate("cmdr").Return(nil),
+				)
+
+				command, err := doctor.Define("cmdr", "1.0.0", "/tmp/cmdr")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(command).To(Equal(secondCommand))
+				Expect(doctor.Undefine("cmdr", "1.0.0")).To(Succeed())
+				Expect(doctor.Activate("cmdr", "1.0.0")).To(Succeed())
+				Expect(doctor.Deactivate("cmdr")).To(Succeed())
+				Expect(doctor.Provider()).To(Equal(core.CommandProviderDoctor))
+			})
+
+			It("should stop on the first command error", func() {
+				mainManager.EXPECT().Define("cmdr", "1.0.0", "/tmp/cmdr").Return(nil, fmt.Errorf("define failed"))
+				_, err := doctor.Define("cmdr", "1.0.0", "/tmp/cmdr")
+				Expect(err).To(MatchError("define failed"))
+
+				mainManager.EXPECT().Undefine("cmdr", "1.0.0").Return(fmt.Errorf("undefine failed"))
+				Expect(doctor.Undefine("cmdr", "1.0.0")).To(MatchError("undefine failed"))
+
+				mainManager.EXPECT().Activate("cmdr", "1.0.0").Return(fmt.Errorf("activate failed"))
+				Expect(doctor.Activate("cmdr", "1.0.0")).To(MatchError("activate failed"))
+
+				mainManager.EXPECT().Deactivate("cmdr").Return(fmt.Errorf("deactivate failed"))
+				Expect(doctor.Deactivate("cmdr")).To(MatchError("deactivate failed"))
+			})
+
+			It("should collect close errors from both managers", func() {
+				mainManager.EXPECT().Close().Return(fmt.Errorf("main close failed"))
+				recorderManager.EXPECT().Close().Return(fmt.Errorf("recorder close failed"))
+
+				err := doctor.Close()
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("main close failed"))
+				Expect(err.Error()).To(ContainSubstring("recorder close failed"))
+			})
+		})
+
 		Context("Query", func() {
 			It("should return recoder query directly", func() {
 				gomock.InOrder(

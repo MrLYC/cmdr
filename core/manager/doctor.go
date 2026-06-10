@@ -34,28 +34,6 @@ type DoctorManager struct {
 	databaseMgr core.CommandManager
 }
 
-func (m *DoctorManager) each(fn func(mgr core.CommandManager) error) error {
-	for _, mgr := range []core.CommandManager{m.binaryMgr, m.databaseMgr} {
-		err := fn(mgr)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (m *DoctorManager) reverseEach(fn func(mgr core.CommandManager) error) error {
-	for _, mgr := range []core.CommandManager{m.databaseMgr, m.binaryMgr} {
-		err := fn(mgr)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (m *DoctorManager) all(fn func(mgr core.CommandManager) error) error {
 	var errs error
 	for _, mgr := range []core.CommandManager{m.binaryMgr, m.databaseMgr} {

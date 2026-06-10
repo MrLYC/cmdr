@@ -166,16 +166,6 @@ func (m *BinaryManager) GetNormalizedVersion(version string) string {
 	return semver.String()
 }
 
-func (m *BinaryManager) getAllPossibleShimsNames(name, version string) []string {
-	shimsDir := filepath.Join(m.shimsDir, name)
-	normalizedVersion := m.GetNormalizedVersion(version)
-
-	return []string{
-		filepath.Join(shimsDir, fmt.Sprintf("%s_%s", name, version)),
-		filepath.Join(shimsDir, fmt.Sprintf("%s_%s", name, normalizedVersion)),
-	}
-}
-
 func (m *BinaryManager) Query() (core.CommandQuery, error) {
 	var binaries []*Binary
 

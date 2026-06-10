@@ -64,6 +64,25 @@ var _ = Describe("Database", func() {
 			Expect(migrator.Init(false)).To(Succeed())
 			Expect(histories["initializer_test.TestModel"]).To(Equal([]string{"Init", "ReIndex"}))
 		})
+
+		It("should return database open errors", func() {
+			migrator = initializer.NewDatabaseMigrator(func() (core.Database, error) {
+				return nil, fmt.Errorf("open failed")
+			}, models)
+
+			Expect(migrator.Init(false)).To(HaveOccurred())
+		})
+
+		It("should return init and reindex errors", func() {
+			db.EXPECT().Init(gomock.Any()).Return(fmt.Errorf("init failed"))
+			db.EXPECT().Close().Return(nil)
+			Expect(migrator.Init(false)).To(HaveOccurred())
+
+			db.EXPECT().Init(gomock.Any()).Return(nil)
+			db.EXPECT().ReIndex(gomock.Any()).Return(fmt.Errorf("reindex failed"))
+			db.EXPECT().Close().Return(nil)
+			Expect(migrator.Init(false)).To(HaveOccurred())
+		})
 	})
 
 })

@@ -43,6 +43,11 @@ var _ = Describe("Database", func() {
 			Entry("1.1.0", "1.1.0", "1.1"),
 			Entry("1.1.1", "1.1.1", "1.1.1"),
 		)
+
+		It("should render command string", func() {
+			Expect((&manager.Command{Name: "cmdr", Version: "1.0.0"}).String()).To(Equal("cmdr(1.0.0)"))
+			Expect((&manager.Command{Name: "cmdr", Version: "1.0.0", Activated: true}).String()).To(Equal("*cmdr(1.0.0)"))
+		})
 	})
 
 	Context("CommandFilter", func() {
@@ -79,6 +84,11 @@ var _ = Describe("Database", func() {
 			Expect(command).To(Equal(commandA))
 		})
 
+		It("should return an error for empty one", func() {
+			_, err := filter.WithName("missing").One()
+			Expect(err).To(HaveOccurred())
+		})
+
 		It("should return 0", func() {
 			result, err := filter.Count()
 			Expect(err).To(BeNil())
@@ -112,6 +122,24 @@ var _ = Describe("Database", func() {
 				query.WithVersion("1.0.1")
 			}),
 		)
+
+		It("should filter by activation and location and add commands", func() {
+			result, err := filter.WithActivated(true).All()
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal([]core.Command{commandA}))
+
+			filter = manager.NewCommandFilter([]*manager.Command{commandA, commandB})
+			result, err = filter.WithLocation("location-b").All()
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal([]core.Command{commandB}))
+
+			filter = manager.NewCommandFilter(nil)
+			filter.AddCommand(commandA, commandB)
+			result, err = filter.All()
+			Expect(err).To(BeNil())
+			Expect(result).To(HaveLen(2))
+			Expect(result[0].GetName()).To(Equal(commandA.Name))
+		})
 	})
 
 	Context("CommandQuery", func() {

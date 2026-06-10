@@ -52,6 +52,7 @@ var _ = Describe("Binary", func() {
 		It("should return location", func() {
 			b := manager.NewBinary(binDir, shimsDir, commandName, version, shimsName)
 			Expect(b.GetLocation()).To(Equal(filepath.Join(shimsDir, commandName, shimsName)))
+			Expect(b.String()).To(Equal(filepath.Join(shimsDir, commandName, shimsName)))
 		})
 
 		Context("Activate", func() {
@@ -154,6 +155,35 @@ var _ = Describe("Binary", func() {
 				Expect(err).To(BeNil())
 				Expect(count).To(Equal(2))
 			})
+
+			It("should filter by fields", func() {
+				filter = manager.NewBinariesFilter([]*manager.Binary{binaryA, binaryB})
+				commands, err := filter.WithName("command-a").All()
+				Expect(err).To(BeNil())
+				Expect(commands).To(Equal([]core.Command{binaryA}))
+
+				filter = manager.NewBinariesFilter([]*manager.Binary{binaryA, binaryB})
+				commands, err = filter.WithVersion("1.0").All()
+				Expect(err).To(BeNil())
+				Expect(commands).To(Equal([]core.Command{binaryA}))
+
+				filter = manager.NewBinariesFilter([]*manager.Binary{binaryA, binaryB})
+				commands, err = filter.WithLocation(binaryB.GetLocation()).All()
+				Expect(err).To(BeNil())
+				Expect(commands).To(Equal([]core.Command{binaryB}))
+
+				filter = manager.NewBinariesFilter([]*manager.Binary{binaryA, binaryB})
+				commands, err = filter.WithActivated(false).All()
+				Expect(err).To(BeNil())
+				Expect(commands).To(Equal([]core.Command{binaryA, binaryB}))
+
+				filter = manager.NewBinariesFilter([]*manager.Binary{binaryA, binaryB})
+				commands, err = filter.Filter(func(b interface{}) bool {
+					return b.(*manager.Binary).GetName() == "command-b"
+				}).All()
+				Expect(err).To(BeNil())
+				Expect(commands).To(Equal([]core.Command{binaryB}))
+			})
 		})
 	})
 
@@ -216,6 +246,10 @@ var _ = Describe("Binary", func() {
 
 		It("should close a manager", func() {
 			Expect(mgr.Close()).To(Succeed())
+			Expect(mgr.Provider()).To(Equal(core.CommandProviderBinary))
+			Expect(mgr.GetShimsDir()).To(Equal(shimsDir))
+			Expect(mgr.GetNormalizedVersion("1.4")).To(Equal("1.4.0"))
+			Expect(manager.GetNormalizedVersion("1.5")).To(Equal("1.5.0"))
 		})
 
 		It("should return provider", func() {

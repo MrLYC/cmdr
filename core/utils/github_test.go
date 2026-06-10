@@ -48,6 +48,10 @@ var _ = Describe("Github", func() {
 			searcher = utils.NewCmdrApiFetcher(client)
 		})
 
+		It("should return string name", func() {
+			Expect(searcher.String()).To(Equal("github-api"))
+		})
+
 		It("should get latest release", func() {
 			client.EXPECT().GetLatestRelease(ctx, core.Author, core.Name).Return(release, nil, nil)
 
@@ -135,6 +139,26 @@ var _ = Describe("Github", func() {
 			Expect(asset.Asset).To(Equal(assetName))
 			Expect(asset.Url).To(Equal(fakeUrl))
 		})
+
+		It("should return release and asset errors", func() {
+			client.EXPECT().GetLatestRelease(ctx, core.Author, core.Name).Return(nil, nil, fmt.Errorf("api failed"))
+			_, err := searcher.GetReleaseAsset(ctx, "latest", "cmdr")
+			Expect(err).To(HaveOccurred())
+
+			client.EXPECT().GetLatestRelease(ctx, core.Author, core.Name).Return(&github.RepositoryRelease{}, nil, nil)
+			_, err = searcher.GetReleaseAsset(ctx, "latest", "cmdr")
+			Expect(err).To(HaveOccurred())
+
+			tagName := "not-a-version"
+			assetName := "cmdr"
+			fakeUrl := "http://example.com"
+			client.EXPECT().GetLatestRelease(ctx, core.Author, core.Name).Return(&github.RepositoryRelease{
+				TagName: &tagName,
+				Assets:  []*github.ReleaseAsset{{Name: &assetName, BrowserDownloadURL: &fakeUrl}},
+			}, nil, nil)
+			_, err = searcher.GetReleaseAsset(ctx, "latest", "cmdr")
+			Expect(err).To(HaveOccurred())
+		})
 	})
 
 	Context("CmdrFeedFetcher", func() {
@@ -162,6 +186,40 @@ var _ = Describe("Github", func() {
 			searcher = utils.NewCmdrFeedFetcher(func(ctx context.Context) (*gofeed.Feed, error) {
 				return &feed, nil
 			})
+		})
+
+		It("should return string name", func() {
+			Expect(searcher.String()).To(Equal("github-feed"))
+		})
+
+		It("should get release names", func() {
+			release, err := searcher.GetRelease(ctx, "latest")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(release).To(Equal("v1.0.1"))
+
+			release, err = searcher.GetRelease(ctx, "v1.0.0")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(release).To(Equal("v1.0.0"))
+		})
+
+		It("should return feed errors", func() {
+			searcher = utils.NewCmdrFeedFetcher(func(ctx context.Context) (*gofeed.Feed, error) {
+				return nil, fmt.Errorf("feed failed")
+			})
+			_, err := searcher.GetRelease(ctx, "latest")
+			Expect(err).To(HaveOccurred())
+
+			searcher = utils.NewCmdrFeedFetcher(func(ctx context.Context) (*gofeed.Feed, error) {
+				return &gofeed.Feed{Items: []*gofeed.Item{{Title: "not-a-version"}}}, nil
+			})
+			_, err = searcher.GetReleaseAsset(ctx, "latest", "asset")
+			Expect(err).To(HaveOccurred())
+
+			searcher = utils.NewCmdrFeedFetcher(func(ctx context.Context) (*gofeed.Feed, error) {
+				return &feed, nil
+			})
+			_, err = searcher.GetRelease(ctx, "missing")
+			Expect(err).To(HaveOccurred())
 		})
 
 		It("should return latest release", func() {
@@ -229,6 +287,37 @@ var _ = Describe("Github", func() {
 			info, err := searcher.GetReleaseAsset(ctx, "latest", "cmdr-goos-goarch")
 			Expect(err).To(BeNil())
 			Expect(info).To(Equal(release2))
+		})
+
+		It("should return combined errors", func() {
+			mockSearcher1.
+				EXPECT().
+				GetReleaseAsset(ctx, "latest", "cmdr-goos-goarch").
+				Return(core.CmdrReleaseAsset{}, fmt.Errorf("searcher1 failed"))
+			mockSearcher2.
+				EXPECT().
+				GetReleaseAsset(ctx, "latest", "cmdr-goos-goarch").
+				Return(core.CmdrReleaseAsset{}, fmt.Errorf("searcher2 failed"))
+
+			_, err := searcher.GetReleaseAsset(ctx, "latest", "cmdr-goos-goarch")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("searcher1 failed"))
+			Expect(err.Error()).To(ContainSubstring("searcher2 failed"))
+		})
+	})
+
+	Context("Factories", func() {
+		It("should create registered searchers without network calls", func() {
+			api, err := core.NewCmdrSearcher(core.CmdrSearcherProviderApi, core.NewConfiguration())
+			Expect(err).NotTo(HaveOccurred())
+			Expect(api).NotTo(BeNil())
+
+			atom := utils.NewCmdrAtomFetcher()
+			Expect(atom).NotTo(BeNil())
+
+			defaultSearcher, err := core.NewCmdrSearcher(core.CmdrSearcherProviderDefault, core.NewConfiguration())
+			Expect(err).NotTo(HaveOccurred())
+			Expect(defaultSearcher).NotTo(BeNil())
 		})
 	})
 })

@@ -66,11 +66,15 @@ func getDefaultCmdrRoot() string {
 
 func preInitConfig() {
 	cfg := core.GetConfiguration()
+	preInitConfigWith(cfg, getDefaultCmdrRoot())
+}
+
+func preInitConfigWith(cfg core.Configuration, defaultRoot string) {
 	cfg.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	cfg.SetEnvPrefix("cmdr")
 	cfg.AutomaticEnv() // read in environment variables that match
 
-	cfg.SetDefault(core.CfgKeyCmdrRootDir, getDefaultCmdrRoot())
+	cfg.SetDefault(core.CfgKeyCmdrRootDir, defaultRoot)
 	cfg.SetDefault(core.CfgKeyCmdrBinDir, "bin")
 	cfg.SetDefault(core.CfgKeyCmdrShimsDir, "shims")
 	cfg.SetDefault(core.CfgKeyCmdrProfileDir, "profile")
@@ -91,11 +95,14 @@ func preInitConfig() {
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	cfg := core.GetConfiguration()
+	initConfigWith(cfg, os.Stat)
+}
 
+func initConfigWith(cfg core.Configuration, stat func(string) (os.FileInfo, error)) {
 	cfgFile := cfg.GetString(core.CfgKeyCmdrConfigPath)
 
 	cfg.SetConfigFile(cfgFile)
-	_, err := os.Stat(cfgFile)
+	_, err := stat(cfgFile)
 	if err == nil {
 		// Use config file from the flag.
 		utils.CheckError(cfg.ReadInConfig())
@@ -104,6 +111,10 @@ func initConfig() {
 
 func postInitConfig() {
 	cfg := core.GetConfiguration()
+	postInitConfigWith(cfg)
+}
+
+func postInitConfigWith(cfg core.Configuration) {
 	rootDir := cfg.GetString(core.CfgKeyCmdrRootDir)
 
 	for _, key := range []string{
@@ -120,7 +131,7 @@ func postInitConfig() {
 		value := filepath.Join(rootDir, path)
 
 		if cfg.IsSet(key) {
-			cfg.SetDefault(key, value)
+			cfg.Set(key, value)
 		} else {
 			cfg.SetDefault(key, value)
 		}
@@ -145,10 +156,12 @@ func initLogger() {
 }
 
 func initDatabase() {
-	core.SetDatabaseFactory(func() (core.Database, error) {
-		logger := core.GetLogger()
+	core.SetDatabaseFactory(makeDatabaseFactory(core.GetConfiguration()))
+}
 
-		cfg := core.GetConfiguration()
+func makeDatabaseFactory(cfg core.Configuration) func() (core.Database, error) {
+	return func() (core.Database, error) {
+		logger := core.GetLogger()
 		dbPath := cfg.GetString(core.CfgKeyCmdrDatabasePath)
 		logger.Debug("opening database", map[string]interface{}{
 			"path": dbPath,
@@ -160,12 +173,15 @@ func initDatabase() {
 		}
 
 		return db, nil
-	})
+	}
 }
 
 func initProxy() {
 	cfg := core.GetConfiguration()
+	initProxyWith(cfg, os.Setenv)
+}
 
+func initProxyWith(cfg core.Configuration, setenv func(string, string) error) {
 	for cfgKey, envKey := range map[string]string{
 		core.CfgKeyProxyGo:    "GOPROXY",
 		core.CfgKeyProxyHTTP:  "HTTP_PROXY",
@@ -173,7 +189,7 @@ func initProxy() {
 	} {
 		value := cfg.GetString(cfgKey)
 		if value != "" {
-			os.Setenv(envKey, value)
+			_ = setenv(envKey, value)
 		}
 	}
 }

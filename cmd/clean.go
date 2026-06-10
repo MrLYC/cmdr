@@ -26,6 +26,24 @@ type cleanCandidate struct {
 	addedAt  time.Time
 }
 
+type cleanDeps struct {
+	now      func() time.Time
+	trashDir func() (string, error)
+	ensure   func(string) error
+	unique   func(string, string) (string, error)
+	move     func(string, string) error
+}
+
+func defaultCleanDeps() cleanDeps {
+	return cleanDeps{
+		now:      time.Now,
+		trashDir: defaultCleanTrashDir,
+		ensure:   ensureDir,
+		unique:   uniquePath,
+		move:     moveFile,
+	}
+}
+
 func defaultCleanTrashDir() (string, error) {
 	switch runtime.GOOS {
 	case "darwin":
@@ -73,7 +91,11 @@ func uniquePath(dir, base string) (string, error) {
 }
 
 func moveFile(src, dst string) error {
-	err := os.Rename(src, dst)
+	return moveFileWithRename(src, dst, os.Rename)
+}
+
+func moveFileWithRename(src, dst string, rename func(string, string) error) error {
+	err := rename(src, dst)
 	if err == nil {
 		return nil
 	}
@@ -115,195 +137,197 @@ var cleanCmd = &cobra.Command{
 	Use:   "clean",
 	Short: "Clean old inactive command versions",
 	Run: utils.RunCobraCommandWith(core.CommandProviderDefault, func(cfg core.Configuration, manager core.CommandManager) error {
-		logger := core.GetLogger()
+		return runClean(cfg, manager, defaultCleanDeps())
+	}),
+}
 
-		ageDays := cfg.GetInt(core.CfgKeyXCleanAgeDays)
-		keep := cfg.GetInt(core.CfgKeyXCleanKeep)
-		wantedNames := cfg.GetStringSlice(core.CfgKeyXCleanName)
-		if ageDays < 0 {
-			return errors.Errorf("age must be >= 0")
-		}
-		if keep < 0 {
-			return errors.Errorf("keep must be >= 0")
-		}
+func runClean(cfg core.Configuration, manager core.CommandManager, deps cleanDeps) error {
+	logger := core.GetLogger()
 
-		trashRoot, err := defaultCleanTrashDir()
-		if err != nil {
-			return err
-		}
-		if err := ensureDir(trashRoot); err != nil {
-			return err
-		}
+	ageDays := cfg.GetInt(core.CfgKeyXCleanAgeDays)
+	keep := cfg.GetInt(core.CfgKeyXCleanKeep)
+	wantedNames := cfg.GetStringSlice(core.CfgKeyXCleanName)
+	if ageDays < 0 {
+		return errors.Errorf("age must be >= 0")
+	}
+	if keep < 0 {
+		return errors.Errorf("keep must be >= 0")
+	}
 
-		binDir := cfg.GetString(core.CfgKeyCmdrBinDir)
-		binHelper := utils.NewPathHelper(binDir)
+	trashRoot, err := deps.trashDir()
+	if err != nil {
+		return err
+	}
+	if err := deps.ensure(trashRoot); err != nil {
+		return err
+	}
 
-		threshold := time.Now().Add(-time.Duration(ageDays) * 24 * time.Hour)
+	binDir := cfg.GetString(core.CfgKeyCmdrBinDir)
+	binHelper := utils.NewPathHelper(binDir)
 
-		query, err := manager.Query()
-		if err != nil {
-			return err
-		}
-		commands, err := query.All()
-		if err != nil {
-			return err
-		}
+	threshold := deps.now().Add(-time.Duration(ageDays) * 24 * time.Hour)
 
-		// If names are specified, only clean those commands.
-		wantedNameSet := map[string]struct{}{}
-		if len(wantedNames) > 0 {
-			for _, n := range wantedNames {
-				n = strings.TrimSpace(n)
-				if n == "" {
-					continue
-				}
-				wantedNameSet[n] = struct{}{}
+	query, err := manager.Query()
+	if err != nil {
+		return err
+	}
+	commands, err := query.All()
+	if err != nil {
+		return err
+	}
+
+	wantedNameSet := map[string]struct{}{}
+	if len(wantedNames) > 0 {
+		for _, n := range wantedNames {
+			n = strings.TrimSpace(n)
+			if n == "" {
+				continue
 			}
-
-			if len(wantedNameSet) == 0 {
-				return errors.Errorf("name must not be empty")
-			}
-
-			seenNameSet := map[string]struct{}{}
-			for _, cmd := range commands {
-				seenNameSet[cmd.GetName()] = struct{}{}
-			}
-			missing := []string{}
-			for n := range wantedNameSet {
-				if _, ok := seenNameSet[n]; !ok {
-					missing = append(missing, n)
-				}
-			}
-			if len(missing) > 0 {
-				sort.Strings(missing)
-				return errors.Errorf("command(s) not found: %s", strings.Join(missing, ", "))
-			}
+			wantedNameSet[n] = struct{}{}
 		}
 
-		activeLocationByName := map[string]string{}
+		if len(wantedNameSet) == 0 {
+			return errors.Errorf("name must not be empty")
+		}
+
+		seenNameSet := map[string]struct{}{}
 		for _, cmd := range commands {
-			name := cmd.GetName()
-			if len(wantedNameSet) > 0 {
-				if _, ok := wantedNameSet[name]; !ok {
-					continue
-				}
-			}
-			if _, ok := activeLocationByName[name]; ok {
-				continue
-			}
-			location, err := binHelper.RealPath(name)
-			if err == nil {
-				activeLocationByName[name] = filepath.Clean(location)
+			seenNameSet[cmd.GetName()] = struct{}{}
+		}
+		missing := []string{}
+		for n := range wantedNameSet {
+			if _, ok := seenNameSet[n]; !ok {
+				missing = append(missing, n)
 			}
 		}
+		if len(missing) > 0 {
+			sort.Strings(missing)
+			return errors.Errorf("command(s) not found: %s", strings.Join(missing, ", "))
+		}
+	}
 
-		inactiveByName := map[string][]cleanCandidate{}
-		for _, cmd := range commands {
-			if len(wantedNameSet) > 0 {
-				if _, ok := wantedNameSet[cmd.GetName()]; !ok {
-					continue
-				}
-			}
-			if cmd.GetActivated() {
+	activeLocationByName := map[string]string{}
+	for _, cmd := range commands {
+		name := cmd.GetName()
+		if len(wantedNameSet) > 0 {
+			if _, ok := wantedNameSet[name]; !ok {
 				continue
 			}
+		}
+		if _, ok := activeLocationByName[name]; ok {
+			continue
+		}
+		location, err := binHelper.RealPath(name)
+		if err == nil {
+			activeLocationByName[name] = filepath.Clean(location)
+		}
+	}
 
-			src := filepath.Clean(cmd.GetLocation())
-			if active, ok := activeLocationByName[cmd.GetName()]; ok && filepath.Clean(active) == src {
-				logger.Warn("skip cleaning activated version detected by shim", map[string]interface{}{
-					"name":     cmd.GetName(),
-					"version":  cmd.GetVersion(),
-					"location": src,
-				})
+	inactiveByName := map[string][]cleanCandidate{}
+	for _, cmd := range commands {
+		if len(wantedNameSet) > 0 {
+			if _, ok := wantedNameSet[cmd.GetName()]; !ok {
 				continue
 			}
+		}
+		if cmd.GetActivated() {
+			continue
+		}
 
-			info, err := os.Stat(src)
-			if err != nil {
-				logger.Warn("skip cleaning version with missing shim", map[string]interface{}{
-					"name":     cmd.GetName(),
-					"version":  cmd.GetVersion(),
-					"location": src,
-					"error":    err,
-				})
-				continue
-			}
-
-			inactiveByName[cmd.GetName()] = append(inactiveByName[cmd.GetName()], cleanCandidate{
-				name:     cmd.GetName(),
-				version:  cmd.GetVersion(),
-				location: src,
-				addedAt:  info.ModTime(),
+		src := filepath.Clean(cmd.GetLocation())
+		if active, ok := activeLocationByName[cmd.GetName()]; ok && filepath.Clean(active) == src {
+			logger.Warn("skip cleaning activated version detected by shim", map[string]interface{}{
+				"name":     cmd.GetName(),
+				"version":  cmd.GetVersion(),
+				"location": src,
 			})
+			continue
 		}
 
-		var resultErr error
-		cleaned := 0
-		for name, candidates := range inactiveByName {
-			sort.Slice(candidates, func(i, j int) bool {
-				if candidates[i].addedAt.Equal(candidates[j].addedAt) {
-					return candidates[i].version > candidates[j].version
-				}
-				return candidates[i].addedAt.After(candidates[j].addedAt)
+		info, err := os.Stat(src)
+		if err != nil {
+			logger.Warn("skip cleaning version with missing shim", map[string]interface{}{
+				"name":     cmd.GetName(),
+				"version":  cmd.GetVersion(),
+				"location": src,
+				"error":    err,
 			})
-
-			for idx, c := range candidates {
-				if idx < keep {
-					continue
-				}
-				if c.addedAt.After(threshold) {
-					continue
-				}
-
-				dstDir := filepath.Join(trashRoot, name)
-				if err := ensureDir(dstDir); err != nil {
-					resultErr = multierror.Append(resultErr, err)
-					continue
-				}
-
-				dst, err := uniquePath(dstDir, filepath.Base(c.location))
-				if err != nil {
-					resultErr = multierror.Append(resultErr, err)
-					continue
-				}
-
-				if err := moveFile(c.location, dst); err != nil {
-					resultErr = multierror.Append(resultErr, err)
-					continue
-				}
-
-				if err := manager.Undefine(name, c.version); err != nil {
-					// Best-effort rollback: restore shim back to original place.
-					if rbErr := moveFile(dst, c.location); rbErr != nil {
-						logger.Warn("failed to rollback shim after undefine failure", map[string]interface{}{
-							"name":    name,
-							"version": c.version,
-							"error":   rbErr,
-						})
-					}
-					resultErr = multierror.Append(resultErr, errors.Wrapf(err, "undefine %s:%s failed", name, c.version))
-					continue
-				}
-
-				cleaned++
-				logger.Info("cleaned inactive version", map[string]interface{}{
-					"name":       name,
-					"version":    c.version,
-					"added_at":   c.addedAt.Format(time.RFC3339),
-					"trashed_to": dst,
-				})
-			}
+			continue
 		}
 
-		logger.Info("clean finished", map[string]interface{}{
-			"cleaned":   cleaned,
-			"age_days":  ageDays,
-			"keep":      keep,
-			"trash_dir": trashRoot,
+		inactiveByName[cmd.GetName()] = append(inactiveByName[cmd.GetName()], cleanCandidate{
+			name:     cmd.GetName(),
+			version:  cmd.GetVersion(),
+			location: src,
+			addedAt:  info.ModTime(),
+		})
+	}
+
+	var resultErr error
+	cleaned := 0
+	for name, candidates := range inactiveByName {
+		sort.Slice(candidates, func(i, j int) bool {
+			if candidates[i].addedAt.Equal(candidates[j].addedAt) {
+				return candidates[i].version > candidates[j].version
+			}
+			return candidates[i].addedAt.After(candidates[j].addedAt)
 		})
 
-		return resultErr
-	}),
+		for idx, c := range candidates {
+			if idx < keep {
+				continue
+			}
+			if c.addedAt.After(threshold) {
+				continue
+			}
+
+			dstDir := filepath.Join(trashRoot, name)
+			if err := deps.ensure(dstDir); err != nil {
+				resultErr = multierror.Append(resultErr, err)
+				continue
+			}
+
+			dst, err := deps.unique(dstDir, filepath.Base(c.location))
+			if err != nil {
+				resultErr = multierror.Append(resultErr, err)
+				continue
+			}
+
+			if err := deps.move(c.location, dst); err != nil {
+				resultErr = multierror.Append(resultErr, err)
+				continue
+			}
+
+			if err := manager.Undefine(name, c.version); err != nil {
+				if rbErr := deps.move(dst, c.location); rbErr != nil {
+					logger.Warn("failed to rollback shim after undefine failure", map[string]interface{}{
+						"name":    name,
+						"version": c.version,
+						"error":   rbErr,
+					})
+				}
+				resultErr = multierror.Append(resultErr, errors.Wrapf(err, "undefine %s:%s failed", name, c.version))
+				continue
+			}
+
+			cleaned++
+			logger.Info("cleaned inactive version", map[string]interface{}{
+				"name":       name,
+				"version":    c.version,
+				"added_at":   c.addedAt.Format(time.RFC3339),
+				"trashed_to": dst,
+			})
+		}
+	}
+
+	logger.Info("clean finished", map[string]interface{}{
+		"cleaned":   cleaned,
+		"age_days":  ageDays,
+		"keep":      keep,
+		"trash_dir": trashRoot,
+	})
+
+	return resultErr
 }
 
 func init() {

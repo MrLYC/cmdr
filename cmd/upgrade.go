@@ -1,12 +1,16 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/utils"
 )
+
+var upgradeCmdrFn = utils.UpgradeCmdr
 
 // upgradeCmd represents the upgrade command
 var upgradeCmd = &cobra.Command{
@@ -17,39 +21,42 @@ var upgradeCmd = &cobra.Command{
 		cfg.Set(core.CfgKeyXUpgradeArgs, []string{"init", "--upgrade"})
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		logger := core.GetLogger()
-		ctx := cmd.Context()
 		cfg := core.GetConfiguration()
-		releaseName := cfg.GetString(core.CfgKeyXUpgradeRelease)
-		assetName := cfg.GetString(core.CfgKeyXUpgradeAsset)
-		upgradeArgs := append(cfg.GetStringSlice(core.CfgKeyXUpgradeArgs), args...)
-
-		searcher, err := core.NewCmdrSearcher(core.CmdrSearcherProviderDefault, cfg)
-		utils.ExitOnError("getting cmdr searcher", err)
-
-		logger.Info("searching for release", map[string]interface{}{
-			"release": releaseName,
-		})
-		info, err := searcher.GetReleaseAsset(ctx, releaseName, assetName)
-		utils.ExitOnError("get latest asset url failed", err)
-
-		err = utils.UpgradeCmdr(ctx, cfg, info.Url, info.Version, upgradeArgs)
-		switch errors.Cause(err) {
-		case nil:
-			logger.Info("upgrade cmdr success")
-		case utils.ErrCmdrAlreadyLatestVersion:
-			logger.Info("cmdr already latest version", map[string]interface{}{
-				"version": core.Version,
-			})
-		case utils.ErrCmdrCommandAlreadyDefined:
-			logger.Warn("cmdr latest version has already defined", map[string]interface{}{
-				"expected": info.Version,
-				"current":  core.Version,
-			})
-		default:
-			utils.ExitOnError("upgrade cmdr failed", err)
-		}
+		runUpgrade(cmd.Context(), cfg, args)
 	},
+}
+
+func runUpgrade(ctx context.Context, cfg core.Configuration, args []string) {
+	logger := core.GetLogger()
+	releaseName := cfg.GetString(core.CfgKeyXUpgradeRelease)
+	assetName := cfg.GetString(core.CfgKeyXUpgradeAsset)
+	upgradeArgs := append(cfg.GetStringSlice(core.CfgKeyXUpgradeArgs), args...)
+
+	searcher, err := core.NewCmdrSearcher(core.CmdrSearcherProviderDefault, cfg)
+	utils.ExitOnError("getting cmdr searcher", err)
+
+	logger.Info("searching for release", map[string]interface{}{
+		"release": releaseName,
+	})
+	info, err := searcher.GetReleaseAsset(ctx, releaseName, assetName)
+	utils.ExitOnError("get latest asset url failed", err)
+
+	err = upgradeCmdrFn(ctx, cfg, info.Url, info.Version, upgradeArgs)
+	switch errors.Cause(err) {
+	case nil:
+		logger.Info("upgrade cmdr success")
+	case utils.ErrCmdrAlreadyLatestVersion:
+		logger.Info("cmdr already latest version", map[string]interface{}{
+			"version": core.Version,
+		})
+	case utils.ErrCmdrCommandAlreadyDefined:
+		logger.Warn("cmdr latest version has already defined", map[string]interface{}{
+			"expected": info.Version,
+			"current":  core.Version,
+		})
+	default:
+		utils.ExitOnError("upgrade cmdr failed", err)
+	}
 }
 
 func init() {

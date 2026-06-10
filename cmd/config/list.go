@@ -24,17 +24,23 @@ var listCmd = &cobra.Command{
 		})
 
 		settings := make(map[string]interface{})
-		for key, value := range cfg.AllSettings() {
-			if !strings.HasPrefix(key, "_") {
-				settings[key] = value
-			}
-		}
+		settings = publicSettings(cfg.AllSettings())
 
 		content, err := yaml.Marshal(settings)
 		utils.ExitOnError("Marshaling settings", err)
 
 		fmt.Printf("%s\n", content)
 	},
+}
+
+func publicSettings(settings map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+	for key, value := range settings {
+		if !strings.HasPrefix(key, "_") {
+			result[key] = value
+		}
+	}
+	return result
 }
 
 func init() {

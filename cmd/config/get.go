@@ -17,13 +17,19 @@ var getCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := core.GetConfiguration()
 		key := cfg.GetString(core.CfgKeyXConfigGetKey)
-		var dumps interface{}
-		utils.PanicOnError("unmarshal config failed", cfg.UnmarshalKey(key, &dumps))
-
-		out, err := yaml.Marshal(dumps)
-		utils.PanicOnError("marshal config failed", err)
+		out, err := renderConfigValue(cfg, key)
+		utils.PanicOnError("render config failed", err)
 		fmt.Printf("%s", out)
 	},
+}
+
+func renderConfigValue(cfg core.Configuration, key string) ([]byte, error) {
+	var dumps interface{}
+	if err := cfg.UnmarshalKey(key, &dumps); err != nil {
+		return nil, err
+	}
+
+	return yaml.Marshal(dumps)
 }
 
 func init() {
