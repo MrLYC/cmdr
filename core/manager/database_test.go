@@ -484,4 +484,39 @@ var _ = Describe("Database", func() {
 			Expect(ok).To(BeTrue())
 		})
 	})
+
+	Context("Stored data compatibility", func() {
+		It("should query legacy command records without schema migration", func() {
+			rootDir, err := os.MkdirTemp("", "cmdr-db-compat")
+			Expect(err).NotTo(HaveOccurred())
+			defer os.RemoveAll(rootDir)
+
+			db, err := storm.Open(filepath.Join(rootDir, "cmdr.db"))
+			Expect(err).NotTo(HaveOccurred())
+			defer db.Close()
+
+			for _, command := range []*manager.Command{
+				{Name: "cmd", Version: "1.0.0", Location: "cmd_1.0.0"},
+				{Name: "cmd", Version: "99.0.4844.51", Location: "cmd_99.0.4844.51"},
+				{Name: "cmd", Version: "0.7.3-ce01615", Location: "cmd_0.7.3-ce01615"},
+			} {
+				Expect(db.Save(command)).To(Succeed())
+			}
+
+			query := manager.NewCommandQuery(db)
+			result, err := query.WithName("cmd").WithVersion("1").One()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result.GetLocation()).To(Equal("cmd_1.0.0"))
+
+			query = manager.NewCommandQuery(db)
+			result, err = query.WithName("cmd").WithVersion("99.0.4844.51").One()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result.GetLocation()).To(Equal("cmd_99.0.4844.51"))
+
+			query = manager.NewCommandQuery(db)
+			result, err = query.WithName("cmd").WithVersion("0.7.3-ce01615").One()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result.GetLocation()).To(Equal("cmd_0.7.3-ce01615"))
+		})
+	})
 })

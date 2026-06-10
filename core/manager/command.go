@@ -2,12 +2,9 @@ package manager
 
 import (
 	"fmt"
-	"strconv"
 
-	. "github.com/ahmetb/go-linq/v3"
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
-	ver "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
@@ -34,15 +31,7 @@ func (c *Command) GetName() string {
 }
 
 func (c *Command) GetVersion() string {
-	semver := ver.Must(ver.NewVersion(c.Version))
-	segments := semver.Segments()
-	if segments[1] == 0 && segments[2] == 0 {
-		return strconv.Itoa(segments[0])
-	}
-	if segments[2] == 0 {
-		return fmt.Sprintf("%d.%d", segments[0], segments[1])
-	}
-	return fmt.Sprintf("%d.%d.%d", segments[0], segments[1], segments[2])
+	return displayVersion(c.Version)
 }
 
 func (c *Command) GetActivated() bool {
@@ -55,10 +44,21 @@ func (c *Command) GetLocation() string {
 
 type CommandFilter struct {
 	commands []*Command
+	err      error
 }
 
 func (f *CommandFilter) Filter(fn func(b interface{}) bool) *CommandFilter {
-	From(f.commands).Where(fn).ToSlice(&f.commands)
+	if f.err != nil {
+		return f
+	}
+
+	filtered := make([]*Command, 0, len(f.commands))
+	for _, command := range f.commands {
+		if fn(command) {
+			filtered = append(filtered, command)
+		}
+	}
+	f.commands = filtered
 	return f
 }
 
@@ -69,11 +69,16 @@ func (f *CommandFilter) WithName(name string) core.CommandQuery {
 }
 
 func (f *CommandFilter) WithVersion(version string) core.CommandQuery {
-	semver := ver.Must(ver.NewVersion(version))
-
+	if f.err != nil {
+		return f
+	}
 	return f.Filter(func(b interface{}) bool {
-		cmdVersion := ver.Must(ver.NewVersion(b.(*Command).GetVersion()))
-		return cmdVersion.Equal(semver)
+		matches, err := versionMatches(b.(*Command).Version, version)
+		if err != nil {
+			f.err = err
+			return false
+		}
+		return matches
 	})
 }
 
@@ -89,6 +94,10 @@ func (f *CommandFilter) WithLocation(location string) core.CommandQuery {
 	})
 }
 func (f *CommandFilter) All() ([]core.Command, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+
 	commands := make([]core.Command, 0, len(f.commands))
 	for _, b := range f.commands {
 		commands = append(commands, b)
@@ -98,6 +107,10 @@ func (f *CommandFilter) All() ([]core.Command, error) {
 }
 
 func (f *CommandFilter) One() (core.Command, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+
 	if len(f.commands) == 0 {
 		return nil, errors.Wrapf(core.ErrBinaryNotFound, "commands not found")
 	}
@@ -106,6 +119,10 @@ func (f *CommandFilter) One() (core.Command, error) {
 }
 
 func (f *CommandFilter) Count() (int, error) {
+	if f.err != nil {
+		return 0, f.err
+	}
+
 	return len(f.commands), nil
 }
 
@@ -121,13 +138,14 @@ func (f *CommandFilter) AddCommand(commands ...core.Command) {
 }
 
 func NewCommandFilter(commands []*Command) *CommandFilter {
-	return &CommandFilter{commands}
+	return &CommandFilter{commands: commands}
 }
 
 type CommandQuery struct {
 	Client   storm.TypeStore
 	matchers []q.Matcher
 	query    storm.Query
+	err      error
 }
 
 func (c *CommandQuery) WithName(name string) core.CommandQuery {
@@ -136,7 +154,17 @@ func (c *CommandQuery) WithName(name string) core.CommandQuery {
 }
 
 func (c *CommandQuery) WithVersion(version string) core.CommandQuery {
-	c.matchers = append(c.matchers, queryMatchVersion(version))
+	if c.err != nil {
+		return c
+	}
+
+	matcher, err := queryMatchVersion(version)
+	if err != nil {
+		c.err = err
+		return c
+	}
+
+	c.matchers = append(c.matchers, matcher)
 	return c
 }
 
@@ -158,6 +186,10 @@ func (c *CommandQuery) Done() storm.Query {
 }
 
 func (c *CommandQuery) All() ([]core.Command, error) {
+	if c.err != nil {
+		return nil, c.err
+	}
+
 	var commands []*Command
 	err := c.Done().Find(&commands)
 	if err != nil {
@@ -172,6 +204,10 @@ func (c *CommandQuery) All() ([]core.Command, error) {
 }
 
 func (c *CommandQuery) One() (core.Command, error) {
+	if c.err != nil {
+		return nil, c.err
+	}
+
 	var cmd Command
 	err := c.Done().First(&cmd)
 	if err != nil {
@@ -181,6 +217,10 @@ func (c *CommandQuery) One() (core.Command, error) {
 }
 
 func (c *CommandQuery) Count() (int, error) {
+	if c.err != nil {
+		return 0, c.err
+	}
+
 	var cmd Command
 	return c.Done().Count(&cmd)
 }

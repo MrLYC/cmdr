@@ -151,6 +151,15 @@ func SubscribeEvent(event string, handler func())
 
 Events like `EventExit` allow components to clean up resources without tight coupling.
 
+## Compatibility-Preserving Refactors
+
+Performance refactors must preserve the user-facing CLI contract and the on-disk data contract. In practice this means:
+
+- Cobra commands, flags, configuration keys, and `CMDR_*` environment variable mappings remain stable.
+- Storm/BoltDB command records keep the same `Command` model fields and tags.
+- Binary shim lookups continue to support both legacy `name_version` files and normalized semantic-version shim files.
+- Version parsing failures should be returned as errors on command/query operations instead of panicking on user or stored data.
+
 ---
 
 [^1]: Exit handling in [`main.go`](https://github.com/mrlyc/cmdr/blob/master/main.go) L15-L28

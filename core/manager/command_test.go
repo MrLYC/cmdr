@@ -50,6 +50,12 @@ var _ = Describe("Database", func() {
 			Expect((&manager.Command{Name: "cmdr", Version: "1.0.0"}).String()).To(Equal("cmdr(1.0.0)"))
 			Expect((&manager.Command{Name: "cmdr", Version: "1.0.0", Activated: true}).String()).To(Equal("*cmdr(1.0.0)"))
 		})
+
+		It("should return invalid versions as stored instead of panicking", func() {
+			cmd := manager.Command{Version: "not semver"}
+			Expect(func() { _ = cmd.GetVersion() }).NotTo(Panic())
+			Expect(cmd.GetVersion()).To(Equal("not semver"))
+		})
 	})
 
 	Context("CommandFilter", func() {
@@ -142,6 +148,22 @@ var _ = Describe("Database", func() {
 			Expect(result).To(HaveLen(2))
 			Expect(result[0].GetName()).To(Equal(commandA.Name))
 		})
+
+		It("should return invalid version errors without panicking", func() {
+			query := filter.WithVersion("not semver")
+
+			Expect(func() {
+				_, _ = query.All()
+			}).NotTo(Panic())
+			_, err := query.All()
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("invalid version"))
+
+			_, err = query.WithName("ignored").One()
+			Expect(err).To(HaveOccurred())
+			_, err = query.Count()
+			Expect(err).To(HaveOccurred())
+		})
 	})
 
 	Context("CommandQuery", func() {
@@ -221,6 +243,23 @@ var _ = Describe("Database", func() {
 			dbQuery.EXPECT().Count(gomock.Any()).Return(0, fmt.Errorf("count failed"))
 			_, err = query.Count()
 			Expect(err).To(MatchError("count failed"))
+		})
+
+		It("should return invalid version errors without querying database", func() {
+			query.WithVersion("not semver")
+
+			Expect(func() {
+				_, _ = query.All()
+			}).NotTo(Panic())
+			_, err := query.All()
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("invalid version"))
+
+			query.WithVersion("still invalid")
+			_, err = query.One()
+			Expect(err).To(HaveOccurred())
+			_, err = query.Count()
+			Expect(err).To(HaveOccurred())
 		})
 	})
 })

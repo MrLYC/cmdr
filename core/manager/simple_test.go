@@ -98,6 +98,16 @@ var _ = Describe("Simple", func() {
 			Expect(err).To(BeNil())
 		})
 
+		It("should return the first command produced by managers", func() {
+			followerCommand := mock.NewMockCommand(ctrl)
+			databaseMgr.EXPECT().Define(name, version, location).Return(command, nil)
+			binaryMgr.EXPECT().Define(name, version, location).Return(followerCommand, nil)
+
+			result, err := mgr.Define(name, version, location)
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal(command))
+		})
+
 		It("should call in a specific order", func() {
 			var ordering []string
 

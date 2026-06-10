@@ -3,7 +3,6 @@ module github.com/mrlyc/cmdr
 go 1.25
 
 require (
-	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/golang/mock v1.6.0

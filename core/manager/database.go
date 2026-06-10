@@ -3,19 +3,10 @@ package manager
 import (
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
-	ver "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
 )
-
-func queryMatchVersion(version string) q.Matcher {
-	semver := ver.Must(ver.NewVersion(version))
-	return q.Or(
-		q.Eq("Version", version),
-		q.Eq("Version", semver.String()),
-	)
-}
 
 type DatabaseManager struct {
 	Client  core.Database
@@ -42,7 +33,12 @@ func (m *DatabaseManager) Query() (core.CommandQuery, error) {
 func (m *DatabaseManager) getOrNew(name string, version string) (*Command, bool, error) {
 	var found bool
 	var command Command
-	err := m.Client.Select(q.Eq("Name", name), queryMatchVersion(version)).First(&command)
+	versionMatcher, err := queryMatchVersion(version)
+	if err != nil {
+		return nil, false, errors.Wrapf(err, "get command failed")
+	}
+
+	err = m.Client.Select(q.Eq("Name", name), versionMatcher).First(&command)
 	switch errors.Cause(err) {
 	case nil:
 		found = true

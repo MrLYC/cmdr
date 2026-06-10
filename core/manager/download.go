@@ -35,13 +35,18 @@ func (m *DownloadManager) search(name, output string) (string, error) {
 	nameLower := strings.ToLower(name)
 	nameLength := float64(len(nameLower))
 
-	err := filepath.Walk(output, func(path string, info fs.FileInfo, err error) error {
+	err := filepath.WalkDir(output, func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if info.IsDir() {
+		if entry.IsDir() {
 			return nil
+		}
+
+		info, err := entry.Info()
+		if err != nil {
+			return err
 		}
 
 		score := 0.0
@@ -74,95 +79,115 @@ func (m *DownloadManager) search(name, output string) (string, error) {
 	return file.(string), nil
 }
 
-func (m *DownloadManager) fetch(f core.Fetcher, name, version, location, output string) (string, error) {
+func (m *DownloadManager) maybeRewriteURI(uri, original string) string {
 	logger := core.GetLogger()
-	logger.Info("fetching", map[string]interface{}{
-		"uri": location,
-	})
-
-	// Use strategy chain if available
-	if m.strategy != nil {
-		var finalResult string
-
-		// Execute strategy chain
-		err := m.strategy.Execute(location, func(uri string) error {
-			logger.Debug("downloading with URI", map[string]interface{}{
-				"uri": uri,
-			})
-
-			// Apply URL rewriting for non-rewrite strategies. RewriteStrategy.Prepare
-			// has already rewritten the URI when it is the active strategy.
-			if uri == location {
-				for _, strat := range m.strategy.Strategies() {
-					if rewriteStrat, ok := strat.(*strategy.RewriteStrategy); ok && rewriteStrat.IsEnabledConfigured() {
-						rewritten, err := rewriteStrat.GetRewrittenURI(uri)
-						if err != nil {
-							logger.Warn("URL rewrite failed, using original", map[string]interface{}{
-								"error": err.Error(),
-							})
-						} else if rewritten != uri {
-							logger.Info("URL rewritten", map[string]interface{}{
-								"original":  uri,
-								"rewritten": rewritten,
-							})
-							uri = rewritten
-						}
-					}
-				}
-			}
-
-			// Apply replacements
-			uri, _ = m.replacements.ReplaceString(uri)
-
-			// Update fetcher options based on current strategy
-			if gg, ok := f.(*fetcher.GoGetter); ok {
-				gg.SetOptions(nil)
-			}
-
-			// Try download
-			fetchErr := f.Fetch(name, version, uri, output)
-			if fetchErr != nil {
-				return fetchErr
-			}
-
-			// Download succeeded, search for binary
-			result, searchErr := m.search(name, output)
-			if searchErr != nil {
-				return searchErr
-			}
-
-			finalResult = result
-			return nil
-		})
-
-		if err != nil {
-			return "", errors.Wrapf(err, "failed to download %s", location)
-		}
-
-		return finalResult, nil
+	if uri != original {
+		return uri
 	}
 
-	// Fallback to old retry logic
-	var err error
-	for i := 0; i < m.retries; i++ {
-		// Apply replacements
-		location, _ = m.replacements.ReplaceString(location)
-
-		err = f.Fetch(name, version, location, output)
-		if err == nil {
-			break
-		} else {
-			logger.Warn("download failed, retrying...", map[string]interface{}{
-				"uri": location,
-			})
+	for _, strat := range m.strategy.Strategies() {
+		rewriteStrat, ok := strat.(*strategy.RewriteStrategy)
+		if !ok || !rewriteStrat.IsEnabledConfigured() {
+			continue
 		}
+
+		rewritten, err := rewriteStrat.GetRewrittenURI(uri)
+		if err != nil {
+			logger.Warn("URL rewrite failed, using original", map[string]interface{}{
+				"error": err.Error(),
+			})
+			return uri
+		}
+		if rewritten != uri {
+			logger.Info("URL rewritten", map[string]interface{}{
+				"original":  uri,
+				"rewritten": rewritten,
+			})
+			return rewritten
+		}
+	}
+
+	return uri
+}
+
+func resetFetcherOptions(source core.Fetcher) {
+	if gg, ok := source.(*fetcher.GoGetter); ok {
+		gg.SetOptions(nil)
+	}
+}
+
+func (m *DownloadManager) fetchOnce(f core.Fetcher, name, version, uri, output string) (string, error) {
+	resetFetcherOptions(f)
+	if err := f.Fetch(name, version, uri, output); err != nil {
+		return "", err
+	}
+
+	return m.search(name, output)
+}
+
+func (m *DownloadManager) fetchWithStrategy(f core.Fetcher, name, version, location, output string) (string, error) {
+	logger := core.GetLogger()
+	var finalResult string
+
+	err := m.strategy.Execute(location, func(uri string) error {
+		logger.Debug("downloading with URI", map[string]interface{}{
+			"uri": uri,
+		})
+
+		uri = m.maybeRewriteURI(uri, location)
+		uri, _ = m.replacements.ReplaceString(uri)
+
+		result, err := m.fetchOnce(f, name, version, uri, output)
+		if err != nil {
+			return err
+		}
+
+		finalResult = result
+		return nil
+	})
+
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to download %s", location)
+	}
+
+	return finalResult, nil
+}
+
+func (m *DownloadManager) fetchWithRetries(f core.Fetcher, name, version, location, output string) (string, error) {
+	logger := core.GetLogger()
+	var err error
+	uri := location
+
+	for i := 0; i < m.retries; i++ {
+		uri, _ = m.replacements.ReplaceString(uri)
+		result, fetchErr := m.fetchOnce(f, name, version, uri, output)
+		err = fetchErr
+		if err == nil {
+			return result, nil
+		}
+
+		logger.Warn("download failed, retrying...", map[string]interface{}{
+			"uri": uri,
+		})
 	}
 
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to download %s", location)
 	}
 
-	return m.search(name, output)
+	return "", errors.Wrapf(core.ErrBinaryNotFound, "binary %s not found", name)
+}
+
+func (m *DownloadManager) fetch(f core.Fetcher, name, version, location, output string) (string, error) {
+	core.GetLogger().Info("fetching", map[string]interface{}{
+		"uri": location,
+	})
+
+	if m.strategy != nil {
+		return m.fetchWithStrategy(f, name, version, location, output)
+	}
+
+	return m.fetchWithRetries(f, name, version, location, output)
 }
 
 func (m *DownloadManager) Define(name string, version string, uriOrLocation string) (core.Command, error) {

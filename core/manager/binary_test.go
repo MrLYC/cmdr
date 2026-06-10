@@ -258,6 +258,8 @@ var _ = Describe("Binary", func() {
 			Expect(mgr.GetShimsDir()).To(Equal(shimsDir))
 			Expect(mgr.GetNormalizedVersion("1.4")).To(Equal("1.4.0"))
 			Expect(manager.GetNormalizedVersion("1.5")).To(Equal("1.5.0"))
+			Expect(mgr.GetNormalizedVersion("not semver")).To(Equal("not semver"))
+			Expect(manager.GetNormalizedVersion("not semver")).To(Equal("not semver"))
 		})
 
 		It("should return provider", func() {
@@ -451,6 +453,49 @@ var _ = Describe("Binary", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(count).To(Equal(1))
 			})
+
+			It("should query activated commands without re-reading every binary location", func() {
+				Expect(mgr.Activate(commandName, version)).To(Succeed())
+
+				query, err := mgr.Query()
+				Expect(err).NotTo(HaveOccurred())
+				commands, err := query.WithActivated(true).All()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(commands).To(HaveLen(1))
+				Expect(commands[0].GetName()).To(Equal(commandName))
+			})
+
+			It("should keep querying old shim version formats", func() {
+				testCmd := "legacy"
+				cmdShimsDir := filepath.Join(shimsDir, testCmd)
+				Expect(os.MkdirAll(cmdShimsDir, 0755)).To(Succeed())
+				Expect(os.WriteFile(filepath.Join(cmdShimsDir, "legacy_1.4"), []byte(""), 0755)).To(Succeed())
+
+				query, err := mgr.Query()
+				Expect(err).NotTo(HaveOccurred())
+				commands, err := query.WithName(testCmd).WithVersion("1.4").All()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(commands).To(HaveLen(1))
+				Expect(commands[0].GetVersion()).To(Equal("1.4"))
+			})
+
+			It("should return invalid version errors without panicking", func() {
+				query, err := mgr.Query()
+				Expect(err).NotTo(HaveOccurred())
+
+				query = query.WithVersion("not semver")
+				Expect(func() {
+					_, _ = query.All()
+				}).NotTo(Panic())
+				_, err = query.All()
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("invalid version"))
+
+				_, err = query.WithName("ignored").One()
+				Expect(err).To(HaveOccurred())
+				_, err = query.Count()
+				Expect(err).To(HaveOccurred())
+			})
 		})
 
 		Context("Version normalization and backward compatibility", func() {
@@ -559,6 +604,24 @@ var _ = Describe("Binary", func() {
 
 				target, _ := os.Readlink(binPath)
 				Expect(target).To(Equal(filepath.Join(cmdShimsDir, "testcmd_1.4.0")))
+			})
+
+			It("should return errors for invalid versions instead of panicking", func() {
+				Expect(func() {
+					_, _ = mgr.Define("bad", "not semver", "location")
+				}).NotTo(Panic())
+				_, err := mgr.Define("bad", "not semver", "location")
+				Expect(err).To(HaveOccurred())
+
+				Expect(func() {
+					_ = mgr.Activate("bad", "not semver")
+				}).NotTo(Panic())
+				Expect(mgr.Activate("bad", "not semver")).To(HaveOccurred())
+
+				Expect(func() {
+					_ = mgr.Undefine("bad", "not semver")
+				}).NotTo(Panic())
+				Expect(mgr.Undefine("bad", "not semver")).To(HaveOccurred())
 			})
 		})
 

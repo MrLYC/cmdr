@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/spf13/viper"
 
@@ -79,6 +80,23 @@ var _ = Describe("Root", func() {
 			"HTTPS_PROXY": "https://proxy.example",
 		}))
 	})
+
+	DescribeTable("should preserve command line contract", func(args []string, flags []string) {
+		cmd, _, err := rootCmd.Find(args)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(cmd).NotTo(BeNil())
+
+		for _, flag := range flags {
+			Expect(cmd.Flags().Lookup(flag)).NotTo(BeNil(), "missing flag %s on %v", flag, args)
+		}
+	},
+		Entry("direct install", []string{"install"}, []string{"name", "version", "location", "activate"}),
+		Entry("deprecated command install", []string{"command", "install"}, []string{"name", "version", "location", "activate"}),
+		Entry("direct define", []string{"define"}, []string{"name", "version", "location", "activate"}),
+		Entry("direct use", []string{"use"}, []string{"name", "version"}),
+		Entry("direct list", []string{"list"}, []string{"name", "version", "location", "activate", "fields"}),
+		Entry("direct clean", []string{"clean"}, []string{"name", "age", "keep"}),
+	)
 
 	It("should initialize logger output and fallback level", func() {
 		previousCfg := core.GetConfiguration()

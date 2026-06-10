@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	. "github.com/ahmetb/go-linq/v3"
-	ver "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
@@ -21,6 +19,7 @@ type Binary struct {
 	name      string
 	version   string
 	shimsName string
+	activated *bool
 }
 
 func (b *Binary) String() string {
@@ -36,6 +35,10 @@ func (b *Binary) GetVersion() string {
 }
 
 func (b *Binary) GetActivated() bool {
+	if b.activated != nil {
+		return *b.activated
+	}
+
 	binHelper := utils.NewPathHelper(b.binDir)
 	binPath, err := binHelper.RealPath(b.name)
 	if err != nil {
@@ -62,12 +65,29 @@ func NewBinary(binDir, shimsDir, name, version, shimsName string) *Binary {
 	}
 }
 
+func newBinaryWithActivated(binDir, shimsDir, name, version, shimsName string, activated bool) *Binary {
+	binary := NewBinary(binDir, shimsDir, name, version, shimsName)
+	binary.activated = &activated
+	return binary
+}
+
 type BinariesFilter struct {
 	binaries []*Binary
+	err      error
 }
 
 func (f *BinariesFilter) Filter(fn func(b interface{}) bool) *BinariesFilter {
-	From(f.binaries).Where(fn).ToSlice(&f.binaries)
+	if f.err != nil {
+		return f
+	}
+
+	filtered := make([]*Binary, 0, len(f.binaries))
+	for _, binary := range f.binaries {
+		if fn(binary) {
+			filtered = append(filtered, binary)
+		}
+	}
+	f.binaries = filtered
 	return f
 }
 
@@ -78,11 +98,16 @@ func (f *BinariesFilter) WithName(name string) core.CommandQuery {
 }
 
 func (f *BinariesFilter) WithVersion(version string) core.CommandQuery {
-	semver := ver.Must(ver.NewVersion(version))
-
+	if f.err != nil {
+		return f
+	}
 	return f.Filter(func(b interface{}) bool {
-		binVer := ver.Must(ver.NewVersion(b.(*Binary).GetVersion()))
-		return semver.Equal(binVer)
+		matches, err := versionMatches(b.(*Binary).GetVersion(), version)
+		if err != nil {
+			f.err = err
+			return false
+		}
+		return matches
 	})
 }
 
@@ -99,6 +124,10 @@ func (f *BinariesFilter) WithLocation(location string) core.CommandQuery {
 }
 
 func (f *BinariesFilter) All() ([]core.Command, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+
 	commands := make([]core.Command, 0, len(f.binaries))
 	for _, b := range f.binaries {
 		commands = append(commands, b)
@@ -108,6 +137,10 @@ func (f *BinariesFilter) All() ([]core.Command, error) {
 }
 
 func (f *BinariesFilter) One() (core.Command, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+
 	if len(f.binaries) == 0 {
 		return nil, errors.Wrapf(core.ErrBinaryNotFound, "binaries not found")
 	}
@@ -116,11 +149,15 @@ func (f *BinariesFilter) One() (core.Command, error) {
 }
 
 func (f *BinariesFilter) Count() (int, error) {
+	if f.err != nil {
+		return 0, f.err
+	}
+
 	return len(f.binaries), nil
 }
 
 func NewBinariesFilter(binaries []*Binary) *BinariesFilter {
-	return &BinariesFilter{binaries}
+	return &BinariesFilter{binaries: binaries}
 }
 
 type BinaryManager struct {
@@ -162,31 +199,52 @@ func (m *BinaryManager) ShimsName(name, version string) string {
 }
 
 func (m *BinaryManager) GetNormalizedVersion(version string) string {
-	semver := ver.Must(ver.NewVersion(version))
-	return semver.String()
+	normalized, err := normalizeVersion(version)
+	if err != nil {
+		return version
+	}
+	return normalized
 }
 
 func (m *BinaryManager) Query() (core.CommandQuery, error) {
 	var binaries []*Binary
+	binHelper := utils.NewPathHelper(m.binDir)
+	activeLocations := map[string]string{}
 
-	err := filepath.Walk(m.shimsDir, func(path string, info fs.FileInfo, err error) error {
+	getActiveLocation := func(name string) string {
+		location, ok := activeLocations[name]
+		if ok {
+			return location
+		}
+
+		location, err := binHelper.RealPath(name)
+		if err != nil {
+			location = ""
+		}
+		activeLocations[name] = location
+		return location
+	}
+
+	err := filepath.WalkDir(m.shimsDir, func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return errors.Wrapf(err, "failed to walk %s", path)
 		}
 
-		if info.IsDir() {
+		if entry.IsDir() {
 			return nil
 		}
 
 		dir, filename := filepath.Split(path)
 		name := filepath.Base(dir)
-		if !strings.HasPrefix(filename, name) {
+		prefix := name + "_"
+		if !strings.HasPrefix(filename, prefix) {
 			return nil
 		}
 
-		version := strings.TrimPrefix(filename, name+"_")
+		version := strings.TrimPrefix(filename, prefix)
+		activated := path == getActiveLocation(name)
 
-		bin := NewBinary(m.binDir, m.shimsDir, name, version, filename)
+		bin := newBinaryWithActivated(m.binDir, m.shimsDir, name, version, filename, activated)
 		binaries = append(binaries, bin)
 
 		return nil
@@ -227,13 +285,19 @@ func (m *BinaryManager) linkBinary(name string, version string, location string,
 	return nil
 }
 
-func (m *BinaryManager) getNormalizedShimsName(name, version string) string {
-	semver := ver.Must(ver.NewVersion(version))
-	return fmt.Sprintf("%s_%s", name, semver.String())
+func (m *BinaryManager) getNormalizedShimsName(name, version string) (string, error) {
+	normalized, err := normalizeVersion(version)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s_%s", name, normalized), nil
 }
 
 func (m *BinaryManager) Define(name string, version string, location string) (core.Command, error) {
-	normalizedShimsName := m.getNormalizedShimsName(name, version)
+	normalizedShimsName, err := m.getNormalizedShimsName(name, version)
+	if err != nil {
+		return nil, err
+	}
 	oldShimsName := m.ShimsName(name, version)
 
 	shimsHelper := utils.NewPathHelper(m.shimsDir).Child(name)
@@ -242,7 +306,7 @@ func (m *BinaryManager) Define(name string, version string, location string) (co
 	normalizedPath := shimsHelper.Child(normalizedShimsName).Path()
 
 	var shimsName string
-	_, err := os.Stat(normalizedPath)
+	_, err = os.Stat(normalizedPath)
 	if err == nil {
 		shimsName = normalizedShimsName
 	} else if !os.IsNotExist(err) {
@@ -286,7 +350,10 @@ func (m *BinaryManager) Define(name string, version string, location string) (co
 
 func (m *BinaryManager) Undefine(name string, version string) error {
 	helper := utils.NewPathHelper(m.shimsDir).Child(name)
-	normalizedShimsName := m.getNormalizedShimsName(name, version)
+	normalizedShimsName, err := m.getNormalizedShimsName(name, version)
+	if err != nil {
+		return err
+	}
 	oldShimsName := m.ShimsName(name, version)
 
 	core.GetLogger().Debug("undefining binary", map[string]interface{}{
@@ -311,11 +378,13 @@ func (m *BinaryManager) Undefine(name string, version string) error {
 
 func (m *BinaryManager) Activate(name, version string) error {
 	shimsHelper := utils.NewPathHelper(m.shimsDir).Child(name)
-	normalizedShimsName := m.getNormalizedShimsName(name, version)
+	normalizedShimsName, err := m.getNormalizedShimsName(name, version)
+	if err != nil {
+		return err
+	}
 	oldShimsName := m.ShimsName(name, version)
 
 	var path string
-	var err error
 
 	for _, shimsName := range []string{normalizedShimsName, oldShimsName} {
 		if shimsName == "" {
@@ -366,8 +435,11 @@ func (m *BinaryManager) GetShimsDir() string {
 }
 
 func GetNormalizedVersion(version string) string {
-	semver := ver.Must(ver.NewVersion(version))
-	return semver.String()
+	normalized, err := normalizeVersion(version)
+	if err != nil {
+		return version
+	}
+	return normalized
 }
 
 func NewBinaryManager(

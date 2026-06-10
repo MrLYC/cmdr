@@ -156,6 +156,59 @@ var _ = Describe("Download", func() {
 			Expect(downloadManager.Define(name, version, input)).To(Succeed())
 		})
 
+		It("should not rewrite twice when rewrite strategy prepares the URI", func() {
+			input := "https://github.com/MrLYC/cmdr"
+			rewritten := "https://mirror.local/MrLYC/cmdr"
+			var targetPath string
+
+			cfg := viper.New()
+			cfg.Set(core.CfgKeyDownloadRewriteRule, "https://mirror.local{{ .Path }}")
+			rewrite := strategy.NewRewriteStrategy()
+			Expect(rewrite.Configure(cfg)).To(Succeed())
+			chain := strategy.NewStrategyChain(rewrite)
+			downloadManager.SetStrategyChain(chain)
+
+			fetcher.EXPECT().IsSupport(input).Return(true)
+			fetcher.EXPECT().Fetch(name, version, rewritten, gomock.Any()).DoAndReturn(func(name, version, uri, dir string) error {
+				targetPath = filepath.Join(dir, "cmdr")
+				Expect(os.WriteFile(targetPath, []byte(""), 0755)).To(Succeed())
+				return nil
+			})
+			baseManager.EXPECT().Define(name, version, gomock.Any()).DoAndReturn(func(name, version, location string) (core.Command, error) {
+				Expect(location).To(Equal(targetPath))
+				return nil, nil
+			})
+
+			Expect(downloadManager.Define(name, version, input)).To(Succeed())
+		})
+
+		It("should keep original URI when configured rewrite execution fails", func() {
+			input := "https://github.com/MrLYC/cmdr"
+			var targetPath string
+
+			cfg := viper.New()
+			cfg.Set(core.CfgKeyDownloadRewriteRule, "{{ .Missing.Field }}")
+			rewrite := strategy.NewRewriteStrategy()
+			Expect(rewrite.Configure(cfg)).To(Succeed())
+			direct := strategy.NewDirectStrategy()
+			direct.SetEnabled(true)
+			chain := strategy.NewStrategyChain(direct, rewrite)
+			downloadManager.SetStrategyChain(chain)
+
+			fetcher.EXPECT().IsSupport(input).Return(true)
+			fetcher.EXPECT().Fetch(name, version, input, gomock.Any()).DoAndReturn(func(name, version, uri, dir string) error {
+				targetPath = filepath.Join(dir, "cmdr")
+				Expect(os.WriteFile(targetPath, []byte(""), 0755)).To(Succeed())
+				return nil
+			})
+			baseManager.EXPECT().Define(name, version, gomock.Any()).DoAndReturn(func(name, version, location string) (core.Command, error) {
+				Expect(location).To(Equal(targetPath))
+				return nil, nil
+			})
+
+			Expect(downloadManager.Define(name, version, input)).To(Succeed())
+		})
+
 		It("should wrap strategy chain errors", func() {
 			chain := strategy.NewStrategyChain(strategy.NewDirectStrategy())
 			downloadManager.SetStrategyChain(chain)
