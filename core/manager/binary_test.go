@@ -244,6 +244,14 @@ var _ = Describe("Binary", func() {
 			Expect(shimsDir).To(BeADirectory())
 		})
 
+		It("should return init errors", func() {
+			Expect(os.RemoveAll(binDir)).To(Succeed())
+			Expect(os.WriteFile(binDir, []byte("file"), 0644)).To(Succeed())
+
+			mgr = manager.NewBinaryManagerWithLink(binDir, shimsDir, 0755)
+			Expect(mgr.Init(false)).To(HaveOccurred())
+		})
+
 		It("should close a manager", func() {
 			Expect(mgr.Close()).To(Succeed())
 			Expect(mgr.Provider()).To(Equal(core.CommandProviderBinary))
@@ -313,6 +321,52 @@ var _ = Describe("Binary", func() {
 				Expect(mgr.Undefine(nonexistsCommand, version)).To(Succeed())
 				checkUndefineResult(nonexistsCommand)
 			})
+
+			It("should return link errors", func() {
+				tempDir, err := os.MkdirTemp("", "")
+				Expect(err).To(BeNil())
+				defer os.RemoveAll(tempDir)
+
+				location := filepath.Join(tempDir, "location")
+				Expect(os.WriteFile(location, []byte(""), 0755)).To(Succeed())
+				mgr = manager.NewBinaryManager(binDir, shimsDir, 0755, func(*utils.PathHelper, string, string, os.FileMode) error {
+					return fmt.Errorf("link failed")
+				})
+
+				_, err = mgr.Define("broken", version, location)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("link"))
+			})
+
+			It("should define commands with copy mode", func() {
+				tempDir, err := os.MkdirTemp("", "")
+				Expect(err).To(BeNil())
+				defer os.RemoveAll(tempDir)
+
+				location := filepath.Join(tempDir, "location")
+				Expect(os.WriteFile(location, []byte("copied"), 0755)).To(Succeed())
+				mgr = manager.NewBinaryManagerWithCopy(binDir, shimsDir, 0755)
+
+				command, err := mgr.Define("copied", version, location)
+				Expect(err).NotTo(HaveOccurred())
+				content, err := os.ReadFile(command.GetLocation())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(content)).To(Equal("copied"))
+			})
+
+			It("should return shim directory creation errors", func() {
+				tempDir, err := os.MkdirTemp("", "")
+				Expect(err).To(BeNil())
+				defer os.RemoveAll(tempDir)
+
+				location := filepath.Join(tempDir, "location")
+				Expect(os.WriteFile(location, []byte(""), 0755)).To(Succeed())
+				Expect(os.RemoveAll(shimsDir)).To(Succeed())
+				Expect(os.WriteFile(shimsDir, []byte("file"), 0644)).To(Succeed())
+
+				_, err = mgr.Define("broken", version, location)
+				Expect(err).To(HaveOccurred())
+			})
 		})
 
 		Context("Activate", func() {
@@ -343,6 +397,13 @@ var _ = Describe("Binary", func() {
 				Expect(getBinPath(nonexistsCommand)).NotTo(BeAnExistingFile())
 			})
 
+			It("should return symlink errors", func() {
+				Expect(os.RemoveAll(binDir)).To(Succeed())
+				Expect(os.WriteFile(binDir, []byte("file"), 0644)).To(Succeed())
+
+				Expect(mgr.Activate(commandName, version)).NotTo(Succeed())
+			})
+
 			checkDeactivateResult := func(name string) {
 				binPath := getBinPath(name)
 				Expect(binPath).NotTo(BeAnExistingFile())
@@ -359,6 +420,13 @@ var _ = Describe("Binary", func() {
 				Expect(mgr.Deactivate(nonexistsCommand)).To(Succeed())
 				checkDeactivateResult(nonexistsCommand)
 			})
+
+			It("should return deactivate errors", func() {
+				Expect(os.RemoveAll(binDir)).To(Succeed())
+				Expect(os.WriteFile(binDir, []byte("file"), 0644)).To(Succeed())
+
+				Expect(mgr.Deactivate(commandName)).To(HaveOccurred())
+			})
 		})
 
 		Context("Query", func() {
@@ -372,6 +440,16 @@ var _ = Describe("Binary", func() {
 				Expect(command.GetName()).To(Equal(commandName))
 				Expect(command.GetVersion()).To(Equal(version))
 				Expect(command.GetLocation()).To(Equal(getShimsPath(command.GetName())))
+			})
+
+			It("should ignore unrelated files while querying", func() {
+				Expect(os.WriteFile(filepath.Join(shimsDir, commandName, "unrelated"), []byte(""), 0644)).To(Succeed())
+
+				query, err := mgr.Query()
+				Expect(err).NotTo(HaveOccurred())
+				count, err := query.Count()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(1))
 			})
 		})
 

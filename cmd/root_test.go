@@ -80,6 +80,26 @@ var _ = Describe("Root", func() {
 		}))
 	})
 
+	It("should initialize logger output and fallback level", func() {
+		previousCfg := core.GetConfiguration()
+		previousLogger := core.GetLogger()
+		defer func() {
+			core.SetConfiguration(previousCfg)
+			core.SetLogger(previousLogger)
+		}()
+
+		cfg := viper.New()
+		cfg.Set(core.CfgKeyLogLevel, "invalid")
+		cfg.Set(core.CfgKeyLogOutput, "stdout")
+		core.SetConfiguration(cfg)
+
+		Expect(func() { initLogger() }).NotTo(Panic())
+
+		cfg.Set(core.CfgKeyLogLevel, "debug")
+		cfg.Set(core.CfgKeyLogOutput, "stderr")
+		Expect(func() { initLogger() }).NotTo(Panic())
+	})
+
 	It("should execute a simple root command", func() {
 		previousCfg := core.GetConfiguration()
 		previousFactory := core.GetDatabaseFactory()

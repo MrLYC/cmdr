@@ -118,6 +118,7 @@ var _ = Describe("Database", func() {
 		}
 
 		BeforeEach(func() {
+			existsCommand = manager.Command{ID: 1}
 			mgr = manager.NewDatabaseManager(db, binaryMgr)
 		})
 
@@ -194,6 +195,41 @@ var _ = Describe("Database", func() {
 				Expect(err).To(BeNil())
 				Expect(result.GetLocation()).To(Equal(binaryCommand.GetLocation()))
 			})
+
+			It("should return binary manager errors", func() {
+				binaryMgr.EXPECT().Define(commandName, version, location).Return(nil, fmt.Errorf("define failed"))
+
+				_, err := mgr.Define(commandName, version, location)
+				Expect(err).To(MatchError("define failed"))
+			})
+
+			It("should return query errors", func() {
+				binaryMgr.EXPECT().Define(commandName, version, location).Return(binaryCommand, nil)
+				db.EXPECT().
+					Select(
+						q.Eq("Name", commandName),
+						q.Or(
+							q.Eq("Version", "1.0"),
+							q.Eq("Version", "1.0.0"),
+						),
+					).
+					Return(dbQuery)
+				dbQuery.EXPECT().First(gomock.Any()).Return(fmt.Errorf("select failed"))
+
+				_, err := mgr.Define(commandName, version, location)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("define command failed"))
+			})
+
+			It("should return save errors", func() {
+				makeCommandNotFound()
+				binaryMgr.EXPECT().Define(commandName, version, location).Return(binaryCommand, nil)
+				db.EXPECT().Save(gomock.Any()).Return(fmt.Errorf("save failed"))
+
+				_, err := mgr.Define(commandName, version, location)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("save command failed"))
+			})
 		})
 
 		Context("Undefine", func() {
@@ -222,6 +258,38 @@ var _ = Describe("Database", func() {
 			It("should not undefine a activated command", func() {
 				existsCommand.Activated = true
 				makeCommandFound()
+
+				Expect(mgr.Undefine(commandName, version)).NotTo(Succeed())
+			})
+
+			It("should return query errors", func() {
+				db.EXPECT().
+					Select(
+						q.Eq("Name", commandName),
+						q.Or(
+							q.Eq("Version", "1.0"),
+							q.Eq("Version", "1.0.0"),
+						),
+					).
+					Return(dbQuery)
+				dbQuery.EXPECT().First(gomock.Any()).Return(fmt.Errorf("select failed"))
+
+				Expect(mgr.Undefine(commandName, version)).NotTo(Succeed())
+			})
+
+			It("should return delete errors", func() {
+				existsCommand.Activated = false
+				makeCommandFound()
+				db.EXPECT().DeleteStruct(gomock.Any()).Return(fmt.Errorf("delete failed"))
+
+				Expect(mgr.Undefine(commandName, version)).NotTo(Succeed())
+			})
+
+			It("should return binary manager errors", func() {
+				existsCommand.Activated = false
+				makeCommandFound()
+				db.EXPECT().DeleteStruct(gomock.Any()).Return(nil)
+				binaryMgr.EXPECT().Undefine(commandName, version).Return(fmt.Errorf("undefine failed"))
 
 				Expect(mgr.Undefine(commandName, version)).NotTo(Succeed())
 			})
@@ -278,6 +346,31 @@ var _ = Describe("Database", func() {
 
 				Expect(mgr.Activate(commandName, version)).NotTo(Succeed())
 			})
+
+			It("should return deactivate errors", func() {
+				makeCommandFound()
+				makeActivatedCommandFound()
+				db.EXPECT().Save(&existsCommand).Return(fmt.Errorf("save failed"))
+
+				Expect(mgr.Activate(commandName, version)).NotTo(Succeed())
+			})
+
+			It("should return save errors", func() {
+				makeCommandFound()
+				makeActivatedCommandNotFound()
+				db.EXPECT().Save(gomock.Any()).Return(fmt.Errorf("save failed"))
+
+				Expect(mgr.Activate(commandName, version)).NotTo(Succeed())
+			})
+
+			It("should return binary manager errors", func() {
+				makeCommandFound()
+				makeActivatedCommandNotFound()
+				db.EXPECT().Save(gomock.Any()).Return(nil)
+				binaryMgr.EXPECT().Activate(commandName, version).Return(fmt.Errorf("activate failed"))
+
+				Expect(mgr.Activate(commandName, version)).NotTo(Succeed())
+			})
 		})
 
 		Context("Deactivate", func() {
@@ -327,6 +420,30 @@ var _ = Describe("Database", func() {
 				binaryMgr.EXPECT().Deactivate(commandName).Return(nil)
 
 				Expect(mgr.Deactivate(commandName)).To(Succeed())
+			})
+
+			It("should return select errors", func() {
+				db.EXPECT().
+					Select(q.Eq("Name", commandName), q.Eq("Activated", true)).
+					Return(dbQuery)
+				dbQuery.EXPECT().Find(gomock.Any()).Return(fmt.Errorf("select failed"))
+
+				Expect(mgr.Deactivate(commandName)).NotTo(Succeed())
+			})
+
+			It("should return save errors", func() {
+				makeActivatedCommandFound()
+				db.EXPECT().Save(gomock.Any()).Return(fmt.Errorf("save failed"))
+
+				Expect(mgr.Deactivate(commandName)).NotTo(Succeed())
+			})
+
+			It("should return binary manager errors", func() {
+				makeActivatedCommandFound()
+				db.EXPECT().Save(gomock.Any()).Return(nil)
+				binaryMgr.EXPECT().Deactivate(commandName).Return(fmt.Errorf("deactivate failed"))
+
+				Expect(mgr.Deactivate(commandName)).NotTo(Succeed())
 			})
 		})
 	})

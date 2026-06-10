@@ -1,6 +1,7 @@
 package strategy
 
 import (
+	"errors"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -9,6 +10,34 @@ import (
 
 	"github.com/mrlyc/cmdr/core"
 )
+
+type testStrategy struct {
+	name           string
+	enabled        bool
+	preparedURI    string
+	prepareErr     error
+	shouldRetry    bool
+	shouldFallback bool
+	configureErr   error
+}
+
+func (s *testStrategy) Name() string { return s.name }
+func (s *testStrategy) Prepare(uri string) (string, error) {
+	if s.prepareErr != nil {
+		return "", s.prepareErr
+	}
+	if s.preparedURI != "" {
+		return s.preparedURI, nil
+	}
+	return uri, nil
+}
+func (s *testStrategy) ShouldRetry(error) bool    { return s.shouldRetry }
+func (s *testStrategy) ShouldFallback(error) bool { return s.shouldFallback }
+func (s *testStrategy) Configure(core.Configuration) error {
+	return s.configureErr
+}
+func (s *testStrategy) IsEnabled(string) bool   { return s.enabled }
+func (s *testStrategy) SetEnabled(enabled bool) { s.enabled = enabled }
 
 func TestStrategy(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -277,5 +306,59 @@ var _ = Describe("StrategyChain", func() {
 
 		Expect(err).To(BeNil())
 		Expect(enabledCount).To(Equal(1))
+	})
+
+	It("should skip strategies that fail prepare", func() {
+		calls := []string{}
+		first := &testStrategy{name: "first", enabled: true, prepareErr: errors.New("bad uri")}
+		second := &testStrategy{name: "second", enabled: true, preparedURI: "prepared"}
+		chain := NewStrategyChain(first, second)
+
+		err := chain.Execute("https://example.com/file", func(uri string) error {
+			calls = append(calls, uri)
+			return nil
+		})
+
+		Expect(err).NotTo(HaveOccurred())
+		Expect(calls).To(Equal([]string{"prepared"}))
+	})
+
+	It("should retry the same strategy when requested", func() {
+		attempts := 0
+		chain := NewStrategyChain(&testStrategy{name: "retry", enabled: true, shouldRetry: true})
+
+		err := chain.Execute("https://example.com/file", func(uri string) error {
+			attempts++
+			if attempts == 1 {
+				return errors.New("temporary")
+			}
+			return nil
+		})
+
+		Expect(err).NotTo(HaveOccurred())
+		Expect(attempts).To(Equal(2))
+	})
+
+	It("should return non-retriable strategy errors directly", func() {
+		expected := errors.New("permanent")
+		chain := NewStrategyChain(&testStrategy{name: "direct", enabled: true})
+
+		err := chain.Execute("https://example.com/file", func(uri string) error {
+			return expected
+		})
+
+		Expect(err).To(MatchError(expected))
+	})
+
+	It("should report unexpected state when no strategy runs", func() {
+		chain := NewStrategyChain(&testStrategy{name: "bad", enabled: true, prepareErr: errors.New("prepare failed")})
+		Expect(chain.Execute("https://example.com/file", func(uri string) error {
+			return nil
+		})).To(MatchError("unexpected state: no error but download failed"))
+	})
+
+	It("should configure strategy errors with strategy names", func() {
+		chain := NewStrategyChain(&testStrategy{name: "bad", configureErr: errors.New("invalid")})
+		Expect(chain.Configure(viper.New())).To(MatchError(ContainSubstring("failed to configure strategy bad")))
 	})
 })

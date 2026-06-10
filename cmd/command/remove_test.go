@@ -1,8 +1,11 @@
 package command
 
 import (
+	"fmt"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"github.com/spf13/viper"
 
 	"github.com/mrlyc/cmdr/cmd/internal/testutils"
@@ -63,6 +66,16 @@ var _ = Describe("Remove", func() {
 			manager.EXPECT().Close().Return(nil)
 
 			RemoveCmd.Run(RemoveCmd, []string{})
+		})
+
+		It("should panic when undefine fails", func() {
+			cfg.Set(core.CfgKeyXCommandRemoveName, "cmdr")
+			cfg.Set(core.CfgKeyXCommandRemoveVersion, "1.0.0")
+
+			manager.EXPECT().Undefine("cmdr", "1.0.0").Return(fmt.Errorf("remove failed"))
+			manager.EXPECT().Close().Return(nil)
+
+			Expect(func() { RemoveCmd.Run(RemoveCmd, []string{}) }).To(Panic())
 		})
 	})
 })

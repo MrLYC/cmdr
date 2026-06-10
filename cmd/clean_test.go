@@ -131,9 +131,13 @@ var _ = Describe("Clean", func() {
 			defer os.RemoveAll(dir)
 
 			Expect(ensureDir(filepath.Join(dir, "nested"))).To(Succeed())
+			path, err := uniquePath(dir, "new")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(path).To(Equal(filepath.Join(dir, "new")))
+
 			Expect(os.WriteFile(filepath.Join(dir, "cmd"), []byte("old"), 0644)).To(Succeed())
 
-			path, err := uniquePath(dir, "cmd")
+			path, err = uniquePath(dir, "cmd")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(path).To(Equal(filepath.Join(dir, "cmd-1")))
 		})
@@ -169,6 +173,29 @@ var _ = Describe("Clean", func() {
 			content, err := os.ReadFile(dst)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).To(Equal("data"))
+		})
+
+		It("should return cross-device fallback errors", func() {
+			dir, err := os.MkdirTemp("", "cmdr-clean")
+			Expect(err).NotTo(HaveOccurred())
+			defer os.RemoveAll(dir)
+
+			linkErr := func(oldname, newname string) error {
+				return &os.LinkError{Op: "rename", Old: oldname, New: newname, Err: syscall.EXDEV}
+			}
+			Expect(moveFileWithRename("missing", filepath.Join(dir, "dst"), linkErr)).To(HaveOccurred())
+
+			src := filepath.Join(dir, "src")
+			Expect(os.WriteFile(src, []byte("data"), 0600)).To(Succeed())
+			Expect(moveFileWithRename(src, filepath.Join(dir, "missing", "dst"), linkErr)).To(HaveOccurred())
+
+			srcDir := filepath.Join(dir, "src-dir")
+			Expect(os.Mkdir(srcDir, 0755)).To(Succeed())
+			Expect(moveFileWithRename(srcDir, filepath.Join(dir, "dst-dir"), linkErr)).To(HaveOccurred())
+
+			Expect(moveFileWithRename(src, filepath.Join(dir, "dst"), func(oldname, newname string) error {
+				return errors.New("rename failed")
+			})).To(HaveOccurred())
 		})
 	})
 
@@ -254,6 +281,24 @@ var _ = Describe("Clean", func() {
 			Expect(recent).To(BeAnExistingFile())
 		})
 
+		It("should filter wanted names and skip missing shim files", func() {
+			target := newShim("cmdr", "1.0.0", 120*24*time.Hour)
+			other := newShim("other", "1.0.0", 120*24*time.Hour)
+			missing := filepath.Join(root, "shims", "missing-1.0.0")
+			manager := &cleanTestManager{commands: []core.Command{
+				cleanTestCommand{name: "cmdr", version: "1.0.0", location: target},
+				cleanTestCommand{name: "cmdr", version: "0.9.0", location: missing},
+				cleanTestCommand{name: "other", version: "1.0.0", location: other},
+			}}
+			cfg.Set(core.CfgKeyXCleanKeep, 0)
+			cfg.Set(core.CfgKeyXCleanName, []string{"cmdr"})
+
+			Expect(runClean(cfg, manager, deps)).To(Succeed())
+			Expect(manager.undefined).To(Equal([]string{"cmdr:1.0.0"}))
+			Expect(target).NotTo(BeAnExistingFile())
+			Expect(other).To(BeAnExistingFile())
+		})
+
 		It("should skip activated commands and shim-detected active locations", func() {
 			active := newShim("cmdr", "2.0.0", 120*24*time.Hour)
 			inactive := newShim("cmdr", "1.0.0", 120*24*time.Hour)
@@ -294,6 +339,28 @@ var _ = Describe("Clean", func() {
 
 			deps.move = func(string, string) error { return errors.New("move failed") }
 			Expect(runClean(cfg, manager, deps)).To(HaveOccurred())
+		})
+
+		It("should report undefine errors even when rollback fails", func() {
+			old := newShim("cmdr", "1.0.0", 120*24*time.Hour)
+			manager := &cleanTestManager{
+				commands: []core.Command{cleanTestCommand{name: "cmdr", version: "1.0.0", location: old}},
+				undefErr: errors.New("undefine failed"),
+			}
+			cfg.Set(core.CfgKeyXCleanKeep, 0)
+
+			moved := false
+			deps.move = func(src, dst string) error {
+				if !moved {
+					moved = true
+					return os.Rename(src, dst)
+				}
+				return errors.New("rollback failed")
+			}
+
+			err := runClean(cfg, manager, deps)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("undefine cmdr:1.0.0 failed"))
 		})
 
 		It("should collect destination preparation errors", func() {

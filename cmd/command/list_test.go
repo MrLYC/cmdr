@@ -20,12 +20,13 @@ var _ = Describe("List", func() {
 
 	Context("command", func() {
 		var (
-			ctrl    *gomock.Controller
-			rawCfg  core.Configuration
-			cfg     core.Configuration
-			manager *mock.MockCommandManager
-			query   *mock.MockCommandQuery
-			factory func(cfg core.Configuration) (core.CommandManager, error)
+			ctrl     *gomock.Controller
+			rawCfg   core.Configuration
+			cfg      core.Configuration
+			manager  *mock.MockCommandManager
+			query    *mock.MockCommandQuery
+			factory  func(cfg core.Configuration) (core.CommandManager, error)
+			commands []core.Command
 		)
 
 		BeforeEach(func() {
@@ -42,7 +43,9 @@ var _ = Describe("List", func() {
 			core.SetConfiguration(cfg)
 
 			query = mock.NewMockCommandQuery(ctrl)
-			query.EXPECT().All().Return(nil, nil)
+			query.EXPECT().All().DoAndReturn(func() ([]core.Command, error) {
+				return commands, nil
+			}).AnyTimes()
 
 			manager.EXPECT().Query().Return(query, nil)
 			manager.EXPECT().Close().Return(nil)
@@ -82,6 +85,23 @@ var _ = Describe("List", func() {
 		It("should filter by activate", func() {
 			cfg.Set(core.CfgKeyXCommandListActivate, true)
 			query.EXPECT().WithActivated(true).Return(nil)
+
+			ListCmd.Run(ListCmd, []string{})
+		})
+
+		It("should render selected fields for active and inactive commands", func() {
+			active := mock.NewMockCommand(ctrl)
+			active.EXPECT().GetActivated().Return(true).AnyTimes()
+			active.EXPECT().GetName().Return("cmdr").AnyTimes()
+			active.EXPECT().GetVersion().Return("1.0.0").AnyTimes()
+			active.EXPECT().GetLocation().Return("/bin/cmdr").AnyTimes()
+			inactive := mock.NewMockCommand(ctrl)
+			inactive.EXPECT().GetActivated().Return(false).AnyTimes()
+			inactive.EXPECT().GetName().Return("other").AnyTimes()
+			inactive.EXPECT().GetVersion().Return("2.0.0").AnyTimes()
+			inactive.EXPECT().GetLocation().Return("/bin/other").AnyTimes()
+			commands = []core.Command{active, inactive}
+			cfg.Set(core.CfgKeyXCommandListFields, []string{"activated", "name", "unknown", "location"})
 
 			ListCmd.Run(ListCmd, []string{})
 		})

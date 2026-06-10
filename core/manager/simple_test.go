@@ -121,6 +121,20 @@ var _ = Describe("Simple", func() {
 			_, err := mgr.Define(name, version, location)
 			Expect(err).NotTo(BeNil())
 		})
+
+		It("should return invalid version errors", func() {
+			_, err := mgr.Define(name, "not semver", location)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("invalid version"))
+		})
+
+		It("should return follower errors", func() {
+			databaseMgr.EXPECT().Define(name, version, location).Return(command, nil)
+			binaryMgr.EXPECT().Define(name, version, location).Return(nil, fmt.Errorf("follower failed"))
+
+			_, err := mgr.Define(name, version, location)
+			Expect(err).To(MatchError("follower failed"))
+		})
 	})
 
 	Context("Undefine", func() {

@@ -74,6 +74,26 @@ func TestDownloadManagerInternals(t *testing.T) {
 	if _, err := manager.fetch(fetcher, "cmdr", "1.0.0", "https://example.com/cmdr", t.TempDir()); err == nil {
 		t.Fatal("expected fetch error")
 	}
+
+	cfg = viper.New()
+	cfg.Set(core.CfgKeyDownloadRewriteRule, "{{ call .URI }}")
+	rewrite = strategy.NewRewriteStrategy()
+	if err := rewrite.Configure(cfg); err != nil {
+		t.Fatal(err)
+	}
+	fetcher = &internalFetcher{}
+	manager = NewDownloadManager(nil, nil, 1, nil)
+	direct := strategy.NewDirectStrategy()
+	direct.SetEnabled(true)
+	manager.SetStrategyChain(strategy.NewStrategyChain(direct, rewrite))
+	manager.SetReplacements(nil)
+	dst = t.TempDir()
+	if _, err := manager.fetch(fetcher, "cmdr", "1.0.0", "https://example.com/cmdr", dst); err != nil {
+		t.Fatal(err)
+	}
+	if fetcher.seenURI != "https://example.com/cmdr" {
+		t.Fatalf("seen uri = %s", fetcher.seenURI)
+	}
 }
 
 func TestBinaryManagerInternals(t *testing.T) {

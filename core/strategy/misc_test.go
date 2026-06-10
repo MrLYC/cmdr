@@ -59,6 +59,17 @@ var _ = Describe("Strategy misc", func() {
 		Expect(proxy.ShouldRetry(errors.New("dial tcp failed"))).To(BeTrue())
 		Expect(proxy.ShouldFallback(ErrConnectionError)).To(BeTrue())
 		Expect(proxy.GetOptions()).To(BeNil())
+		Expect(proxy.ShouldRetry(nil)).To(BeFalse())
+		Expect(proxy.ShouldFallback(nil)).To(BeFalse())
+	})
+
+	It("should cover network helper negative branches", func() {
+		Expect(isTimeoutError(nil)).To(BeFalse())
+		Expect(isTimeoutError(errors.New("other"))).To(BeFalse())
+		Expect(isConnectionError(nil)).To(BeFalse())
+		Expect(isConnectionError(errors.New("other"))).To(BeFalse())
+		Expect(isNetworkError(nil)).To(BeFalse())
+		Expect(isNetworkError(errors.New("other"))).To(BeFalse())
 	})
 
 	It("should rewrite URIs and expose rewrite state", func() {
@@ -85,5 +96,50 @@ var _ = Describe("Strategy misc", func() {
 		cfg = viper.New()
 		cfg.Set("download.rewrite.rule", "{{")
 		Expect(NewRewriteStrategy().Configure(cfg)).To(HaveOccurred())
+	})
+
+	It("should cover rewrite URI parsing edge cases", func() {
+		cfg := viper.New()
+		cfg.Set("download.rewrite.rule", "{{ .Scheme }}|{{ .Host }}|{{ .Path }}|{{ .Query }}|{{ .Fragment }}")
+		rewrite := NewRewriteStrategy()
+		Expect(rewrite.Configure(cfg)).To(Succeed())
+
+		result, err := rewrite.Prepare("https://example.com")
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result).To(Equal("https|example.com|||"))
+
+		result, err = rewrite.Prepare("https://example.com/path#fragment")
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result).To(Equal("https|example.com|/path||fragment"))
+
+		cfg.Set("download.rewrite.rule", "")
+		rewrite = NewRewriteStrategy()
+		Expect(rewrite.Configure(cfg)).To(Succeed())
+		Expect(rewrite.IsEnabled("https://example.com")).To(BeFalse())
+		rewrite.SetEnabled(true)
+		Expect(rewrite.IsEnabled("https://example.com")).To(BeTrue())
+
+		cfg.Set("download.rewrite.rule", "{{ .URI }}")
+		rewrite = NewRewriteStrategy()
+		Expect(rewrite.Configure(cfg)).To(Succeed())
+		result, err = rewrite.Prepare("https://example.com/file")
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result).To(Equal("https://example.com/file"))
+	})
+
+	It("should cover strategy condition non-matches", func() {
+		cfg := &StrategyConfig{Enabled: true, Condition: &StrategyCondition{
+			Schemes:  []string{"https"},
+			Hosts:    []string{"github.com"},
+			Patterns: []string{"*.github.com"},
+		}}
+		Expect(cfg.Matches("%")).To(BeFalse())
+		Expect(cfg.Matches("http://api.github.com/file")).To(BeFalse())
+		Expect(cfg.Matches("https://example.com/file")).To(BeFalse())
+		Expect(cfg.Matches("https://github.com/file")).To(BeFalse())
+
+		chain := NewStrategyChain(NewDirectStrategy())
+		chain.config = &StrategyConfig{MaxRetries: 7}
+		Expect(chain.getStrategyMaxRetries(chain.Strategies()[0])).To(Equal(7))
 	})
 })

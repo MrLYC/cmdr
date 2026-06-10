@@ -49,6 +49,20 @@ var _ = Describe("Cmdr", func() {
 
 			Expect(utils.DefineCmdrCommand(manager, "test", "1.0.0", "test", false)).To(Succeed())
 		})
+
+		It("should return invalid version, define and activate errors", func() {
+			_, err := utils.DefineCmdrCommand(manager, "test", "bad", "test", false)
+			Expect(err).To(HaveOccurred())
+
+			manager.EXPECT().Define("test", "1.0.0", "test").Return(nil, fmt.Errorf("define failed"))
+			_, err = utils.DefineCmdrCommand(manager, "test", "1.0.0", "test", false)
+			Expect(err).To(MatchError("define failed"))
+
+			manager.EXPECT().Define("test", "1.0.0", "test")
+			manager.EXPECT().Activate("test", "1.0.0").Return(fmt.Errorf("activate failed"))
+			_, err = utils.DefineCmdrCommand(manager, "test", "1.0.0", "test", true)
+			Expect(err).To(MatchError("activate failed"))
+		})
 	})
 
 	Context("DefineCmdrCommandNX", func() {
@@ -64,6 +78,15 @@ var _ = Describe("Cmdr", func() {
 
 			_, err := utils.DefineCmdrCommandNX(manager, "test", "1.0.0", "test", false)
 			Expect(errors.Cause(err)).To(Equal(utils.ErrCmdrCommandAlreadyDefined))
+		})
+
+		It("should return query errors", func() {
+			managerWithQueryError := mock.NewMockCommandManager(ctrl)
+			managerWithQueryError.EXPECT().Query().Return(nil, fmt.Errorf("query failed"))
+
+			_, err := utils.DefineCmdrCommandNX(managerWithQueryError, "test", "1.0.0", "test", false)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("query command"))
 		})
 	})
 
@@ -82,6 +105,15 @@ var _ = Describe("Cmdr", func() {
 
 			command, err := utils.GetCmdrCommand(manager, "test", "1.0.0")
 			Expect(err).NotTo(BeNil())
+			Expect(command).To(BeNil())
+		})
+
+		It("should return query creation errors", func() {
+			managerWithQueryError := mock.NewMockCommandManager(ctrl)
+			managerWithQueryError.EXPECT().Query().Return(nil, fmt.Errorf("query failed"))
+
+			command, err := utils.GetCmdrCommand(managerWithQueryError, "test", "1.0.0")
+			Expect(err).To(HaveOccurred())
 			Expect(command).To(BeNil())
 		})
 	})
@@ -132,6 +164,69 @@ var _ = Describe("Cmdr", func() {
 
 			err := utils.UpgradeCmdr(ctx, nil, url, "1.0.0", []string{})
 			Expect(errors.Cause(err)).To(Equal(utils.ErrCmdrCommandAlreadyDefined))
+		})
+
+		It("should skip current version upgrades", func() {
+			err := utils.UpgradeCmdr(ctx, nil, url, core.Version, []string{})
+			Expect(errors.Cause(err)).To(Equal(utils.ErrCmdrAlreadyLatestVersion))
+		})
+
+		It("should return manager factory errors", func() {
+			core.RegisterCommandManagerFactory(core.CommandProviderDownload, func(cfg core.Configuration) (core.CommandManager, error) {
+				return nil, fmt.Errorf("factory failed")
+			})
+
+			err := utils.UpgradeCmdr(ctx, nil, url, "1.0.0", []string{})
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("create command manager"))
+		})
+
+		It("should return get command errors", func() {
+			query.EXPECT().One().Return(nil, fmt.Errorf("not found")).Times(2)
+			manager.EXPECT().Define(core.Name, "1.0.0", url).Return(nil, nil)
+
+			err := utils.UpgradeCmdr(ctx, nil, url, "1.0.0", []string{})
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("get command"))
+		})
+
+		It("should return close errors", func() {
+			defined := false
+			query.EXPECT().One().DoAndReturn(func() (core.Command, error) {
+				if !defined {
+					return nil, fmt.Errorf("not found")
+				}
+				return command, nil
+			}).Times(2)
+			manager.EXPECT().Define(core.Name, "1.0.0", url).DoAndReturn(func(name, version, url string) (core.Command, error) {
+				defined = true
+				return nil, nil
+			})
+			manager.EXPECT().Close().Return(fmt.Errorf("close failed"))
+
+			err := utils.UpgradeCmdr(ctx, nil, url, "1.0.0", []string{})
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("close command manager"))
+		})
+
+		It("should return process errors", func() {
+			defined := false
+			query.EXPECT().One().DoAndReturn(func() (core.Command, error) {
+				if !defined {
+					return nil, fmt.Errorf("not found")
+				}
+				return command, nil
+			}).Times(2)
+			manager.EXPECT().Define(core.Name, "1.0.0", url).DoAndReturn(func(name, version, url string) (core.Command, error) {
+				defined = true
+				return nil, nil
+			})
+			manager.EXPECT().Close().Return(nil)
+			command.EXPECT().GetLocation().Return("definitely-not-a-cmdr-test-command")
+
+			err := utils.UpgradeCmdr(ctx, nil, url, "1.0.0", []string{})
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("run command"))
 		})
 	})
 })

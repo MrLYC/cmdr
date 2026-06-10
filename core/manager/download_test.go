@@ -130,6 +130,44 @@ var _ = Describe("Download", func() {
 			Expect(downloadManager.Define(name, version, uri)).To(Succeed())
 		})
 
+		It("should apply configured rewrite strategy while direct strategy downloads", func() {
+			input := "https://github.com/MrLYC/cmdr"
+			rewritten := "https://mirror.local/MrLYC/cmdr"
+			var targetPath string
+
+			cfg := viper.New()
+			cfg.Set(core.CfgKeyDownloadRewriteRule, "https://mirror.local{{ .Path }}")
+			rewrite := strategy.NewRewriteStrategy()
+			Expect(rewrite.Configure(cfg)).To(Succeed())
+			chain := strategy.NewStrategyChain(strategy.NewDirectStrategy(), rewrite)
+			downloadManager.SetStrategyChain(chain)
+
+			fetcher.EXPECT().IsSupport(input).Return(true)
+			fetcher.EXPECT().Fetch(name, version, rewritten, gomock.Any()).DoAndReturn(func(name, version, uri, dir string) error {
+				targetPath = filepath.Join(dir, "cmdr")
+				Expect(os.WriteFile(targetPath, []byte(""), 0755)).To(Succeed())
+				return nil
+			})
+			baseManager.EXPECT().Define(name, version, gomock.Any()).DoAndReturn(func(name, version, location string) (core.Command, error) {
+				Expect(location).To(Equal(targetPath))
+				return nil, nil
+			})
+
+			Expect(downloadManager.Define(name, version, input)).To(Succeed())
+		})
+
+		It("should wrap strategy chain errors", func() {
+			chain := strategy.NewStrategyChain(strategy.NewDirectStrategy())
+			downloadManager.SetStrategyChain(chain)
+
+			fetcher.EXPECT().IsSupport(uri).Return(true)
+			fetcher.EXPECT().Fetch(name, version, uri, gomock.Any()).Return(errors.New("timeout")).Times(3)
+
+			_, err := downloadManager.Define(name, version, uri)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("failed to download"))
+		})
+
 		DescribeTable("fetch multiple files", func(files map[string]os.FileMode, expected string) {
 			var outputDir string
 

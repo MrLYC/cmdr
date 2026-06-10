@@ -203,6 +203,15 @@ var _ = Describe("Core", func() {
 		Expect(count).To(Equal(12))
 	})
 
+	It("should panic on invalid event subscribers", func() {
+		previous := eventBus
+		defer func() { eventBus = previous }()
+		eventBus = eventbus.New()
+
+		Expect(func() { SubscribeEvent("topic", "not-a-function") }).To(Panic())
+		Expect(func() { SubscribeEventOnce("topic", "not-a-function") }).To(Panic())
+	})
+
 	It("should manage loggers and format fields", func() {
 		previous := GetLogger()
 		defer SetLogger(previous)

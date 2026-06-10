@@ -1,8 +1,11 @@
 package command
 
 import (
+	"fmt"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"github.com/spf13/viper"
 
 	"github.com/mrlyc/cmdr/cmd/internal/testutils"
@@ -53,6 +56,13 @@ var _ = Describe("Use", func() {
 			manager.EXPECT().Close().Return(nil)
 
 			UseCmd.Run(UnsetCmd, []string{})
+		})
+
+		It("should panic when activate fails", func() {
+			manager.EXPECT().Activate("cmdr", "1.0.0").Return(fmt.Errorf("activate failed"))
+			manager.EXPECT().Close().Return(nil)
+
+			Expect(func() { UseCmd.Run(UseCmd, []string{}) }).To(Panic())
 		})
 	})
 })

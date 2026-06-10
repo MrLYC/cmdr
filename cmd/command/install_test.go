@@ -1,6 +1,8 @@
 package command
 
 import (
+	"fmt"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -69,6 +71,14 @@ var _ = Describe("Install", func() {
 			manager.EXPECT().Close().Return(nil)
 
 			InstallCmd.Run(InstallCmd, []string{})
+		})
+
+		It("should panic when install fails", func() {
+			cfg.Set(core.CfgKeyXCommandInstallActivate, false)
+			manager.EXPECT().Define("cmdr", "1.0.0", "").Return(nil, fmt.Errorf("install failed"))
+			manager.EXPECT().Close().Return(nil)
+
+			Expect(func() { InstallCmd.Run(InstallCmd, []string{}) }).To(Panic())
 		})
 
 		It("should change link mode", func() {

@@ -90,6 +90,20 @@ var _ = Describe("Pathlib", func() {
 		Expect(helper.SymbolLink("link", filepath.Join(root, "missing"), 0755)).To(HaveOccurred())
 	})
 
+	It("should return nested path errors under file parents", func() {
+		blocker := filepath.Join(root, "blocker")
+		source := filepath.Join(root, "source")
+		Expect(os.WriteFile(blocker, []byte("x"), 0644)).To(Succeed())
+		Expect(os.WriteFile(source, []byte("x"), 0644)).To(Succeed())
+
+		helper := NewPathHelper(blocker)
+		Expect(helper.EnsureNotExists("child")).To(HaveOccurred())
+		Expect(helper.SymbolLink("child", source, 0755)).To(HaveOccurred())
+		Expect(helper.CopyFile("child", source, 0755)).To(HaveOccurred())
+		_, err := helper.RealPath("child")
+		Expect(err).To(HaveOccurred())
+	})
+
 	It("should return real paths for normal files and errors for bad links", func() {
 		helper := NewPathHelper(root)
 		path := filepath.Join(root, "file")

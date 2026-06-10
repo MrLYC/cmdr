@@ -304,6 +304,20 @@ var _ = Describe("Doctor", func() {
 				Expect(doctor.Fix(false)).To(Succeed())
 			})
 
+			It("should continue when deactivate and undefine fail", func() {
+				command.EXPECT().GetActivated().Return(true).AnyTimes()
+				mgr.EXPECT().Deactivate(command.GetName()).Return(fmt.Errorf("deactivate failed"))
+				mgr.EXPECT().Undefine(command.GetName(), command.GetVersion()).Return(fmt.Errorf("undefine failed"))
+
+				Expect(doctor.Fix(false)).To(Succeed())
+			})
+
+			It("should not mutate commands in dry-run mode", func() {
+				command.EXPECT().GetActivated().Return(true).AnyTimes()
+
+				Expect(doctor.Fix(true)).To(Succeed())
+			})
+
 			It("should remove non-activate command", func() {
 				command.EXPECT().GetActivated().Return(false).AnyTimes()
 				mgr.EXPECT().Undefine(command.GetName(), command.GetVersion())
@@ -324,6 +338,19 @@ var _ = Describe("Doctor", func() {
 				mgr.EXPECT().Activate(command.GetName(), command.GetVersion())
 
 				Expect(doctor.Fix(false)).To(Succeed())
+			})
+
+			It("should continue when re-activate fails", func() {
+				command.EXPECT().GetActivated().Return(true).AnyTimes()
+				mgr.EXPECT().Activate(command.GetName(), command.GetVersion()).Return(fmt.Errorf("activate failed"))
+
+				Expect(doctor.Fix(false)).To(Succeed())
+			})
+
+			It("should log re-activation in dry-run mode", func() {
+				command.EXPECT().GetActivated().Return(true).AnyTimes()
+
+				Expect(doctor.Fix(true)).To(Succeed())
 			})
 
 			It("should skip non-activated available command", func() {
@@ -401,6 +428,23 @@ var _ = Describe("Doctor", func() {
 
 				matches, _ := filepath.Glob(backupRootDir + ".backup.*")
 				Expect(matches).To(BeEmpty())
+			})
+
+			It("should fail when backup root is a file", func() {
+				fileRoot := filepath.Join(rootDir, "not-dir")
+				Expect(os.WriteFile(fileRoot, []byte("x"), 0644)).To(Succeed())
+				doctor = manager.NewCommandDoctor(mgr, fileRoot)
+
+				Expect(doctor.FixWithOptions(false, true)).To(HaveOccurred())
+			})
+
+			It("should ignore missing backup roots", func() {
+				missingRoot := filepath.Join(rootDir, "missing")
+				doctor = manager.NewCommandDoctor(mgr, missingRoot)
+				mgr.EXPECT().Query().Return(query, nil)
+				query.EXPECT().All().Return([]core.Command{}, nil)
+
+				Expect(doctor.FixWithOptions(false, true)).To(Succeed())
 			})
 		})
 	})

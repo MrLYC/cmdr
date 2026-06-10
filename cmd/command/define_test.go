@@ -1,6 +1,8 @@
 package command
 
 import (
+	"fmt"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -69,6 +71,14 @@ var _ = Describe("Define", func() {
 			manager.EXPECT().Close().Return(nil)
 
 			DefineCmd.Run(DefineCmd, []string{})
+		})
+
+		It("should panic when define fails", func() {
+			cfg.Set(core.CfgKeyXCommandDefineActivate, false)
+			manager.EXPECT().Define("test", "1.0.0", "").Return(nil, fmt.Errorf("define failed"))
+			manager.EXPECT().Close().Return(nil)
+
+			Expect(func() { DefineCmd.Run(DefineCmd, []string{}) }).To(Panic())
 		})
 
 		It("should change link mode", func() {

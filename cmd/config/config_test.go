@@ -38,6 +38,13 @@ var _ = Describe("Config", func() {
 		Expect(string(out)).To(ContainSubstring("template:"))
 	})
 
+	It("should return render errors for unsupported values", func() {
+		cfg := core.NewConfiguration()
+		cfg.Set("bad", map[string]interface{}{"ch": make(chan int)})
+
+		Expect(func() { _, _ = renderConfigValue(cfg, "bad") }).To(Panic())
+	})
+
 	It("should filter private settings", func() {
 		settings := publicSettings(map[string]interface{}{
 			"core": map[string]interface{}{"root_dir": "/tmp/cmdr"},
@@ -74,6 +81,17 @@ var _ = Describe("Config", func() {
 
 		configFile := filepath.Join(root, "config.yaml")
 		Expect(setConfigValue(configFile, "core.root_dir", "[", logur.NoopLogger{})).To(HaveOccurred())
+	})
+
+	It("should return config directory creation errors", func() {
+		root, err := os.MkdirTemp("", "cmdr-config")
+		Expect(err).NotTo(HaveOccurred())
+		defer os.RemoveAll(root)
+
+		blocker := filepath.Join(root, "blocker")
+		Expect(os.WriteFile(blocker, []byte("x"), 0644)).To(Succeed())
+		configFile := filepath.Join(blocker, "config.yaml")
+		Expect(setConfigValue(configFile, "core.root_dir", "/tmp/cmdr", logur.NoopLogger{})).To(HaveOccurred())
 	})
 
 	It("should run get and list commands", func() {

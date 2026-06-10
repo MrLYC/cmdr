@@ -1,6 +1,8 @@
 package manager_test
 
 import (
+	"fmt"
+
 	"github.com/asdine/storm/v3/q"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -202,6 +204,23 @@ var _ = Describe("Database", func() {
 			count, err := query.Count()
 			Expect(err).To(BeNil())
 			Expect(count).To(Equal(1))
+		})
+
+		It("should return query errors", func() {
+			db.EXPECT().Select().Return(dbQuery).Times(3)
+			dbQuery.EXPECT().Find(gomock.Any()).Return(fmt.Errorf("find failed"))
+			_, err := query.All()
+			Expect(err).To(MatchError("find failed"))
+
+			query = manager.NewCommandQuery(db)
+			dbQuery.EXPECT().First(gomock.Any()).Return(fmt.Errorf("first failed"))
+			_, err = query.One()
+			Expect(err).To(MatchError("first failed"))
+
+			query = manager.NewCommandQuery(db)
+			dbQuery.EXPECT().Count(gomock.Any()).Return(0, fmt.Errorf("count failed"))
+			_, err = query.Count()
+			Expect(err).To(MatchError("count failed"))
 		})
 	})
 })

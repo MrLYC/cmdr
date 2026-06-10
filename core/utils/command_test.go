@@ -1,6 +1,8 @@
 package utils_test
 
 import (
+	"errors"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -67,6 +69,12 @@ var _ = Describe("Command", func() {
 			Expect(helper.RegisterAll()).To(BeNil())
 		})
 
+		It("should return an error when registering missing flag completions", func() {
+			Expect(helper.RegisterNameFunc()).To(HaveOccurred())
+			Expect(helper.RegisterVersionFunc()).To(HaveOccurred())
+			Expect(helper.RegisterLocationFunc()).To(HaveOccurred())
+		})
+
 		Context("Complete", func() {
 			BeforeEach(func() {
 				mockManager.EXPECT().Close()
@@ -124,7 +132,96 @@ var _ = Describe("Command", func() {
 				))
 				Expect(helper.GetLocationSlice("/path/to/command-a")).To(Equal([]string{"/path/to/command-a"}))
 			})
+
+			It("should apply activate filters during completion", func() {
+				mockQuery.EXPECT().WithActivated(true).Return(mockQuery)
+
+				cobraCommand.Flags().String("name", "", "command name")
+				cobraCommand.Flags().String("version", "", "command version")
+				cobraCommand.Flags().String("location", "", "command location")
+				cobraCommand.Flags().Bool("activate", true, "activated command")
+
+				Expect(helper.GetNameSlice("command")).To(Equal([]string{"command-a", "command-b"}))
+			})
 		})
 
+	})
+
+	Context("RunCobraCommandWith", func() {
+		var original func(cfg core.Configuration) (core.CommandManager, error)
+
+		BeforeEach(func() {
+			original = core.GetCommandManagerFactory(core.CommandProviderUnknown)
+		})
+
+		AfterEach(func() {
+			core.RegisterCommandManagerFactory(core.CommandProviderUnknown, original)
+		})
+
+		It("should exit when manager creation fails", func() {
+			core.RegisterCommandManagerFactory(core.CommandProviderUnknown, func(cfg core.Configuration) (core.CommandManager, error) {
+				return nil, errors.New("manager failed")
+			})
+
+			run := utils.RunCobraCommandWith(core.CommandProviderUnknown, func(core.Configuration, core.CommandManager) error {
+				return nil
+			})
+
+			Expect(func() { run(&cobra.Command{Use: "test"}, nil) }).To(Panic())
+		})
+	})
+
+	Context("CobraCommandCompleteHelper errors", func() {
+		var (
+			ctrl         *gomock.Controller
+			cobraCommand *cobra.Command
+			original     func(cfg core.Configuration) (core.CommandManager, error)
+		)
+
+		BeforeEach(func() {
+			ctrl = gomock.NewController(GinkgoT())
+			cobraCommand = &cobra.Command{}
+			original = core.GetCommandManagerFactory(core.CommandProviderUnknown)
+		})
+
+		AfterEach(func() {
+			ctrl.Finish()
+			core.RegisterCommandManagerFactory(core.CommandProviderUnknown, original)
+		})
+
+		It("should return empty completions when manager creation fails", func() {
+			core.RegisterCommandManagerFactory(core.CommandProviderUnknown, func(cfg core.Configuration) (core.CommandManager, error) {
+				return nil, errors.New("manager failed")
+			})
+
+			helper := utils.NewCobraCommandCompleteHelper(cobraCommand, core.CommandProviderUnknown)
+			Expect(helper.GetNameSlice("cmd")).To(BeEmpty())
+		})
+
+		It("should return empty completions when query creation fails", func() {
+			manager := mock.NewMockCommandManager(ctrl)
+			manager.EXPECT().Query().Return(nil, errors.New("query failed"))
+			manager.EXPECT().Close().Return(nil)
+			core.RegisterCommandManagerFactory(core.CommandProviderUnknown, func(cfg core.Configuration) (core.CommandManager, error) {
+				return manager, nil
+			})
+
+			helper := utils.NewCobraCommandCompleteHelper(cobraCommand, core.CommandProviderUnknown)
+			Expect(helper.GetVersionSlice("1")).To(BeEmpty())
+		})
+
+		It("should return empty completions when query execution fails", func() {
+			manager := mock.NewMockCommandManager(ctrl)
+			query := mock.NewMockCommandQuery(ctrl)
+			manager.EXPECT().Query().Return(query, nil)
+			manager.EXPECT().Close().Return(nil)
+			query.EXPECT().All().Return(nil, errors.New("all failed"))
+			core.RegisterCommandManagerFactory(core.CommandProviderUnknown, func(cfg core.Configuration) (core.CommandManager, error) {
+				return manager, nil
+			})
+
+			helper := utils.NewCobraCommandCompleteHelper(cobraCommand, core.CommandProviderUnknown)
+			Expect(helper.GetLocationSlice("/tmp")).To(BeEmpty())
+		})
 	})
 })
