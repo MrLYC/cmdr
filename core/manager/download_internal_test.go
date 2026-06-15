@@ -2,8 +2,9 @@ package manager
 
 import (
 	"io"
-	"testing"
 
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"github.com/spf13/viper"
 
 	"github.com/mrlyc/cmdr/core"
@@ -21,26 +22,28 @@ func (noopFetcher) Fetch(string, string, string, string) error {
 	return nil
 }
 
-func TestDownloadManagerMaybeRewriteURI(t *testing.T) {
-	manager := NewDownloadManager(nil, nil, 0, nil)
-	manager.SetStrategyChain(strategy.NewStrategyChain(strategy.NewDirectStrategy()))
-	if got := manager.maybeRewriteURI("prepared", "original"); got != "prepared" {
-		t.Fatalf("expected prepared URI, got %s", got)
-	}
+var _ = Describe("Download manager internals", func() {
+	It("keeps prepared URI when direct strategy is selected", func() {
+		manager := NewDownloadManager(nil, nil, 0, nil)
+		manager.SetStrategyChain(strategy.NewStrategyChain(strategy.NewDirectStrategy()))
 
-	cfg := viper.New()
-	cfg.Set(core.CfgKeyDownloadRewriteRule, "{{ .URI }}")
-	rewrite := strategy.NewRewriteStrategy()
-	if err := rewrite.Configure(cfg); err != nil {
-		t.Fatal(err)
-	}
-	manager.SetStrategyChain(strategy.NewStrategyChain(rewrite))
-	if got := manager.maybeRewriteURI("https://example.com/cmd", "https://example.com/cmd"); got != "https://example.com/cmd" {
-		t.Fatalf("expected original URI, got %s", got)
-	}
-}
+		Expect(manager.maybeRewriteURI("prepared", "original")).To(Equal("prepared"))
+	})
 
-func TestResetFetcherOptions(t *testing.T) {
-	resetFetcherOptions(noopFetcher{})
-	resetFetcherOptions(fetcher.NewDefaultGoGetter(io.Discard))
-}
+	It("returns original URI when rewrite keeps it unchanged", func() {
+		cfg := viper.New()
+		cfg.Set(core.CfgKeyDownloadRewriteRule, "{{ .URI }}")
+		rewrite := strategy.NewRewriteStrategy()
+		Expect(rewrite.Configure(cfg)).To(Succeed())
+
+		manager := NewDownloadManager(nil, nil, 0, nil)
+		manager.SetStrategyChain(strategy.NewStrategyChain(rewrite))
+
+		Expect(manager.maybeRewriteURI("https://example.com/cmd", "https://example.com/cmd")).To(Equal("https://example.com/cmd"))
+	})
+
+	It("resets supported fetcher option types", func() {
+		resetFetcherOptions(noopFetcher{})
+		resetFetcherOptions(fetcher.NewDefaultGoGetter(io.Discard))
+	})
+})

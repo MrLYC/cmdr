@@ -3,77 +3,52 @@ package command
 import (
 	"fmt"
 
-	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
-	"github.com/spf13/viper"
 
 	"github.com/mrlyc/cmdr/cmd/internal/testutils"
 	"github.com/mrlyc/cmdr/core"
-	"github.com/mrlyc/cmdr/core/mock"
 )
 
 var _ = Describe("Remove", func() {
 	It("should check flags", func() {
-		testutils.CheckCommandFlag(RemoveCmd, "name", "n", core.CfgKeyXCommandRemoveName, "", true)
-		testutils.CheckCommandFlag(RemoveCmd, "version", "v", core.CfgKeyXCommandRemoveVersion, "", true)
+		testutils.CheckCommandFlags(RemoveCmd,
+			testutils.CommandFlagSpec{Name: "name", Shorthand: "n", ConfigKey: core.CfgKeyXCommandRemoveName, IsRequired: true},
+			testutils.CommandFlagSpec{Name: "version", Shorthand: "v", ConfigKey: core.CfgKeyXCommandRemoveVersion, IsRequired: true},
+		)
 	})
 
 	Context("command", func() {
 		var (
-			ctrl    *gomock.Controller
-			rawCfg  core.Configuration
-			cfg     core.Configuration
-			manager *mock.MockCommandManager
-			factory func(cfg core.Configuration) (core.CommandManager, error)
+			harness *testutils.CommandHarness
 		)
 
 		BeforeEach(func() {
-			factory = core.GetCommandManagerFactory(core.CommandProviderDefault)
-			rawCfg = core.GetConfiguration()
+			harness = testutils.NewCommandHarness(core.CommandProviderDefault)
 
-			ctrl = gomock.NewController(GinkgoT())
-			manager = mock.NewMockCommandManager(ctrl)
-			core.RegisterCommandManagerFactory(core.CommandProviderDefault, func(cfg core.Configuration) (core.CommandManager, error) {
-				return manager, nil
-			})
-
-			cfg = viper.New()
-			core.SetConfiguration(cfg)
+			harness.Cfg.Set(core.CfgKeyXCommandRemoveName, "cmdr")
+			harness.Cfg.Set(core.CfgKeyXCommandRemoveVersion, "1.0.0")
 		})
 
 		AfterEach(func() {
-			ctrl.Finish()
-			core.RegisterCommandManagerFactory(core.CommandProviderDefault, factory)
-			core.SetConfiguration(rawCfg)
+			harness.Finish()
 		})
 
-		It("should undefine a command", func() {
-			cfg.Set(core.CfgKeyXCommandRemoveName, "cmdr")
-			cfg.Set(core.CfgKeyXCommandRemoveVersion, "1.0.0")
+		DescribeTable("should handle expected undefine results",
+			func(err error) {
+				harness.Manager.EXPECT().Undefine("cmdr", "1.0.0").Return(err)
+				harness.ExpectClose()
 
-			manager.EXPECT().Undefine("cmdr", "1.0.0").Return(nil)
-			manager.EXPECT().Close().Return(nil)
-
-			RemoveCmd.Run(RemoveCmd, []string{})
-		})
-
-		It("should not undefine a activated command", func() {
-			cfg.Set(core.CfgKeyXCommandRemoveName, "cmdr")
-			cfg.Set(core.CfgKeyXCommandRemoveVersion, "1.0.0")
-
-			manager.EXPECT().Undefine("cmdr", "1.0.0").Return(core.ErrCommandAlreadyActivated)
-			manager.EXPECT().Close().Return(nil)
-
-			RemoveCmd.Run(RemoveCmd, []string{})
-		})
+				RemoveCmd.Run(RemoveCmd, []string{})
+			},
+			Entry("successfully", nil),
+			Entry("when command is activated", core.ErrCommandAlreadyActivated),
+		)
 
 		It("should panic when undefine fails", func() {
-			cfg.Set(core.CfgKeyXCommandRemoveName, "cmdr")
-			cfg.Set(core.CfgKeyXCommandRemoveVersion, "1.0.0")
-
-			manager.EXPECT().Undefine("cmdr", "1.0.0").Return(fmt.Errorf("remove failed"))
-			manager.EXPECT().Close().Return(nil)
+			harness.Manager.EXPECT().Undefine("cmdr", "1.0.0").Return(fmt.Errorf("remove failed"))
+			harness.ExpectClose()
 
 			Expect(func() { RemoveCmd.Run(RemoveCmd, []string{}) }).To(Panic())
 		})

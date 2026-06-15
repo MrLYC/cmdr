@@ -4,8 +4,10 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"testing"
 
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 	"github.com/spf13/viper"
 
 	"github.com/mrlyc/cmdr/core"
@@ -26,94 +28,109 @@ func (f *internalFetcher) Fetch(name, version, uri, dst string) error {
 	return os.WriteFile(filepath.Join(dst, name), []byte("binary"), 0755)
 }
 
-func TestResolveVersionFromLocation(t *testing.T) {
-	tests := []struct {
-		name     string
-		fallback string
-		location string
-		expected string
-	}{
-		{"cmdr", "1", "/tmp/cmdr_1.2.3", "1.2.3"},
-		{"cmdr", "1", "/tmp/other_1.2.3", "1"},
-		{"cmdr", "1", "/tmp/cmdr_", "1"},
-	}
-	for _, tt := range tests {
-		if got := resolveVersionFromLocation(tt.name, tt.fallback, tt.location); got != tt.expected {
-			t.Fatalf("resolveVersionFromLocation() = %s, want %s", got, tt.expected)
-		}
-	}
+func managerTempDir() string {
+	dir, err := os.MkdirTemp("", "cmdr-manager-test-*")
+	Expect(err).NotTo(HaveOccurred())
+	return dir
 }
 
-func TestDownloadManagerInternals(t *testing.T) {
-	manager := NewDownloadManager(nil, nil, 1, nil)
-	if _, err := manager.search("cmdr", filepath.Join(t.TempDir(), "missing")); err == nil {
-		t.Fatal("expected search error")
-	}
+var _ = Describe("Manager internals", func() {
+	DescribeTable("resolveVersionFromLocation",
+		func(name, fallback, location, expected string) {
+			Expect(resolveVersionFromLocation(name, fallback, location)).To(Equal(expected))
+		},
+		Entry("extracts the matching command suffix", "cmdr", "1", "/tmp/cmdr_1.2.3", "1.2.3"),
+		Entry("keeps fallback for another command", "cmdr", "1", "/tmp/other_1.2.3", "1"),
+		Entry("keeps fallback for an empty suffix", "cmdr", "1", "/tmp/cmdr_", "1"),
+	)
 
-	cfg := viper.New()
-	cfg.Set(core.CfgKeyDownloadRewriteRule, "{{ .URI }}?mirror=1")
-	rewrite := strategy.NewRewriteStrategy()
-	if err := rewrite.Configure(cfg); err != nil {
-		t.Fatal(err)
-	}
-	fetcher := &internalFetcher{}
-	manager.SetStrategyChain(strategy.NewStrategyChain(rewrite))
-	dst := t.TempDir()
-	result, err := manager.fetch(fetcher, "cmdr", "1.0.0", "https://example.com/cmdr", dst)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if fetcher.seenURI != "https://example.com/cmdr?mirror=1" {
-		t.Fatalf("seen uri = %s", fetcher.seenURI)
-	}
-	if result != filepath.Join(dst, "cmdr") {
-		t.Fatalf("result = %s", result)
-	}
+	Context("download manager", func() {
+		It("returns search errors for missing paths", func() {
+			dir := managerTempDir()
+			defer os.RemoveAll(dir)
 
-	fetcher.err = errors.New("fetch failed")
-	if _, err := manager.fetch(fetcher, "cmdr", "1.0.0", "https://example.com/cmdr", t.TempDir()); err == nil {
-		t.Fatal("expected fetch error")
-	}
+			manager := NewDownloadManager(nil, nil, 1, nil)
+			_, err := manager.search("cmdr", filepath.Join(dir, "missing"))
+			Expect(err).To(HaveOccurred())
+		})
 
-	cfg = viper.New()
-	cfg.Set(core.CfgKeyDownloadRewriteRule, "{{ call .URI }}")
-	rewrite = strategy.NewRewriteStrategy()
-	if err := rewrite.Configure(cfg); err != nil {
-		t.Fatal(err)
-	}
-	fetcher = &internalFetcher{}
-	manager = NewDownloadManager(nil, nil, 1, nil)
-	direct := strategy.NewDirectStrategy()
-	direct.SetEnabled(true)
-	manager.SetStrategyChain(strategy.NewStrategyChain(direct, rewrite))
-	manager.SetReplacements(nil)
-	dst = t.TempDir()
-	if _, err := manager.fetch(fetcher, "cmdr", "1.0.0", "https://example.com/cmdr", dst); err != nil {
-		t.Fatal(err)
-	}
-	if fetcher.seenURI != "https://example.com/cmdr" {
-		t.Fatalf("seen uri = %s", fetcher.seenURI)
-	}
-}
+		It("rewrites URIs before fetching", func() {
+			cfg := viper.New()
+			cfg.Set(core.CfgKeyDownloadRewriteRule, "{{ .URI }}?mirror=1")
+			rewrite := strategy.NewRewriteStrategy()
+			Expect(rewrite.Configure(cfg)).To(Succeed())
 
-func TestBinaryManagerInternals(t *testing.T) {
-	cfg := viper.New()
-	cfg.Set(core.CfgKeyCmdrBinDir, "bin")
-	cfg.Set(core.CfgKeyCmdrShimsDir, "shims")
-	cfg.Set(core.CfgKeyCmdrLinkMode, "link")
-	if newBinaryManagerByConfiguration(cfg) == nil {
-		t.Fatal("expected link manager")
-	}
-	cfg.Set(core.CfgKeyCmdrLinkMode, "copy")
-	if NewBinaryManagerWithCopy("bin", "shims", 0755) == nil {
-		t.Fatal("expected copy manager")
-	}
-	if newBinaryManagerByConfiguration(cfg) == nil {
-		t.Fatal("expected copy manager from config")
-	}
+			fetcher := &internalFetcher{}
+			manager := NewDownloadManager(nil, nil, 1, nil)
+			manager.SetStrategyChain(strategy.NewStrategyChain(rewrite))
+			dst := managerTempDir()
+			defer os.RemoveAll(dst)
 
-	mgr := NewBinaryManagerWithLink(filepath.Join(t.TempDir(), "bin"), filepath.Join(t.TempDir(), "missing"), 0755)
-	if _, err := mgr.Query(); err == nil {
-		t.Fatal("expected query error")
-	}
-}
+			result, err := manager.fetch(fetcher, "cmdr", "1.0.0", "https://example.com/cmdr", dst)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fetcher.seenURI).To(Equal("https://example.com/cmdr?mirror=1"))
+			Expect(result).To(Equal(filepath.Join(dst, "cmdr")))
+		})
+
+		It("returns fetcher errors", func() {
+			cfg := viper.New()
+			cfg.Set(core.CfgKeyDownloadRewriteRule, "{{ .URI }}")
+			rewrite := strategy.NewRewriteStrategy()
+			Expect(rewrite.Configure(cfg)).To(Succeed())
+
+			fetcher := &internalFetcher{err: errors.New("fetch failed")}
+			manager := NewDownloadManager(nil, nil, 1, nil)
+			manager.SetStrategyChain(strategy.NewStrategyChain(rewrite))
+			dst := managerTempDir()
+			defer os.RemoveAll(dst)
+
+			_, err := manager.fetch(fetcher, "cmdr", "1.0.0", "https://example.com/cmdr", dst)
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("keeps prepared URIs when direct strategy wins", func() {
+			cfg := viper.New()
+			cfg.Set(core.CfgKeyDownloadRewriteRule, "{{ call .URI }}")
+			rewrite := strategy.NewRewriteStrategy()
+			Expect(rewrite.Configure(cfg)).To(Succeed())
+
+			direct := strategy.NewDirectStrategy()
+			direct.SetEnabled(true)
+			fetcher := &internalFetcher{}
+			manager := NewDownloadManager(nil, nil, 1, nil)
+			manager.SetStrategyChain(strategy.NewStrategyChain(direct, rewrite))
+			manager.SetReplacements(nil)
+			dst := managerTempDir()
+			defer os.RemoveAll(dst)
+
+			_, err := manager.fetch(fetcher, "cmdr", "1.0.0", "https://example.com/cmdr", dst)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fetcher.seenURI).To(Equal("https://example.com/cmdr"))
+		})
+	})
+
+	Context("binary manager", func() {
+		It("creates configured managers", func() {
+			cfg := viper.New()
+			cfg.Set(core.CfgKeyCmdrBinDir, "bin")
+			cfg.Set(core.CfgKeyCmdrShimsDir, "shims")
+			cfg.Set(core.CfgKeyCmdrLinkMode, "link")
+			Expect(newBinaryManagerByConfiguration(cfg)).NotTo(BeNil())
+
+			cfg.Set(core.CfgKeyCmdrLinkMode, "copy")
+			Expect(NewBinaryManagerWithCopy("bin", "shims", 0755)).NotTo(BeNil())
+			Expect(newBinaryManagerByConfiguration(cfg)).NotTo(BeNil())
+		})
+
+		It("returns query errors when shim paths are missing", func() {
+			binDir := managerTempDir()
+			defer os.RemoveAll(binDir)
+			shimRoot := managerTempDir()
+			defer os.RemoveAll(shimRoot)
+
+			mgr := NewBinaryManagerWithLink(filepath.Join(binDir, "bin"), filepath.Join(shimRoot, "missing"), 0755)
+			_, err := mgr.Query()
+			Expect(err).To(HaveOccurred())
+		})
+	})
+})

@@ -3,80 +3,61 @@ package command
 import (
 	"fmt"
 
-	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
-	"github.com/spf13/viper"
 
 	"github.com/mrlyc/cmdr/cmd/internal/testutils"
 	"github.com/mrlyc/cmdr/core"
-	"github.com/mrlyc/cmdr/core/mock"
 )
 
 var _ = Describe("Define", func() {
 	It("should check flags", func() {
-		testutils.CheckCommandFlag(DefineCmd, "name", "n", core.CfgKeyXCommandDefineName, "", true)
-		testutils.CheckCommandFlag(DefineCmd, "version", "v", core.CfgKeyXCommandDefineVersion, "", true)
-		testutils.CheckCommandFlag(DefineCmd, "location", "l", core.CfgKeyXCommandDefineLocation, "", true)
-		testutils.CheckCommandFlag(DefineCmd, "activate", "a", core.CfgKeyXCommandDefineActivate, "false", false)
+		testutils.CheckCommandFlags(DefineCmd,
+			testutils.CommandFlagSpec{Name: "name", Shorthand: "n", ConfigKey: core.CfgKeyXCommandDefineName, IsRequired: true},
+			testutils.CommandFlagSpec{Name: "version", Shorthand: "v", ConfigKey: core.CfgKeyXCommandDefineVersion, IsRequired: true},
+			testutils.CommandFlagSpec{Name: "location", Shorthand: "l", ConfigKey: core.CfgKeyXCommandDefineLocation, IsRequired: true},
+			testutils.CommandFlagSpec{Name: "activate", Shorthand: "a", ConfigKey: core.CfgKeyXCommandDefineActivate, Default: "false"},
+		)
 	})
 
 	Context("command", func() {
 		var (
-			ctrl    *gomock.Controller
-			rawCfg  core.Configuration
-			cfg     core.Configuration
-			manager *mock.MockCommandManager
-			factory func(cfg core.Configuration) (core.CommandManager, error)
+			harness *testutils.CommandHarness
 		)
 
 		BeforeEach(func() {
-			factory = core.GetCommandManagerFactory(core.CommandProviderDefault)
-			rawCfg = core.GetConfiguration()
+			harness = testutils.NewCommandHarness(core.CommandProviderDefault)
 
-			ctrl = gomock.NewController(GinkgoT())
-			manager = mock.NewMockCommandManager(ctrl)
-			core.RegisterCommandManagerFactory(core.CommandProviderDefault, func(cfg core.Configuration) (core.CommandManager, error) {
-				return manager, nil
-			})
-
-			cfg = viper.New()
-			core.SetConfiguration(cfg)
-
-			cfg.Set(core.CfgKeyXCommandDefineName, "test")
-			cfg.Set(core.CfgKeyXCommandDefineVersion, "1.0.0")
-			cfg.Set(core.CfgKeyXCommandDefineLocation, "")
+			harness.Cfg.Set(core.CfgKeyXCommandDefineName, "test")
+			harness.Cfg.Set(core.CfgKeyXCommandDefineVersion, "1.0.0")
+			harness.Cfg.Set(core.CfgKeyXCommandDefineLocation, "")
 		})
 
 		AfterEach(func() {
-			ctrl.Finish()
-			core.RegisterCommandManagerFactory(core.CommandProviderDefault, factory)
-			core.SetConfiguration(rawCfg)
+			harness.Finish()
 		})
 
-		It("should define a activated command", func() {
-			cfg.Set(core.CfgKeyXCommandDefineActivate, true)
+		DescribeTable("should define commands",
+			func(activate bool) {
+				harness.Cfg.Set(core.CfgKeyXCommandDefineActivate, activate)
 
-			manager.EXPECT().Define("test", "1.0.0", "")
-			manager.EXPECT().Activate("test", "1.0.0").Return(nil)
-			manager.EXPECT().Close().Return(nil)
+				harness.Manager.EXPECT().Define("test", "1.0.0", "")
+				if activate {
+					harness.Manager.EXPECT().Activate("test", "1.0.0").Return(nil)
+				}
+				harness.ExpectClose()
 
-			DefineCmd.Run(DefineCmd, []string{})
-		})
-
-		It("should define a non-activated command", func() {
-			cfg.Set(core.CfgKeyXCommandDefineActivate, false)
-
-			manager.EXPECT().Define("test", "1.0.0", "")
-			manager.EXPECT().Close().Return(nil)
-
-			DefineCmd.Run(DefineCmd, []string{})
-		})
+				DefineCmd.Run(DefineCmd, []string{})
+			},
+			Entry("and activates it", true),
+			Entry("without activation", false),
+		)
 
 		It("should panic when define fails", func() {
-			cfg.Set(core.CfgKeyXCommandDefineActivate, false)
-			manager.EXPECT().Define("test", "1.0.0", "").Return(nil, fmt.Errorf("define failed"))
-			manager.EXPECT().Close().Return(nil)
+			harness.Cfg.Set(core.CfgKeyXCommandDefineActivate, false)
+			harness.Manager.EXPECT().Define("test", "1.0.0", "").Return(nil, fmt.Errorf("define failed"))
+			harness.ExpectClose()
 
 			Expect(func() { DefineCmd.Run(DefineCmd, []string{}) }).To(Panic())
 		})
@@ -84,7 +65,7 @@ var _ = Describe("Define", func() {
 		It("should change link mode", func() {
 			DefineCmd.PreRun(DefineCmd, []string{})
 
-			Expect(cfg.GetString(core.CfgKeyCmdrLinkMode)).To(Equal("link"))
+			Expect(harness.Cfg.GetString(core.CfgKeyCmdrLinkMode)).To(Equal("link"))
 		})
 	})
 })

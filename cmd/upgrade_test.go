@@ -9,6 +9,7 @@ import (
 	pkgerrors "github.com/pkg/errors"
 	"github.com/spf13/viper"
 
+	"github.com/mrlyc/cmdr/cmd/internal/testutils"
 	"github.com/mrlyc/cmdr/core"
 	"github.com/mrlyc/cmdr/core/utils"
 )
@@ -47,9 +48,8 @@ var _ = Describe("Upgrade", func() {
 	})
 
 	It("should set init upgrade args in pre-run", func() {
-		previous := core.GetConfiguration()
-		defer core.SetConfiguration(previous)
-		core.SetConfiguration(cfg)
+		restoreConfig := testutils.SwapConfiguration(cfg)
+		defer restoreConfig()
 
 		upgradeCmd.PreRun(upgradeCmd, nil)
 		Expect(cfg.GetStringSlice(core.CfgKeyXUpgradeArgs)).To(Equal([]string{"init", "--upgrade"}))

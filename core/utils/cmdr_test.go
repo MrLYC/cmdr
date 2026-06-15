@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/internal/testutils"
 	"github.com/mrlyc/cmdr/core/mock"
 	"github.com/mrlyc/cmdr/core/utils"
 )
@@ -120,23 +121,22 @@ var _ = Describe("Cmdr", func() {
 
 	Context("UpgradeCmdr", func() {
 		var (
-			ctx     context.Context
-			factory func(cfg core.Configuration) (core.CommandManager, error)
-			command *mock.MockCommand
-			url     = "https://example.com"
+			ctx            context.Context
+			restoreFactory func()
+			command        *mock.MockCommand
+			url            = "https://example.com"
 		)
 
 		BeforeEach(func() {
 			ctx = context.Background()
-			factory = core.GetCommandManagerFactory(core.CommandProviderDownload)
 			command = mock.NewMockCommand(ctrl)
-			core.RegisterCommandManagerFactory(core.CommandProviderDownload, func(cfg core.Configuration) (core.CommandManager, error) {
+			restoreFactory = testutils.RegisterCommandManagerFactory(core.CommandProviderDownload, func(cfg core.Configuration) (core.CommandManager, error) {
 				return manager, nil
 			})
 		})
 
 		AfterEach(func() {
-			core.RegisterCommandManagerFactory(core.CommandProviderDownload, factory)
+			restoreFactory()
 		})
 
 		It("should upgrade a command", func() {
@@ -172,7 +172,8 @@ var _ = Describe("Cmdr", func() {
 		})
 
 		It("should return manager factory errors", func() {
-			core.RegisterCommandManagerFactory(core.CommandProviderDownload, func(cfg core.Configuration) (core.CommandManager, error) {
+			restoreFactory()
+			restoreFactory = testutils.RegisterCommandManagerFactory(core.CommandProviderDownload, func(cfg core.Configuration) (core.CommandManager, error) {
 				return nil, fmt.Errorf("factory failed")
 			})
 

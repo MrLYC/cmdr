@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"logur.dev/logur"
 
+	"github.com/mrlyc/cmdr/cmd/internal/testutils"
 	"github.com/mrlyc/cmdr/core"
 )
 
@@ -95,23 +96,18 @@ var _ = Describe("Config", func() {
 	})
 
 	It("should run get and list commands", func() {
-		previous := core.GetConfiguration()
-		defer core.SetConfiguration(previous)
-
 		cfg := core.NewConfiguration()
 		cfg.Set("core.root_dir", "/tmp/cmdr")
 		cfg.Set("_", map[string]interface{}{"hidden": true})
 		cfg.Set(core.CfgKeyXConfigGetKey, "core.root_dir")
-		core.SetConfiguration(cfg)
+		restoreConfig := testutils.SwapConfiguration(cfg)
+		defer restoreConfig()
 
 		Expect(captureStdout(func() { getCmd.Run(getCmd, nil) })).To(Equal("/tmp/cmdr\n"))
 		Expect(captureStdout(func() { listCmd.Run(listCmd, nil) })).To(ContainSubstring("core:"))
 	})
 
 	It("should run set command", func() {
-		previous := core.GetConfiguration()
-		defer core.SetConfiguration(previous)
-
 		root, err := os.MkdirTemp("", "cmdr-config")
 		Expect(err).NotTo(HaveOccurred())
 		defer os.RemoveAll(root)
@@ -121,7 +117,8 @@ var _ = Describe("Config", func() {
 		cfg.SetConfigFile(configFile)
 		cfg.Set(core.CfgKeyXConfigSetKey, "core.root_dir")
 		cfg.Set(core.CfgKeyXConfigSetValue, "/tmp/cmdr")
-		core.SetConfiguration(cfg)
+		restoreConfig := testutils.SwapConfiguration(cfg)
+		defer restoreConfig()
 
 		Expect(func() { setCmd.Run(setCmd, nil) }).NotTo(Panic())
 		Expect(configFile).To(BeAnExistingFile())

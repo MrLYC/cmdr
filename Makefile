@@ -17,7 +17,7 @@ test:
 .PHONY: coverage
 coverage:
 	go test -gcflags=all=-l ./... -coverprofile=coverage.out -covermode=count
-	awk 'NR == 1 || ($$1 !~ /\/mock\// && $$1 !~ /_string\.go:/ && $$1 !~ /\/cmd\/internal\/testutils\// && $$1 !~ /\/main\.go:/)' coverage.out > coverage.business.out
+	awk 'NR == 1 || ($$1 !~ /\/mock\// && $$1 !~ /_string\.go:/ && $$1 !~ /\/internal\/testutils\// && $$1 !~ /\/main\.go:/)' coverage.out > coverage.business.out
 	go tool cover -func=coverage.business.out
 
 .PHONY: coverage-check

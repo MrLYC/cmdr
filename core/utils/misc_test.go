@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/internal/testutils"
 	"github.com/spf13/cobra"
 )
 
@@ -120,9 +121,10 @@ var _ = Describe("Misc utils", func() {
 
 	It("should run cobra commands with managed command managers", func() {
 		manager := &miscCommandManager{}
-		core.RegisterCommandManagerFactory(core.CommandProviderUnknown, func(core.Configuration) (core.CommandManager, error) {
+		restoreFactory := testutils.RegisterCommandManagerFactory(core.CommandProviderUnknown, func(core.Configuration) (core.CommandManager, error) {
 			return manager, nil
 		})
+		defer restoreFactory()
 		cmd := &cobra.Command{Use: "test"}
 
 		called := false

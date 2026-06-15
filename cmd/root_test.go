@@ -11,6 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/spf13/viper"
 
+	"github.com/mrlyc/cmdr/cmd/internal/testutils"
 	"github.com/mrlyc/cmdr/core"
 )
 
@@ -99,17 +100,14 @@ var _ = Describe("Root", func() {
 	)
 
 	It("should initialize logger output and fallback level", func() {
-		previousCfg := core.GetConfiguration()
 		previousLogger := core.GetLogger()
-		defer func() {
-			core.SetConfiguration(previousCfg)
-			core.SetLogger(previousLogger)
-		}()
+		defer core.SetLogger(previousLogger)
 
 		cfg := viper.New()
 		cfg.Set(core.CfgKeyLogLevel, "invalid")
 		cfg.Set(core.CfgKeyLogOutput, "stdout")
-		core.SetConfiguration(cfg)
+		restoreConfig := testutils.SwapConfiguration(cfg)
+		defer restoreConfig()
 
 		Expect(func() { initLogger() }).NotTo(Panic())
 
@@ -119,11 +117,9 @@ var _ = Describe("Root", func() {
 	})
 
 	It("should execute a simple root command", func() {
-		previousCfg := core.GetConfiguration()
 		previousFactory := core.GetDatabaseFactory()
 		previousLogger := core.GetLogger()
 		defer func() {
-			core.SetConfiguration(previousCfg)
 			core.SetDatabaseFactory(previousFactory)
 			core.SetLogger(previousLogger)
 			rootCmd.SetArgs(nil)
@@ -131,7 +127,8 @@ var _ = Describe("Root", func() {
 
 		cfg := viper.New()
 		cfg.Set(core.CfgKeyCmdrConfigPath, filepath.Join(os.TempDir(), "cmdr-missing-config.yaml"))
-		core.SetConfiguration(cfg)
+		restoreConfig := testutils.SwapConfiguration(cfg)
+		defer restoreConfig()
 		rootCmd.SetArgs([]string{"version"})
 
 		Expect(func() { ExecuteContext(context.Background()) }).NotTo(Panic())

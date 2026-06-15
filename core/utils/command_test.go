@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/internal/testutils"
 	"github.com/mrlyc/cmdr/core/mock"
 	"github.com/mrlyc/cmdr/core/utils"
 )
@@ -22,6 +23,7 @@ var _ = Describe("Command", func() {
 			commandA, commandB *mock.MockCommand
 			cobraCommand       *cobra.Command
 			helper             *utils.CobraCommandCompleteHelper
+			restoreFactory     func()
 		)
 
 		BeforeEach(func() {
@@ -34,7 +36,7 @@ var _ = Describe("Command", func() {
 			mockManager.EXPECT().Query().Return(mockQuery, nil).AnyTimes()
 			mockQuery.EXPECT().All().Return([]core.Command{commandA, commandB}, nil).AnyTimes()
 
-			core.RegisterCommandManagerFactory(
+			restoreFactory = testutils.RegisterCommandManagerFactory(
 				core.CommandProviderUnknown,
 				func(cfg core.Configuration) (core.CommandManager, error) {
 					return mockManager, nil
@@ -53,6 +55,7 @@ var _ = Describe("Command", func() {
 		})
 
 		AfterEach(func() {
+			restoreFactory()
 			ctrl.Finish()
 		})
 
@@ -148,18 +151,14 @@ var _ = Describe("Command", func() {
 	})
 
 	Context("RunCobraCommandWith", func() {
-		var original func(cfg core.Configuration) (core.CommandManager, error)
-
-		BeforeEach(func() {
-			original = core.GetCommandManagerFactory(core.CommandProviderUnknown)
-		})
+		var restoreFactory func()
 
 		AfterEach(func() {
-			core.RegisterCommandManagerFactory(core.CommandProviderUnknown, original)
+			restoreFactory()
 		})
 
 		It("should exit when manager creation fails", func() {
-			core.RegisterCommandManagerFactory(core.CommandProviderUnknown, func(cfg core.Configuration) (core.CommandManager, error) {
+			restoreFactory = testutils.RegisterCommandManagerFactory(core.CommandProviderUnknown, func(cfg core.Configuration) (core.CommandManager, error) {
 				return nil, errors.New("manager failed")
 			})
 
@@ -173,24 +172,23 @@ var _ = Describe("Command", func() {
 
 	Context("CobraCommandCompleteHelper errors", func() {
 		var (
-			ctrl         *gomock.Controller
-			cobraCommand *cobra.Command
-			original     func(cfg core.Configuration) (core.CommandManager, error)
+			ctrl           *gomock.Controller
+			cobraCommand   *cobra.Command
+			restoreFactory func()
 		)
 
 		BeforeEach(func() {
 			ctrl = gomock.NewController(GinkgoT())
 			cobraCommand = &cobra.Command{}
-			original = core.GetCommandManagerFactory(core.CommandProviderUnknown)
 		})
 
 		AfterEach(func() {
+			restoreFactory()
 			ctrl.Finish()
-			core.RegisterCommandManagerFactory(core.CommandProviderUnknown, original)
 		})
 
 		It("should return empty completions when manager creation fails", func() {
-			core.RegisterCommandManagerFactory(core.CommandProviderUnknown, func(cfg core.Configuration) (core.CommandManager, error) {
+			restoreFactory = testutils.RegisterCommandManagerFactory(core.CommandProviderUnknown, func(cfg core.Configuration) (core.CommandManager, error) {
 				return nil, errors.New("manager failed")
 			})
 
@@ -202,7 +200,7 @@ var _ = Describe("Command", func() {
 			manager := mock.NewMockCommandManager(ctrl)
 			manager.EXPECT().Query().Return(nil, errors.New("query failed"))
 			manager.EXPECT().Close().Return(nil)
-			core.RegisterCommandManagerFactory(core.CommandProviderUnknown, func(cfg core.Configuration) (core.CommandManager, error) {
+			restoreFactory = testutils.RegisterCommandManagerFactory(core.CommandProviderUnknown, func(cfg core.Configuration) (core.CommandManager, error) {
 				return manager, nil
 			})
 
@@ -216,7 +214,7 @@ var _ = Describe("Command", func() {
 			manager.EXPECT().Query().Return(query, nil)
 			manager.EXPECT().Close().Return(nil)
 			query.EXPECT().All().Return(nil, errors.New("all failed"))
-			core.RegisterCommandManagerFactory(core.CommandProviderUnknown, func(cfg core.Configuration) (core.CommandManager, error) {
+			restoreFactory = testutils.RegisterCommandManagerFactory(core.CommandProviderUnknown, func(cfg core.Configuration) (core.CommandManager, error) {
 				return manager, nil
 			})
 

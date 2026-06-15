@@ -5,11 +5,14 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"testing"
 
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 	"github.com/spf13/viper"
 
 	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/internal/testutils"
 )
 
 type failingWriter struct{}
@@ -58,11 +61,8 @@ func (c initializerCommand) GetActivated() bool  { return c.activated }
 func (c initializerCommand) GetLocation() string { return "/tmp/cmdr_" + c.version }
 
 type initializerCommandManager struct {
-	queryErr  error
-	query     core.CommandQuery
-	defined   bool
-	activated bool
-	undefined []string
+	queryErr error
+	query    core.CommandQuery
 }
 
 func (m initializerCommandManager) Close() error { return nil }
@@ -79,189 +79,151 @@ func (m initializerCommandManager) Undefine(string, string) error { return nil }
 func (m initializerCommandManager) Activate(string, string) error { return nil }
 func (m initializerCommandManager) Deactivate(string) error       { return nil }
 
-func TestProfilePathByShell(t *testing.T) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	tests := map[string]string{
-		"bash": filepath.Join(home, ".bashrc"),
-		"zsh":  filepath.Join(home, ".zshrc"),
-		"fish": filepath.Join(home, ".config", "fish", "config.fish"),
-		"sh":   filepath.Join(home, ".profile"),
-		"ash":  filepath.Join(home, ".profile"),
-	}
-
-	for shell, expected := range tests {
-		got, err := getProfilePathByShell(shell)
-		if err != nil {
-			t.Fatalf("getProfilePathByShell(%s): %v", shell, err)
-		}
-		if got != expected {
-			t.Fatalf("getProfilePathByShell(%s) = %s, want %s", shell, got, expected)
-		}
-	}
+func initializerTempDir() string {
+	dir, err := os.MkdirTemp("", "cmdr-initializer-test-*")
+	Expect(err).NotTo(HaveOccurred())
+	return dir
 }
 
-func TestInitializerFactories(t *testing.T) {
-	dir := t.TempDir()
-	cfg := viper.New()
-	cfg.Set(core.CfgKeyCmdrProfileDir, dir)
-	cfg.Set(core.CfgKeyCmdrProfilePath, filepath.Join(dir, "profile"))
-	cfg.Set(core.CfgKeyCmdrShell, "sh")
+var _ = Describe("Initializer internals", func() {
+	DescribeTable("getProfilePathByShell",
+		func(shell string, expected func(string) string) {
+			home, err := os.UserHomeDir()
+			Expect(err).NotTo(HaveOccurred())
 
-	for _, key := range []string{"profile-dir-backup", "profile-dir-export", "profile-dir-render", "profile-injector", "database-migrator"} {
-		initializer, err := core.NewInitializer(key, cfg)
-		if err != nil {
-			t.Fatalf("NewInitializer(%s): %v", key, err)
+			got, err := getProfilePathByShell(shell)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(got).To(Equal(expected(home)))
+		},
+		Entry("bash", "bash", func(home string) string { return filepath.Join(home, ".bashrc") }),
+		Entry("zsh", "zsh", func(home string) string { return filepath.Join(home, ".zshrc") }),
+		Entry("fish", "fish", func(home string) string { return filepath.Join(home, ".config", "fish", "config.fish") }),
+		Entry("sh", "sh", func(home string) string { return filepath.Join(home, ".profile") }),
+		Entry("ash", "ash", func(home string) string { return filepath.Join(home, ".profile") }),
+	)
+
+	It("creates configured initializer factories", func() {
+		dir := initializerTempDir()
+		defer os.RemoveAll(dir)
+
+		cfg := viper.New()
+		cfg.Set(core.CfgKeyCmdrProfileDir, dir)
+		cfg.Set(core.CfgKeyCmdrProfilePath, filepath.Join(dir, "profile"))
+		cfg.Set(core.CfgKeyCmdrShell, "sh")
+
+		for _, key := range []string{"profile-dir-backup", "profile-dir-export", "profile-dir-render", "profile-injector", "database-migrator"} {
+			initializer, err := core.NewInitializer(key, cfg)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(initializer).NotTo(BeNil())
 		}
-		if initializer == nil {
-			t.Fatalf("NewInitializer(%s) returned nil", key)
-		}
-	}
-}
-
-func TestCmdrUpdaterFactory(t *testing.T) {
-	previous := core.GetCommandManagerFactory(core.CommandProviderDatabase)
-	defer core.RegisterCommandManagerFactory(core.CommandProviderDatabase, previous)
-
-	core.RegisterCommandManagerFactory(core.CommandProviderDatabase, func(cfg core.Configuration) (core.CommandManager, error) {
-		return initializerCommandManager{query: initializerCommandQuery{count: 0}}, nil
 	})
 
-	initializer, err := core.NewInitializer("cmdr-updater", viper.New())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if initializer == nil {
-		t.Fatal("expected initializer")
-	}
-}
+	It("creates the cmdr updater factory with a database manager", func() {
+		restoreFactory := testutils.RegisterCommandManagerFactory(core.CommandProviderDatabase, func(core.Configuration) (core.CommandManager, error) {
+			return initializerCommandManager{query: initializerCommandQuery{count: 0}}, nil
+		})
+		defer restoreFactory()
 
-func TestEmbedFSExporterErrorBranches(t *testing.T) {
-	root := t.TempDir()
-	dst := t.TempDir()
-	exporter := NewEmbedFSExporter(os.DirFS(root), "root", dst, 0644)
+		initializer, err := core.NewInitializer("cmdr-updater", viper.New())
+		Expect(err).NotTo(HaveOccurred())
+		Expect(initializer).NotTo(BeNil())
+	})
 
-	blocker := filepath.Join(dst, "blocker")
-	if err := os.WriteFile(blocker, []byte("x"), 0644); err != nil {
-		t.Fatal(err)
-	}
-	if err := exporter.copyDir(blocker, 0755); err == nil {
-		t.Fatal("expected copyDir error")
-	}
-	if err := exporter.copyFile("missing", filepath.Join(dst, "out"), 0644); err == nil {
-		t.Fatal("expected source open error")
-	}
+	Context("EmbedFSExporter", func() {
+		It("returns filesystem errors", func() {
+			root := initializerTempDir()
+			defer os.RemoveAll(root)
+			dst := initializerTempDir()
+			defer os.RemoveAll(dst)
+			exporter := NewEmbedFSExporter(os.DirFS(root), "root", dst, 0644)
 
-	src := filepath.Join(root, "source")
-	if err := os.WriteFile(src, []byte("x"), 0644); err != nil {
-		t.Fatal(err)
-	}
-	if err := exporter.copyFile("source", filepath.Join(dst, "missing", "out"), 0644); err == nil {
-		t.Fatal("expected destination open error")
-	}
-	if err := exporter.exportDir("root/file", nil, errors.New("walk failed")); err == nil {
-		t.Fatal("expected exportDir walk error")
-	}
-	if err := exporter.Init(false); err == nil {
-		t.Fatal("expected missing source error")
-	}
-}
+			blocker := filepath.Join(dst, "blocker")
+			Expect(os.WriteFile(blocker, []byte("x"), 0644)).To(Succeed())
+			Expect(exporter.copyDir(blocker, 0755)).To(HaveOccurred())
+			Expect(exporter.copyFile("missing", filepath.Join(dst, "out"), 0644)).To(HaveOccurred())
 
-func TestDirRenderErrorBranches(t *testing.T) {
-	root := t.TempDir()
-	renderer := NewDirRender(root, ".gotmpl", map[string]string{"key": "value"})
+			src := filepath.Join(root, "source")
+			Expect(os.WriteFile(src, []byte("x"), 0644)).To(Succeed())
+			Expect(exporter.copyFile("source", filepath.Join(dst, "missing", "out"), 0644)).To(HaveOccurred())
+			Expect(exporter.exportDir("root/file", nil, errors.New("walk failed"))).To(HaveOccurred())
+			Expect(exporter.Init(false)).To(HaveOccurred())
+		})
+	})
 
-	if err := renderer.renderTemplate("bad", "{{", bytes.NewBuffer(nil)); err == nil {
-		t.Fatal("expected template parse error")
-	}
-	if err := renderer.renderTemplate("write", "content", failingWriter{}); err == nil {
-		t.Fatal("expected template execute/write error")
-	}
+	Context("DirRender", func() {
+		It("returns template and filesystem errors", func() {
+			root := initializerTempDir()
+			defer os.RemoveAll(root)
+			renderer := NewDirRender(root, ".gotmpl", map[string]string{"key": "value"})
 
-	src := filepath.Join(root, "source.txt.gotmpl")
-	if err := os.WriteFile(src, []byte("{{ .key }}"), 0644); err != nil {
-		t.Fatal(err)
-	}
-	target := filepath.Join(root, "source.txt")
-	if err := os.Mkdir(target, 0755); err != nil {
-		t.Fatal(err)
-	}
-	info, err := os.Stat(src)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := renderer.renderFile(src, info); err == nil {
-		t.Fatal("expected renderFile create target error")
-	}
+			Expect(renderer.renderTemplate("bad", "{{", bytes.NewBuffer(nil))).To(HaveOccurred())
+			Expect(renderer.renderTemplate("write", "content", failingWriter{})).To(HaveOccurred())
 
-	dirTemplate := filepath.Join(root, "blocker", "child.gotmpl")
-	if err := os.WriteFile(filepath.Join(root, "blocker"), []byte("x"), 0644); err != nil {
-		t.Fatal(err)
-	}
-	if err := renderer.renderDir(dirTemplate, info); err == nil {
-		t.Fatal("expected renderDir create target error")
-	}
-}
+			src := filepath.Join(root, "source.txt.gotmpl")
+			Expect(os.WriteFile(src, []byte("{{ .key }}"), 0644)).To(Succeed())
+			target := filepath.Join(root, "source.txt")
+			Expect(os.Mkdir(target, 0755)).To(Succeed())
+			info, err := os.Stat(src)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(renderer.renderFile(src, info)).To(HaveOccurred())
 
-func TestProfileInjectorErrorBranches(t *testing.T) {
-	root := t.TempDir()
-	missingProfile := filepath.Join(root, "missing")
-	injector := NewProfileInjector("/tmp/cmdr_initializer.sh", missingProfile)
-	if _, err := injector.makeProfileScript(); err == nil {
-		t.Fatal("expected makeProfileScript open error")
-	}
+			dirTemplate := filepath.Join(root, "blocker", "child.gotmpl")
+			Expect(os.WriteFile(filepath.Join(root, "blocker"), []byte("x"), 0644)).To(Succeed())
+			Expect(renderer.renderDir(dirTemplate, info)).To(HaveOccurred())
+		})
+	})
 
-	blocker := filepath.Join(root, "blocker")
-	if err := os.WriteFile(blocker, []byte("x"), 0644); err != nil {
-		t.Fatal(err)
-	}
-	injector = NewProfileInjector("/tmp/cmdr_initializer.sh", filepath.Join(blocker, "profile"))
-	if err := injector.Init(false); err == nil {
-		t.Fatal("expected profile open error")
-	}
-}
+	Context("ProfileInjector", func() {
+		It("returns profile read and write errors", func() {
+			root := initializerTempDir()
+			defer os.RemoveAll(root)
 
-func TestCmdrUpdaterCollectLegacyVersionErrors(t *testing.T) {
-	tests := []core.CommandManager{
-		initializerCommandManager{queryErr: errors.New("query failed")},
-		initializerCommandManager{query: initializerCommandQuery{countErr: errors.New("count failed")}},
-		initializerCommandManager{query: initializerCommandQuery{allErr: errors.New("all failed")}},
-	}
+			missingProfile := filepath.Join(root, "missing")
+			injector := NewProfileInjector("/tmp/cmdr_initializer.sh", missingProfile)
+			_, err := injector.makeProfileScript()
+			Expect(err).To(HaveOccurred())
 
-	for _, manager := range tests {
-		updater := NewCmdrUpdater(manager, "cmdr", "1.0.0", "/tmp/cmdr")
-		if err := updater.Init(true); err == nil {
-			t.Fatal("expected error")
-		}
-	}
-}
+			blocker := filepath.Join(root, "blocker")
+			Expect(os.WriteFile(blocker, []byte("x"), 0644)).To(Succeed())
+			injector = NewProfileInjector("/tmp/cmdr_initializer.sh", filepath.Join(blocker, "profile"))
+			Expect(injector.Init(false)).To(HaveOccurred())
+		})
+	})
 
-func TestCmdrUpdaterCollectLegacyVersionBranches(t *testing.T) {
-	updater := NewCmdrUpdater(
-		initializerCommandManager{query: initializerCommandQuery{count: 0}},
-		core.Name,
-		"2.0.0",
-		"/tmp/cmdr",
-	)
-	if err := updater.Init(true); err != nil {
-		t.Fatal(err)
-	}
+	Context("CmdrUpdater", func() {
+		DescribeTable("returns legacy collection errors",
+			func(manager core.CommandManager) {
+				updater := NewCmdrUpdater(manager, "cmdr", "1.0.0", "/tmp/cmdr")
+				Expect(updater.Init(true)).To(HaveOccurred())
+			},
+			Entry("query failure", initializerCommandManager{queryErr: errors.New("query failed")}),
+			Entry("count failure", initializerCommandManager{query: initializerCommandQuery{countErr: errors.New("count failed")}}),
+			Entry("all failure", initializerCommandManager{query: initializerCommandQuery{allErr: errors.New("all failed")}}),
+		)
 
-	updater = NewCmdrUpdater(
-		initializerCommandManager{query: initializerCommandQuery{commands: []core.Command{
-			initializerCommand{version: "1.0.0"},
-			initializerCommand{version: "2.0.0"},
-			initializerCommand{version: "3.0.0"},
-			initializerCommand{version: "0.9.0", activated: true},
-		}}},
-		core.Name,
-		"2.0.0",
-		"/tmp/cmdr",
-	)
-	if err := updater.Init(true); err != nil {
-		t.Fatal(err)
-	}
-}
+		It("handles empty legacy command sets", func() {
+			updater := NewCmdrUpdater(
+				initializerCommandManager{query: initializerCommandQuery{count: 0}},
+				core.Name,
+				"2.0.0",
+				"/tmp/cmdr",
+			)
+			Expect(updater.Init(true)).To(Succeed())
+		})
+
+		It("handles multiple legacy command branches", func() {
+			updater := NewCmdrUpdater(
+				initializerCommandManager{query: initializerCommandQuery{commands: []core.Command{
+					initializerCommand{version: "1.0.0"},
+					initializerCommand{version: "2.0.0"},
+					initializerCommand{version: "3.0.0"},
+					initializerCommand{version: "0.9.0", activated: true},
+				}}},
+				core.Name,
+				"2.0.0",
+				"/tmp/cmdr",
+			)
+			Expect(updater.Init(true)).To(Succeed())
+		})
+	})
+})

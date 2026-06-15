@@ -113,9 +113,11 @@ func (m *cleanTestManager) Deactivate(string) error {
 
 var _ = Describe("Clean", func() {
 	It("should check flags", func() {
-		testutils.CheckCommandFlag(cleanCmd, "age", "", core.CfgKeyXCleanAgeDays, "100", false)
-		testutils.CheckCommandFlag(cleanCmd, "keep", "", core.CfgKeyXCleanKeep, "3", false)
-		testutils.CheckCommandFlag(cleanCmd, "name", "n", core.CfgKeyXCleanName, "", false)
+		testutils.CheckCommandFlags(cleanCmd,
+			testutils.CommandFlagSpec{Name: "age", ConfigKey: core.CfgKeyXCleanAgeDays, Default: "100"},
+			testutils.CommandFlagSpec{Name: "keep", ConfigKey: core.CfgKeyXCleanKeep, Default: "3"},
+			testutils.CommandFlagSpec{Name: "name", Shorthand: "n", ConfigKey: core.CfgKeyXCleanName},
+		)
 	})
 
 	Describe("helpers", func() {

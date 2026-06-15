@@ -7,18 +7,15 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/mrlyc/cmdr/cmd/internal/testutils"
 	"github.com/mrlyc/cmdr/core"
 )
 
 var _ = Describe("Doctor", func() {
 	It("should run doctor command with options", func() {
-		previousCfg := core.GetConfiguration()
-		previousFactory := core.GetCommandManagerFactory(core.CommandProviderDoctor)
 		previousDryRun := doctorDryRun
 		previousNoBackup := doctorNoBackup
 		defer func() {
-			core.SetConfiguration(previousCfg)
-			core.RegisterCommandManagerFactory(core.CommandProviderDoctor, previousFactory)
 			doctorDryRun = previousDryRun
 			doctorNoBackup = previousNoBackup
 		}()
@@ -29,10 +26,12 @@ var _ = Describe("Doctor", func() {
 
 		cfg := core.NewConfiguration()
 		cfg.Set(core.CfgKeyCmdrRootDir, filepath.Join(root, "missing"))
-		core.SetConfiguration(cfg)
-		core.RegisterCommandManagerFactory(core.CommandProviderDoctor, func(cfg core.Configuration) (core.CommandManager, error) {
+		restoreConfig := testutils.SwapConfiguration(cfg)
+		defer restoreConfig()
+		restoreFactory := testutils.RegisterCommandManagerFactory(core.CommandProviderDoctor, func(cfg core.Configuration) (core.CommandManager, error) {
 			return &cleanTestManager{}, nil
 		})
+		defer restoreFactory()
 
 		doctorDryRun = true
 		doctorNoBackup = true

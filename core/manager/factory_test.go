@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/mrlyc/cmdr/core"
+	"github.com/mrlyc/cmdr/core/internal/testutils"
 	"github.com/mrlyc/cmdr/core/manager"
 )
 
@@ -24,14 +25,10 @@ func (m factoryTestManager) Define(string, string, string) (core.Command, error)
 	return nil, nil
 }
 func (m factoryTestManager) Undefine(string, string) error { return nil }
-func (m factoryTestManager) Activate(string, string) error  { return nil }
-func (m factoryTestManager) Deactivate(string) error        { return nil }
+func (m factoryTestManager) Activate(string, string) error { return nil }
+func (m factoryTestManager) Deactivate(string) error       { return nil }
 
 var _ = Describe("Factories", func() {
-	restoreFactory := func(provider core.CommandProvider, fn func(core.Configuration) (core.CommandManager, error)) {
-		core.RegisterCommandManagerFactory(provider, fn)
-	}
-
 	It("should create binary managers from config", func() {
 		cfg := viper.New()
 		cfg.Set(core.CfgKeyCmdrBinDir, "bin")
@@ -48,19 +45,14 @@ var _ = Describe("Factories", func() {
 	})
 
 	It("should create simple, doctor and download managers", func() {
-		oldDefault := core.GetCommandManagerFactory(core.CommandProviderDefault)
-		oldBinary := core.GetCommandManagerFactory(core.CommandProviderBinary)
-		oldDatabase := core.GetCommandManagerFactory(core.CommandProviderDatabase)
-		defer restoreFactory(core.CommandProviderDefault, oldDefault)
-		defer restoreFactory(core.CommandProviderBinary, oldBinary)
-		defer restoreFactory(core.CommandProviderDatabase, oldDatabase)
-
-		core.RegisterCommandManagerFactory(core.CommandProviderDatabase, func(core.Configuration) (core.CommandManager, error) {
+		restoreDatabase := testutils.RegisterCommandManagerFactory(core.CommandProviderDatabase, func(core.Configuration) (core.CommandManager, error) {
 			return factoryTestManager{provider: core.CommandProviderDatabase}, nil
 		})
-		core.RegisterCommandManagerFactory(core.CommandProviderBinary, func(core.Configuration) (core.CommandManager, error) {
+		defer restoreDatabase()
+		restoreBinary := testutils.RegisterCommandManagerFactory(core.CommandProviderBinary, func(core.Configuration) (core.CommandManager, error) {
 			return factoryTestManager{provider: core.CommandProviderBinary}, nil
 		})
+		defer restoreBinary()
 
 		cfg := viper.New()
 		defaultMgr, err := core.NewCommandManager(core.CommandProviderDefault, cfg)
@@ -77,14 +69,12 @@ var _ = Describe("Factories", func() {
 	})
 
 	It("should return factory dependency errors", func() {
-		oldBinary := core.GetCommandManagerFactory(core.CommandProviderBinary)
-		oldDatabase := core.GetCommandManagerFactory(core.CommandProviderDatabase)
-		defer restoreFactory(core.CommandProviderBinary, oldBinary)
-		defer restoreFactory(core.CommandProviderDatabase, oldDatabase)
-
-		core.RegisterCommandManagerFactory(core.CommandProviderBinary, func(core.Configuration) (core.CommandManager, error) {
+		restoreBinary := testutils.RegisterCommandManagerFactory(core.CommandProviderBinary, func(core.Configuration) (core.CommandManager, error) {
 			return nil, fmt.Errorf("binary failed")
 		})
+		defer restoreBinary()
+		restoreDatabase := testutils.RestoreCommandManagerFactory(core.CommandProviderDatabase)
+		defer restoreDatabase()
 		_, err := core.NewCommandManager(core.CommandProviderDoctor, viper.New())
 		Expect(err).To(HaveOccurred())
 
